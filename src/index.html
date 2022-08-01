@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CSE 351 VM Simulator</title>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+</head>
+
+<body>
+    <h1>351 VM Simulator</h1>
+
+    <div class="TBD">
+
+        <!-- System Parameters -->
+        <div id="sysParam">
+            <fieldset id="pFieldset">
+                <legend><b>System Parameters</b></legend>
+                <table>
+                    <tr>
+                        <!-- The page size choices are temporary for now -->
+                        <td>Address width:</td>
+                        <td>
+                            <select id="addrWidth" name="addrWidth">
+                                <option value="10">10</option>
+                                <option value="12" selected>12</option>
+                                <option value="16">16</option>
+                            </select> bits
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Page Size:</td>
+                        <td>
+                            <select name="pgSize" id="pgSize">
+                                <option value="8" selected>8</option>
+                                <option value="16">16</option>
+                                <option value="32">32</option>
+                            </select> bytes
+                        </td>
+                    <tr>
+                        <!-- The physical memory choices are temporary for now -->
+                        <td>TLB Size:</td>
+                        <td><select id="tlbSize" name="tlbSize">
+                                <option value="4">4</option>
+                                <option value="8">8</option>
+                                <option value="16" selected>16</option>
+                                <option value="32">32</option>
+                            </select> entries
+                        </td>
+                    <tr>
+                        <td>TLB Associativity:</td>
+                        <td><select name="tlbE" id="tlbE">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="4" selected>4</option>
+                                <option value="8">8</option>
+                            </select> - way
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Page Table Size:</td>
+                        <!-- value to be calculated -->
+                        <td>###</td>
+                    </tr>
+                    <tr>
+                        <td>Physical Memory Size:</td>
+                        <td><select name="physMemSize" id= "physMemSize">
+                            <option value="128">128</option>
+                            <option value="256" selected>256</option>
+                            <option value="512">512</option>
+                        </select> Bytes </td>
+                    </tr>
+                    <tr>
+                        <!-- value t be calculated -->
+                        <td>Virtual Memory Size:</td>
+                        <td>###</td>
+                    </tr>
+                    <tr>
+                        <td class="center-align">
+                            <br><input id="paramButton" type="submit" value="Generate System">
+                        </td>
+                        <td class="center-align bottom-vertical-align">
+                            <input id="explain" type="checkbox" name="explain">
+                            <label for="explain">Explain</label>
+                        </td>
+                    </tr>
+                </table>
+            </fieldset>
+        </div>
+</body>
+
+</html>
