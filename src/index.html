@@ -7,16 +7,16 @@
 
     <title>CSE 351 VM Simulator</title>
 
-    <link rel="stylesheet" type="text/css" href="style.css">
-
     <script src="libraries/p5.min.js"></script>
     <script src="libraries/p5.sound.min.js"></script>
+    
+    <link rel="stylesheet" href="css/App.css">
 </head>
 
 <body>
     <h1>351 VM Simulator</h1>
 
-    <div class="TBD">
+    <div class="grid-container">
 
         <!-- System Parameters -->
         <div id="sysParam">
@@ -89,6 +89,67 @@
                             <input id="explain" type="checkbox" name="explain">
                             <label for="explain">Explain</label>
                         </td>
+                    </tr>
+                </table>
+            </fieldset>
+        </div>
+
+        <!-- Manual Memory Access -->
+        <div id="mma">
+            <fieldset>
+                <legend><b>Manual Memory Access:</b></legend>
+                <table>
+                    <tr>
+                        <td><input id="readButton" type="submit" value="Read"></td>
+                        <td colspan="2">Addr: 0x<input id="rAddr" type="text" name="rAddr" size="3" maxlength="3"></td>
+                    </tr>
+                    <tr>
+                        <td><input id="writeButton" type="submit" value="Write"></td>
+                        <td>Addr: 0x<input id="wAddr" type="text" name="wAddr" size="3" maxlength="3"></td>
+                        <td>Byte: 0x<input id="wData" type="text" name="wData" size="2" maxlength="2"></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="showSteps" type="checkbox" name="showSteps">
+                            <label for="showSteps">Step By Step</label>
+                        </td>
+                        <td colspan="2"><input id="nextBtn" type="submit" value="Next Step"></td>
+                    </tr>
+                </table>
+
+                <table class="even-width-cell">
+                    <tr class="grey-bg center-align">
+                        <td>VPN</td>
+                        <td>Offset</td>
+                        <td class="white-bg"></td>
+                        <td>TLB Tag</td>
+                        <td>TLB Index</td>
+                        <td class="white-bg"></td>
+                        <td>PPN</td>
+                    </tr>
+                    <!-- note the id dispO was renamed to dispPO -->
+                    <tr class="white-bg center-align">
+                        <td id="dispVPN" class="green-bg">-</td>
+                        <td id="dispPO" class="green-bg">-</td>
+                        <td></td>
+                        <td id="dispTLBTag" class="yellow-bg">-</td>
+                        <td id="dispTLBIndex" class="yellow-bg">-</td>
+                        <td></td>
+                        <td id="PPN" class="purple-bg">-</td>
+                    </tr>
+                    <tr class="grey-bg center-align">
+                        <td>TLB Hits</td>
+                        <td>TLB Misses</td>
+                        <td class="white-bg"></td>
+                        <td>PT Hits</td>
+                        <td>PT Misses</td>
+                    </tr>
+                    <tr class="white-bg center-align">
+                        <td id="dispTLBHit" class="blue-bg">-</td>
+                        <td id="dispTLBMiss" class="blue-bg">-</td>
+                        <td></td>
+                        <td id="dispPTHit" class="pink-bg">-</td>
+                        <td id="dispPTMiss" class="pink-bg">-</td>
                     </tr>
                 </table>
             </fieldset>

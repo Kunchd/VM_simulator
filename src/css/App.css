@@ -1,0 +1,99 @@
+body {
+    width: 960px;
+}
+
+/* grid areas */
+#sysParam {
+    grid-area: a;
+}
+
+#mma {
+    grid-area: b;
+}
+
+#history {
+    grid-area: c;
+}
+
+#statusMsg {
+    grid-area: d;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-areas:
+    "a a a b b b c c"
+    "a a a b b b c c"
+    "d d d d d d d d";
+}
+
+/* hacky % to make 3 panels have same height on Chrome */
+fieldset {
+    height: 90%;
+}
+
+table {
+    border: 0;
+}
+
+.even-width-cell table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.even-width-cell td {
+    width: 15%;
+}
+
+table tr td:empty {
+    width: 10px;
+}
+
+.center-align {
+    text-align: center;
+}
+
+.bottom-vertical-align {
+    vertical-align: bottom;
+}
+
+#nextStep {
+    text-align: center;
+    width: 75%;
+}
+
+.grey-bg {
+    background: #d0d0d0;
+}
+
+.green-bg {
+    background: #98FB98
+}
+
+.white-bg {
+    background: white;
+}
+
+.blue-bg {
+    background: #87CEFA;
+}
+
+.purple-bg {
+    background: #CC5FDE;
+}
+
+.yellow-bg {
+    background: #FCFE92;
+}
+
+.pink-bg {
+    background: hsl(318, 100%, 69%);
+}
+
+textarea {
+    resize: none;
+}
+
+#p5canvas {
+    margin: 10px auto;
+}
