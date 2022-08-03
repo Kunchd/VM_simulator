@@ -24,7 +24,7 @@ body {
     grid-template-areas:
     "a a a b b b c c"
     "a a a b b b c c"
-    "d d d d d d d d";
+    "d d d d e e e e";
 }
 
 /* hacky % to make 3 panels have same height on Chrome */
