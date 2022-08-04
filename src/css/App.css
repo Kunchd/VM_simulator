@@ -19,6 +19,10 @@ body {
     grid-area: d;
 }
 
+#addrTranslation {
+    grid-area: e;
+}
+
 .grid-container {
     display: grid;
     grid-template-areas:
