@@ -7,8 +7,10 @@
 
     <title>CSE 351 VM Simulator</title>
 
-    <script src="libraries/p5.min.js"></script>
-    <script src="libraries/p5.sound.min.js"></script>
+    <script src="../p5lib/p5.min.js"></script>
+    <!-- <script src="libraries/p5.sound.min.js"></script> -->
+
+    <script language="javascript" type="text/javascript" src="App.js"></script>
     
     <link rel="stylesheet" href="css/App.css">
 </head>
@@ -177,6 +179,9 @@
                 <legend><b>Address Translation</b></legend>
             </fieldset>
         </div>
+
+        <!-- p5 Canvas to display TLB, PT, VM, Memory, and Disk -->
+        <div id="p5canvas"></div>
 </body>
 
 </html>
