@@ -11,7 +11,7 @@
     <!-- <script src="libraries/p5.sound.min.js"></script> -->
 
     <script language="javascript" type="text/javascript" src="App.js"></script>
-    
+
     <link rel="stylesheet" href="css/App.css">
 </head>
 
@@ -72,11 +72,11 @@
                     </tr>
                     <tr>
                         <td>Physical Memory Size:</td>
-                        <td><select name="physMemSize" id= "physMemSize">
-                            <option value="128">128</option>
-                            <option value="256" selected>256</option>
-                            <option value="512">512</option>
-                        </select> Bytes </td>
+                        <td><select name="physMemSize" id="physMemSize">
+                                <option value="128">128</option>
+                                <option value="256" selected>256</option>
+                                <option value="512">512</option>
+                            </select> Bytes </td>
                     </tr>
                     <tr>
                         <!-- value t be calculated -->
@@ -159,9 +159,13 @@
 
         <!-- History -->
         <div id="history">
-            <fieldset>
-                <legend><b>History:</b></legend>
-                <textarea id="hist" rows="9" cols="18" disabled></textarea>
+            <fieldset id="historyFieldset" style="text-align: center">
+                <legend style="text-align: left;"><b>History:</b></legend>
+                <textarea id="hist" rows="12" cols="19" disabled style="margin-top: 10px; resize: none;"></textarea>
+                <p></p>
+                <input id="loadHist" type="submit" value="Load"> ||
+                <input id="upButton" type="submit" value="&uarr;">
+                <input id="dnButton" type="submit" value="&darr;">
             </fieldset>
         </div>
 
