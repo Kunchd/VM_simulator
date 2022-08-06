@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6"
+  },
+  "include": [
+    "*.js",
+    "p5lib/*.js",
+    "/root/.vscode-server/extensions/samplavigne.p5-vscode-1.2.11/p5types/global.d.ts",
+    "src/*.js"
+  ]
+}
