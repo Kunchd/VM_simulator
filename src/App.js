@@ -57,15 +57,18 @@ const displayTables = (p) => {
 
         // setup working values
         m = p.int(inAddrWidth.value());
-        alert(m);
 
         reset(true);
     }
 
+    // draws the canvas, updated constantly
     p.draw = function () {
         p.background(bg);
-        dispMsg(5, 25);
+        if(state === INIT) {
+            dispMsg(5, 25);
+        }
         if (state >= PARAMS_MEM)   { mem.display(); }
+        if (vbarMemEnable)   { vbarMem.update();   vbarMem.display(); }
     }
 
 
@@ -134,7 +137,7 @@ const displayDiagram = (p) => {
     }
 
     p.setup = function () {
-        diagramCanvas = p.createCanvas(500, 200).parent("p5addrTranslationCanvas");
+        diagramCanvas = p.createCanvas(500, 180).parent("p5addrTranslationCanvas");
         p.image(img, 0, 0);
     }
 }

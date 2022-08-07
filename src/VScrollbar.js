@@ -23,6 +23,10 @@ export class VScrollbar {
         this.p = p;
     }
 
+    /**
+     * update the scroll bar position to match mouse movement when 
+     * over the current scroll bar
+     */
     update() {
         this.over = this.overEvent();
         if (this.p.mouseIsPressed && this.over) {
@@ -34,18 +38,24 @@ export class VScrollbar {
         if (this.locked) {
             this.newspos = this.constrain(this.p.mouseY - this.swidth / 2, this.sposMin, this.sposMax);
         }
-        if (abs(this.newspos - this.spos) > 1) {
+        if (this.p.abs(this.newspos - this.spos) > 1) {
             this.spos = this.spos + (this.newspos - this.spos) / this.loose;
         }
     }
 
-    constrain(val, minv, maxv) { return min(max(val, minv), maxv); }
+    constrain(val, minv, maxv) { return this.p.min(this.p.max(val, minv), maxv); }
 
+    /**
+     * @returns whether mouse is currently over the bar or not
+     */
     overEvent() {
         return (this.p.mouseX > this.xpos && this.p.mouseX < this.xpos + this.swidth &&
             this.p.mouseY > this.ypos && this.p.mouseY < this.ypos + this.sheight);
     }
 
+    /**
+     * Display the current scroll bar
+     */
     display() {
         this.p.noStroke();
         // draw slide track
