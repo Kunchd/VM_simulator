@@ -1,12 +1,31 @@
+import { Memory } from "./Memory.js"
+import { VScrollbar } from "./VScrollbar.js";
+
 
 let canvas, diagramCanvas;
-let bg; // color variables
+let inAddrWidth, inPgSize, inTlbSize, inTlbE, inPhysMemSize; // system param input
+let ptSize, vmSize; // sys param calculated values
+let bg, colorC, colorM, colorH;; // color variables
+
+// working values
+let m;
+
+// Main canvas table components
+let mem;
+
+// scroll bars
+let vbarMem, vbarMemEnable;
+
+// system control buttons
+let paramButton;
 
 let msg = ""; // canvas message
 
 // state variables and constants
 let state;
-const INIT = 0;
+const INIT = 0, PARAMS_MEM = 1;
+
+const scrollSize = 16;
 
 // history related variables
 let histArray = [];
@@ -14,7 +33,31 @@ let histArray = [];
 const displayTables = (p) => {
     p.setup = function () {
         bg = p.color(230);
+        colorC = p.color(226, 102, 26);  // orange
+        colorM = p.color(51, 153, 126);  // turquoise
+        colorH = p.color(255, 0, 0);     // red
+
         canvas = p.createCanvas(960, 400).parent("p5Canvas");
+
+        // setup sys param input
+        inAddrWidth = p.select("#addrWidth");
+        inPgSize = p.select("#pgSize");
+        inTlbSize = p.select("#tlbSize");
+        inTlbE = p.select("#tlbE");
+        inPhysMemSize = p.select("#physMemSize");
+
+        // TODO: figure out how to display the calculated ptSize and vmSize are
+
+        // setup system control buttons
+        paramButton = p.select("#paramButton");
+        paramButton.mousePressed(changeParams);
+
+        // setup scroll bar
+        vbarMem = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, scrollSize);
+
+        // setup working values
+        m = p.int(inAddrWidth.value());
+        alert(m);
 
         reset(true);
     }
@@ -22,6 +65,7 @@ const displayTables = (p) => {
     p.draw = function () {
         p.background(bg);
         dispMsg(5, 25);
+        if (state >= PARAMS_MEM)   { mem.display(); }
     }
 
 
@@ -45,6 +89,27 @@ const displayTables = (p) => {
         }
     }
 
+    // Change systems parameter (what is displayed in main canvas) depending
+    // on the current system state
+    // safety measure in case someone mess with it I guess
+    function changeParams() {
+        if (checkParams) {
+            switch (state) {
+                case INIT:
+                    mem = new Memory(p, m, vbarMem, colorM, colorC, colorH, bg);
+
+                    // reset memory scroll bar
+                    vbarMemEnable = (mem.Mtop + mem.Mheight > p.height);
+                    vbarMem.spos = vbarMem.ypos;
+                    vbarMem.newspos = vbarMem.ypos;
+                    paramButton.attribute('value', 'Next');
+                    // msgbox.value("Press Next (left) to advance explanation.\n");
+                    state = PARAMS_MEM;
+                    /*if (!histMove && explain)*/ break;
+            }
+        }
+    }
+
     // display the current message to canvas
     function dispMsg(x, y) {
         p.fill(0);
@@ -52,6 +117,12 @@ const displayTables = (p) => {
         p.textSize(20);
         p.textAlign(p.LEFT);
         p.text(msg, x, y);
+    }
+
+    // checks whether the systems initialization params are correctly set
+    // only returns true for dev purposes for now
+    function checkParams() {
+        return true;
     }
 }
 
