@@ -1,26 +1,42 @@
 // temporary storage for const
 const scaleC = 20;
 
+let colorC;
+let colorM;
+let colorH;
 
 // Note: WH and WM policies settings are removed 
 
 /* Class to represent a TLB entry (tag + PPN + management bits) */
-class TLBSetEntry {
-    constructor(p) {
+export class TLBSetEntry {
+    constructor(p, t, PPNWidth, PPN) {
         this.p = p;       // p5 object of the current canvas
+
+        this.t = t;       // tag width
+        this.PPNWidth = PPNWidth;   // PPN width
+        this.PPN = 0;     // PPN value
+
         this.V = 0;       // valid bit value
-        this.D = 0;       // initialized to non-dirty?
+        this.D = 0;       // Dirty bit value
+        this.R = 0;       // read bit value
+        this.W = 0;       // write bit value
+        this.E = 0;       // execute bit value
         this.T = 0;       // tag value
         this.addr = -1;   // address of beginning of block (-1 is dummy addr)
-        this.block = [];  // data in the cache block
-        this.light = [];  // indicate highlighting for moved/changed data
-        for (var i = 0; i < K; i++) {
-            this.block[i] = 0;
-            this.light[i] = 0;
-        }
+        this.PPN = 0;     // PPN value
+
+        // lighting values
+        this.lightPPN = 0;  // indicate highlighting for moved/changed data
         this.lightV = 0;
         this.lightD = 0;
+        this.lightR = 0;
+        this.lightW = 0;
+        this.lightE = 0;
         this.lightT = 0;
+
+        colorC = this.p.color(226, 102, 26);  // orange
+        colorM = this.p.color(51, 153, 126);  // turquoise
+        colorH = this.p.color(255, 0, 0);     // red
     }
 
     // all functional methods are temporarily commented
@@ -76,28 +92,44 @@ class TLBSetEntry {
     // }
 
     // highlights the currently focused lines
-    highlightData() { for (var i = 0; i < K; i++) this.light[i] = 1; }
+    highlightData() { this.lightPPN = 1; }
     highlightAll() {
         this.lightV = 1;
         this.lightD = 1;
+        this.lightR = 1;
+        this.lightW = 1;
+        this.lightE = 1;
         this.lightT = 1;
         this.highlightData();
     }
 
     // clears the currently highlighted data
     clearHighlight() {
-        for (var i = 0; i < K; i++) this.light[i] = 0;
+        this.lightPPN = 0;
         this.lightV = 0;
         this.lightD = 0;
+        this.lightR = 0;
+        this.lightW = 0;
+        this.lightE = 0;
         this.lightT = 0;
     }
 
+    /**
+     * @todo change math for the TLB to work
+     */
+
+    /**
+     * 
+     * @param {*} x 
+     * @param {*} y 
+     */
     display(x, y) {
-        var d = this.D === 0 ? 0 : 1;
+        // var d = this.D < 0 ? 0 : 1;    a write policy thing
+        var d = 1;
         this.p.textSize(scaleC);
         // cache block boxes
         var xt = x + scaleC * xwidth(1) * (1 + d);
-        var xb = x + scaleC * (xwidth(1) * (1 + d) + xwidth(t < 1 ? 0 : this.p.ceil(t / 4)));
+        var xb = x + scaleC * (xwidth(1) * (1 + d) + xwidth(this.t < 1 ? 0 : this.p.ceil(this.t / 4)));
         this.p.stroke(0);
         (this.lightV ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
         this.p.rect(x, y, scaleC * xwidth(1), scaleC);  // valid
@@ -105,37 +137,34 @@ class TLBSetEntry {
             (this.lightD ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
             this.p.rect(x + scaleC * xwidth(1), y, scaleC * xwidth(1), scaleC);  // dirty
         }
-        if (t > 0) {
+        if (this.t > 0) {
             (this.lightT ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
             this.p.rect(xt, y, scaleC * xwidth(this.p.ceil(t / 4)), scaleC);  // tag
         }
-        for (var i = 0; i < K; i++) {
-            (this.light[i] > 0 ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
-            this.p.rect(xb + scaleC * xwidth(2) * i, y, scaleC * xwidth(2), scaleC);  // data
-        }
+        // for PPN
+        (this.light > 0 ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        this.p.rect(xb + scaleC * xwidth(2), y, scaleC * xwidth(2), scaleC);  // data
 
         // cache block text
         var ytext = y + 0.85 * scaleC;
-        this.p.textAlign(CENTER);
+        this.p.textAlign(this.p.CENTER);
         this.p.fill(this.lightV ? colorH : 0);
         this.p.text(this.V, x + scaleC * xwidth(1) * 0.5, ytext);  // valid
         if (d == 1) {
             this.p.fill(this.lightD ? colorH : 0);
             this.p.text(this.D, x + scaleC * xwidth(1) * 1.5, ytext);  // dirty
         }
-        if (t > 0) {
+        if (this.t > 0) {
             var tagText = "";
             if (this.V)
-                tagText = toBase(this.T, 16, this.p.ceil(t / 4));
+                tagText = toBase(this.T, 16, this.p.ceil(this.t / 4));
             else
                 for (var i = 0; i < this.p.ceil(t / 4); i++) tagText += "-";
             this.p.fill(this.lightT ? colorH : 0);
             this.p.text(tagText, xt + scaleC * xwidth(this.p.ceil(t / 4)) * 0.5, ytext);  // tag
         }
-        for (var i = 0; i < K; i++) {
-            this.p.fill(this.light[i] > 1 ? colorH : 0);
-            this.p.text(this.V ? toBase(this.block[i], 16, 2) : "--", xb + scaleC * xwidth(2) * (i + 0.5), ytext);  // data
-        }
+        this.p.fill(this.light > 1 ? colorH : 0);
+        this.p.text(this.V ? toBase(this.PPN, 16, 2) : "--", xb + scaleC * xwidth(2) * (i + 0.5), ytext);  // data
 
         // hover text
         if (this.V && this.p.mouseY > y && this.p.mouseY < y + scaleC && this.p.mouseX > xb && this.p.mouseX < xb + scaleC * xwidth(2) * K) {

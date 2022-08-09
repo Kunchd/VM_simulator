@@ -1,20 +1,39 @@
+import { TLBSetEntry } from './TLBSetEntry.js';
+
+// temporary storage for const
+const scaleC = 20;
+
+let colorC;
+let colorM;
+let colorH;
 
 /* Class to represent a TLB set (E cache lines).
  * This is where most of the cache policies are handled. */
-class CacheSet {
-    constructor( ) {
+export class TLBSet {
+    constructor( p, E, t, PPNWidth ) {
+      this.p = p;   // p5 object for current canvas
+
+      this.E = E;   // associativty
+      this.t = t;   // tag width
+      this.PPNWidth = PPNWidth;   // PPN width
+
       this.lines = [];  // lines in this set
       for (var i = 0; i < E; i++)
-        this.lines[i] = new CacheLine();
+        this.lines[i] = new TLBSetEntry(p, t, PPNWidth);
       // width for drawing
-      this.width = scaleC*(xwidth(1)*(1+WH) + xwidth(t < 1 ? 0 : ceil(t/4)) + xwidth(2)*K + 1);
+      this.width = scaleC*(xwidth(1)*(1) + xwidth(t < 1 ? 0 : this.p.ceil(t/4)) + xwidth(2) + 1);
       // is this the set of interest for this access? (affects display)
       this.active = 0;
-      // replacement policy:  0 = random, 1 = LRU
-      this.used = [];
-      if ( replace > 0 )
-        for (var i = 0; i < E; i++ )
-          this.used[i] = (replace == 1 ? E - i : 0);  // LRU: replace Block 0 first, FIFO: all zeros
+
+      colorC = this.p.color(226, 102, 26);  // orange
+      colorM = this.p.color(51, 153, 126);  // turquoise
+      colorH = this.p.color(255, 0, 0);     // red
+
+      // // replacement policy:  0 = random, 1 = LRU
+      // this.used = [];
+      // if ( replace > 0 )
+      //   for (var i = 0; i < E; i++ )
+      //     this.used[i] = (replace == 1 ? E - i : 0);  // LRU: replace Block 0 first, FIFO: all zeros
     }
     // // INCOMPLETE
     // updateFIFO ( linenum ) {
@@ -55,30 +74,30 @@ class CacheSet {
     //   return victim;
     // }
   
-    checkSet( addr ) {
-      var T = int(addr/K/S);  // tag value of addr
-      for (var i = 0; i < E; i++)
-        if (this.lines[i].V == 1 && this.lines[i].T == T) {
-          activeLine = this.lines[i];
-          activeLine.lightV = 1;
-          activeLine.lightT = 1;
-          cacheH += 1;  result = "H";  // record hit
-          activeLineNum = i;
-          msgbox.value(msgbox.value() + "HIT in Line " + i + "!\n");
-          msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
-          dispHit.style('color','red');
-          return;
-        }
-      cacheM += 1;  result = "M";  // record miss
-      msgbox.value(msgbox.value() + "MISS!\n");
-      msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
-      dispMiss.style('color','red');
-    }
+    // checkSet( addr ) {
+    //   var T = int(addr/K/S);  // tag value of addr
+    //   for (var i = 0; i < E; i++)
+    //     if (this.lines[i].V == 1 && this.lines[i].T == T) {
+    //       activeLine = this.lines[i];
+    //       activeLine.lightV = 1;
+    //       activeLine.lightT = 1;
+    //       cacheH += 1;  result = "H";  // record hit
+    //       activeLineNum = i;
+    //       msgbox.value(msgbox.value() + "HIT in Line " + i + "!\n");
+    //       msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+    //       dispHit.style('color','red');
+    //       return;
+    //     }
+    //   cacheM += 1;  result = "M";  // record miss
+    //   msgbox.value(msgbox.value() + "MISS!\n");
+    //   msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+    //   dispMiss.style('color','red');
+    // }
   
     flush( ) {
       for (var i = 0; i < E; i++) {
         this.lines[i].invalidate();
-        if (replace > 0) this.used[i] = (replace == 1 ? E-i : 0);  // reset replacement policy
+        // if (replace > 0) this.used[i] = (replace == 1 ? E-i : 0);  // reset replacement policy
       }
     }
   
@@ -87,17 +106,30 @@ class CacheSet {
     clearHighlight( ) { for (var i = 0; i < E; i++) this.lines[i].clearHighlight(); }
   
     display( x, y ) {
-      stroke(colorC);  // orange set outline
-      (this.active ? fill(255, 0, 0, 50) : noFill());
-      rect(x, y, this.width, 1.5*scaleC*E);
-      for (var i = 0; i < E; i++) {
+      this.p.stroke(colorC);  // orange set outline
+      (this.active ? this.p.fill(255, 0, 0, 50) : this.p.noFill());
+      this.p.rect(x, y, this.width, 1.5*scaleC*this.E);
+      for (var i = 0; i < this.E; i++) {
         this.lines[i].display(x+0.5*scaleC, y+scaleC*(1+6*i)/4);
-        if (replace != 0) {
-          textSize(12);
-          fill(colorC);
-          noStroke();
-          text(this.used[i], x + this.width + 0.3*scaleC, y+scaleC*(2+3*i)/2);
-        }
+        // if (replace != 0) {
+        //   textSize(12);
+        //   fill(colorC);
+        //   noStroke();
+        //   text(this.used[i], x + this.width + 0.3*scaleC, y+scaleC*(2+3*i)/2);
+        // }
       }
     }
   }
+
+  /* Helper function for determining width of boxes for cache and mem. */
+function xwidth(w) { return 0.2 + 0.7 * w; }
+
+
+/* Helper function that prints d in base b, padded out to padding digits. */
+function toBase(d, b, padding) {
+  var out = Number(d).toString(b);
+  padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+  while (out.length < padding)
+    out = "0" + out;
+  return out;
+}

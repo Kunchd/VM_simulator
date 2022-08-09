@@ -20,7 +20,7 @@ export class Memory {
      * @param {*} colrH colorH
      * @param {*} backgrd bg
      */
-    constructor(p, m, scrollBar, colrM, colrC, colrH, backgrd) {
+    constructor(p, m, scrollBar, scrollBarEnable, colrM, colrC, colrH, backgrd) {
         this.Mtop = scaleM;  // initial y of top of memory
         this.Mheight = 1.5 * p.pow(2, m - 3) * scaleM;  // height of memory when drawn out
         this.Mwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
@@ -28,7 +28,7 @@ export class Memory {
         this.data = [];  // data stored in memory
         this.light = [];  // indicate highlighting for moved/changed data
         this.vbarMem = scrollBar;   // the scroll bar created for the memory
-        this.vbarMemEnable = true;  // indicate whether current memory is enabled
+        this.vbarMemEnable = scrollBarEnable;  // indicate whether current memory is enabled
         this.p = p;
         this.m = m;
         this.colorM = colrM;
