@@ -7,6 +7,7 @@ const scaleC = 20;
 /* Class to represent a TLB entry (tag + PPN + management bits) */
 class TLBSetEntry {
     constructor(p) {
+        this.p = p;       // p5 object of the current canvas
         this.V = 0;       // valid bit value
         this.D = 0;       // initialized to non-dirty?
         this.T = 0;       // tag value
@@ -93,69 +94,69 @@ class TLBSetEntry {
 
     display(x, y) {
         var d = this.D === 0 ? 0 : 1;
-        textSize(scaleC);
+        this.p.textSize(scaleC);
         // cache block boxes
         var xt = x + scaleC * xwidth(1) * (1 + d);
-        var xb = x + scaleC * (xwidth(1) * (1 + d) + xwidth(t < 1 ? 0 : ceil(t / 4)));
-        stroke(0);
-        (this.lightV ? fill(red(colorC), green(colorC), blue(colorC), 100) : noFill());
-        rect(x, y, scaleC * xwidth(1), scaleC);  // valid
+        var xb = x + scaleC * (xwidth(1) * (1 + d) + xwidth(t < 1 ? 0 : this.p.ceil(t / 4)));
+        this.p.stroke(0);
+        (this.lightV ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        this.p.rect(x, y, scaleC * xwidth(1), scaleC);  // valid
         if (d == 1) {
-            (this.lightD ? fill(red(colorC), green(colorC), blue(colorC), 100) : noFill());
-            rect(x + scaleC * xwidth(1), y, scaleC * xwidth(1), scaleC);  // dirty
+            (this.lightD ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+            this.p.rect(x + scaleC * xwidth(1), y, scaleC * xwidth(1), scaleC);  // dirty
         }
         if (t > 0) {
-            (this.lightT ? fill(red(colorC), green(colorC), blue(colorC), 100) : noFill());
-            rect(xt, y, scaleC * xwidth(ceil(t / 4)), scaleC);  // tag
+            (this.lightT ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+            this.p.rect(xt, y, scaleC * xwidth(this.p.ceil(t / 4)), scaleC);  // tag
         }
         for (var i = 0; i < K; i++) {
-            (this.light[i] > 0 ? fill(red(colorC), green(colorC), blue(colorC), 100) : noFill());
-            rect(xb + scaleC * xwidth(2) * i, y, scaleC * xwidth(2), scaleC);  // data
+            (this.light[i] > 0 ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+            this.p.rect(xb + scaleC * xwidth(2) * i, y, scaleC * xwidth(2), scaleC);  // data
         }
 
         // cache block text
         var ytext = y + 0.85 * scaleC;
-        textAlign(CENTER);
-        fill(this.lightV ? colorH : 0);
-        text(this.V, x + scaleC * xwidth(1) * 0.5, ytext);  // valid
+        this.p.textAlign(CENTER);
+        this.p.fill(this.lightV ? colorH : 0);
+        this.p.text(this.V, x + scaleC * xwidth(1) * 0.5, ytext);  // valid
         if (d == 1) {
-            fill(this.lightD ? colorH : 0);
-            text(this.D, x + scaleC * xwidth(1) * 1.5, ytext);  // dirty
+            this.p.fill(this.lightD ? colorH : 0);
+            this.p.text(this.D, x + scaleC * xwidth(1) * 1.5, ytext);  // dirty
         }
         if (t > 0) {
             var tagText = "";
             if (this.V)
-                tagText = toBase(this.T, 16, ceil(t / 4));
+                tagText = toBase(this.T, 16, this.p.ceil(t / 4));
             else
-                for (var i = 0; i < ceil(t / 4); i++) tagText += "-";
-            fill(this.lightT ? colorH : 0);
-            text(tagText, xt + scaleC * xwidth(ceil(t / 4)) * 0.5, ytext);  // tag
+                for (var i = 0; i < this.p.ceil(t / 4); i++) tagText += "-";
+            this.p.fill(this.lightT ? colorH : 0);
+            this.p.text(tagText, xt + scaleC * xwidth(this.p.ceil(t / 4)) * 0.5, ytext);  // tag
         }
         for (var i = 0; i < K; i++) {
-            fill(this.light[i] > 1 ? colorH : 0);
-            text(this.V ? toBase(this.block[i], 16, 2) : "--", xb + scaleC * xwidth(2) * (i + 0.5), ytext);  // data
+            this.p.fill(this.light[i] > 1 ? colorH : 0);
+            this.p.text(this.V ? toBase(this.block[i], 16, 2) : "--", xb + scaleC * xwidth(2) * (i + 0.5), ytext);  // data
         }
 
         // hover text
-        if (this.V && mouseY > y && mouseY < y + scaleC && mouseX > xb && mouseX < xb + scaleC * xwidth(2) * K) {
+        if (this.V && this.p.mouseY > y && this.p.mouseY < y + scaleC && this.p.mouseX > xb && this.p.mouseX < xb + scaleC * xwidth(2) * K) {
             var idx = int((mouseX - xb) / xwidth(2) / scaleC);
-            textSize(hoverSize);
-            fill(colorH);
-            noStroke();
-            text("0x" + (this.addr + idx).toString(16), mouseX, mouseY);
+            this.p.textSize(hoverSize);
+            this.p.fill(colorH);
+            this.p.noStroke();
+            this.p.text("0x" + (this.addr + idx).toString(16), mouseX, mouseY);
         }
     }
 }
 
 /* Helper function for determining width of boxes for cache and mem. */
-function xwidth(w) { return 0.2 + 0.7*w; }
+function xwidth(w) { return 0.2 + 0.7 * w; }
 
 
 /* Helper function that prints d in base b, padded out to padding digits. */
 function toBase(d, b, padding) {
-  var out = Number(d).toString(b);
-  padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-  while (out.length < padding)
-    out = "0" + out;
-  return out;
+    var out = Number(d).toString(b);
+    padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+    while (out.length < padding)
+        out = "0" + out;
+    return out;
 }
