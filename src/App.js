@@ -1,12 +1,14 @@
 import { Memory } from "./Memory.js"
 import { VScrollbar } from "./VScrollbar.js";
 import { TLB } from "./TLB.js";
+import { INIT, PARAMS_MEM, PARAMS_TLB, scrollSize, scaleM } from "./Constants.js";
 
 
 let canvas, diagramCanvas;
 let inAddrWidth, inPgSize, inTlbSize, inTlbE, inPhysMemSize; // system param input
 let ptSize, vmSize; // sys param calculated values
-let bg, colorC, colorM, colorH;; // color variables
+
+export let bg, colorC, colorM, colorH;
 
 // System parameters
 let m, PPNWidth, E, TLBSize, pgSize, physMemSize;
@@ -26,10 +28,6 @@ let msg = ""; // canvas message
 
 // state variables and constants
 let state;
-const INIT = 0, PARAMS_MEM = 1, PARAMS_TLB=2;
-
-const scrollSize = 16;
-const scaleM = 20;
 
 // history related variables
 let histArray = [];
@@ -41,7 +39,6 @@ const displayTables = (p) => {
         colorC = p.color(226, 102, 26);  // orange
         colorM = p.color(51, 153, 126);  // turquoise
         colorH = p.color(255, 0, 0);     // red
-
         canvas = p.createCanvas(960, 400).parent("p5Canvas");
 
         // setup sys param input
@@ -59,7 +56,7 @@ const displayTables = (p) => {
 
         // setup scroll bar
         vbarMem = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, scrollSize);
-        vbarTlb = new VScrollbar(p, 615-scrollSize, 0, scrollSize, p.height, scrollSize);
+        vbarTlb = new VScrollbar(p, 615 - scrollSize, 0, scrollSize, p.height, scrollSize);
 
         // setup working values
         m = p.int(inAddrWidth.value());
@@ -112,7 +109,7 @@ const displayTables = (p) => {
         if (checkParams) {
             switch (state) {
                 case INIT:
-                    mem = new Memory(p, m, vbarMem, vbarMemEnable, colorM, colorC, colorH, bg);
+                    mem = new Memory(p, m, vbarMem, vbarMemEnable);
 
                     // reset memory scroll bar
                     vbarMemEnable = (mem.Mtop + mem.Mheight > p.height);
@@ -167,3 +164,16 @@ const displayDiagram = (p) => {
 
 let tableP5 = new p5(displayTables);
 let diagramP5 = new p5(displayDiagram);
+
+/* Helper function for determining width of boxes for cache and mem. */
+export function xwidth(w) { return 0.2 + 0.7 * w; }
+
+
+/* Helper function that prints d in base b, padded out to padding digits. */
+export function toBase(d, b, padding) {
+  var out = Number(d).toString(b);
+  padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+  while (out.length < padding)
+    out = "0" + out;
+  return out;
+}

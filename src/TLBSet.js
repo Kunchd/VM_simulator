@@ -1,11 +1,7 @@
 import { TLBSetEntry } from './TLBSetEntry.js';
-
-// temporary storage for const
-const scaleC = 20;
-
-let colorC;
-let colorM;
-let colorH;
+import { scaleC } from './Constants.js';
+import {colorC, colorM, colorH} from "./App.js";
+import { xwidth } from './App.js';
 
 /* Class to represent a TLB set (E cache lines).
  * This is where most of the cache policies are handled. */
@@ -24,10 +20,6 @@ export class TLBSet {
       this.width = scaleC*(xwidth(1)*(1) + xwidth(t < 1 ? 0 : this.p.ceil(t/4)) + xwidth(2) + 1);
       // is this the set of interest for this access? (affects display)
       this.active = 0;
-
-      colorC = this.p.color(226, 102, 26);  // orange
-      colorM = this.p.color(51, 153, 126);  // turquoise
-      colorH = this.p.color(255, 0, 0);     // red
 
       // // replacement policy:  0 = random, 1 = LRU
       // this.used = [];
@@ -120,16 +112,3 @@ export class TLBSet {
       }
     }
   }
-
-  /* Helper function for determining width of boxes for cache and mem. */
-function xwidth(w) { return 0.2 + 0.7 * w; }
-
-
-/* Helper function that prints d in base b, padded out to padding digits. */
-function toBase(d, b, padding) {
-  var out = Number(d).toString(b);
-  padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-  while (out.length < padding)
-    out = "0" + out;
-  return out;
-}

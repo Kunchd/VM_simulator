@@ -1,11 +1,7 @@
 import { TLBSet } from "./TLBSet.js";
-
-// temporary storage for const
-const scaleC = 20;
-
-let colorC;
-let colorM;
-let colorH;
+import {scaleC} from "./Constants.js";
+import {colorC, colorM, colorH, bg} from "./App.js";
+import { xwidth } from "./App.js";
 
 /* Class to represent a TLB. */
 export class TLB {
@@ -27,11 +23,6 @@ export class TLB {
 
     this.vbarTLBEnable = scrollBarEnable;
     this.x = scrollBar.xpos - 10 - this.Cwidth;
-
-    colorC = this.p.color(226, 102, 26);  // orange
-    colorM = this.p.color(51, 153, 126);  // turquoise
-    colorH = this.p.color(255, 0, 0);     // red
-    this.bg = this.p.color(230);
   }
 
   flush() {
@@ -55,7 +46,7 @@ export class TLB {
       this.sets[i].display(x, this.Ctop + offset + 1.5 * this.E * scaleC * i);
     }
     this.p.noStroke();
-    this.p.fill(this.bg);
+    this.p.fill(bg);
     this.p.rect(x, 0, this.Cwidth, this.Ctop);  // background for header
     this.p.rect(x, 0, -scaleC * 3.0, this.Ctop);  // cover set numbers
     this.p.fill(colorC);
@@ -73,17 +64,4 @@ export class TLB {
     this.p.textAlign(this.p.LEFT);
     this.p.text("PPN", xb + scaleC, ytext);  // data
   }
-}
-
-/* Helper function for determining width of boxes for cache and mem. */
-function xwidth(w) { return 0.2 + 0.7 * w; }
-
-
-/* Helper function that prints d in base b, padded out to padding digits. */
-function toBase(d, b, padding) {
-  var out = Number(d).toString(b);
-  padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-  while (out.length < padding)
-    out = "0" + out;
-  return out;
 }

@@ -1,20 +1,18 @@
-// temporary storage for const
-const scaleC = 20;
-
-let colorC;
-let colorM;
-let colorH;
+import {scaleC} from "./Constants.js";
+import {colorC, colorM, colorH} from "./App.js";
+import { xwidth, toBase } from "./App.js";
 
 // Note: WH and WM policies settings are removed 
 
 /* Class to represent a TLB entry (tag + PPN + management bits) */
 export class TLBSetEntry {
-    constructor(p, t, PPNWidth, PPN) {
+    // undefined for PPN means no value
+    constructor(p, t, PPNWidth) {
         this.p = p;       // p5 object of the current canvas
 
         this.t = t;       // tag width
         this.PPNWidth = PPNWidth;   // PPN width
-        this.PPN = 0;     // PPN value
+        this.PPN = -1;     // PPN value
 
         this.V = 0;       // valid bit value
         this.D = 0;       // Dirty bit value
@@ -33,10 +31,6 @@ export class TLBSetEntry {
         this.lightW = 0;
         this.lightE = 0;
         this.lightT = 0;
-
-        colorC = this.p.color(226, 102, 26);  // orange
-        colorM = this.p.color(51, 153, 126);  // turquoise
-        colorH = this.p.color(255, 0, 0);     // red
     }
 
     // all functional methods are temporarily commented
@@ -128,8 +122,10 @@ export class TLBSetEntry {
         var d = 1;
         this.p.textSize(scaleC);
         // cache block boxes
+        // Where the tag start
         var xt = x + scaleC * xwidth(1) * (1 + d);
-        var xb = x + scaleC * (xwidth(1) * (1 + d) + xwidth(this.t < 1 ? 0 : this.p.ceil(this.t / 4)));
+        // Where the PPN start
+        var xPPN = x + scaleC * (xwidth(1) * (1 + d) + xwidth(this.t < 1 ? 0 : this.p.ceil(this.t / 4)));
         this.p.stroke(0);
         (this.lightV ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
         this.p.rect(x, y, scaleC * xwidth(1), scaleC);  // valid
@@ -143,7 +139,7 @@ export class TLBSetEntry {
         }
         // for PPN
         (this.light > 0 ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
-        this.p.rect(xb + scaleC * xwidth(2), y, scaleC * xwidth(2), scaleC);  // data
+        this.p.rect(xPPN + scaleC * xwidth(2), y, scaleC * xwidth(2), scaleC);  // data
 
         // cache block text
         var ytext = y + 0.85 * scaleC;
@@ -164,28 +160,15 @@ export class TLBSetEntry {
             this.p.text(tagText, xt + scaleC * xwidth(this.p.ceil(t / 4)) * 0.5, ytext);  // tag
         }
         this.p.fill(this.light > 1 ? colorH : 0);
-        this.p.text(this.V ? toBase(this.PPN, 16, 2) : "--", xb + scaleC * xwidth(2) * (i + 0.5), ytext);  // data
+        this.p.text(this.V ? toBase(this.PPN, 16, 2) : "--", xPPN + scaleC * xwidth(2) * (i + 0.5), ytext);  // data
 
         // hover text
-        if (this.V && this.p.mouseY > y && this.p.mouseY < y + scaleC && this.p.mouseX > xb && this.p.mouseX < xb + scaleC * xwidth(2) * K) {
-            var idx = int((mouseX - xb) / xwidth(2) / scaleC);
+        if (this.V && this.p.mouseY > y && this.p.mouseY < y + scaleC && this.p.mouseX > xPPN && this.p.mouseX < xPPN + scaleC * xwidth(2) * K) {
+            var idx = int((mouseX - xPPN) / xwidth(2) / scaleC);
             this.p.textSize(hoverSize);
             this.p.fill(colorH);
             this.p.noStroke();
             this.p.text("0x" + (this.addr + idx).toString(16), mouseX, mouseY);
         }
     }
-}
-
-/* Helper function for determining width of boxes for cache and mem. */
-function xwidth(w) { return 0.2 + 0.7 * w; }
-
-
-/* Helper function that prints d in base b, padded out to padding digits. */
-function toBase(d, b, padding) {
-    var out = Number(d).toString(b);
-    padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-    while (out.length < padding)
-        out = "0" + out;
-    return out;
 }

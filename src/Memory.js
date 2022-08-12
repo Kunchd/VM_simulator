@@ -1,7 +1,6 @@
-// class constants
-const scaleM = 20; // initial y of top of memory table
-const scrollSize = 16;
-const hoverSize = 16;
+import {scaleM, scrollSize, hoverSize} from "./Constants.js";
+import {colorC, colorM, colorH, bg} from "./App.js";
+import { xwidth, toBase } from "./App.js";
 
 /**
  * class to represent physical memory
@@ -15,12 +14,8 @@ export class Memory {
      *              representation will be placed in
      * @param {*} m the address width
      * @param {*} scrollBar the scroll bar associated with this table
-     * @param {*} colrM colorM
-     * @param {*} colrC colorC
-     * @param {*} colrH colorH
-     * @param {*} backgrd bg
      */
-    constructor(p, m, scrollBar, scrollBarEnable, colrM, colrC, colrH, backgrd) {
+    constructor(p, m, scrollBar, scrollBarEnable) {
         this.Mtop = scaleM;  // initial y of top of memory
         this.Mheight = 1.5 * p.pow(2, m - 3) * scaleM;  // height of memory when drawn out
         this.Mwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
@@ -31,10 +26,6 @@ export class Memory {
         this.vbarMemEnable = scrollBarEnable;  // indicate whether current memory is enabled
         this.p = p;
         this.m = m;
-        this.colorM = colrM;
-        this.colorC = colrC;
-        this.colorH = colrH;
-        this.bg = backgrd;
         for (var i = 0; i < p.pow(2, this.m); i++) {
             this.data[i] = p.floor(Math.random() * 256);  // randomize the initial memory
             this.light[i] = 0;                 // nothing starts highlighted
@@ -61,7 +52,7 @@ export class Memory {
           this.p.textSize(scaleM*0.8);
           this.p.textAlign(this.p.RIGHT);
           this.p.noStroke();
-          this.p.fill(this.colorM);
+          this.p.fill(colorM);
           this.p.text("0x" + toBase(8*i,16, this.p.ceil(this.m/4)), x-2, ytext);
     
           this.p.textSize(scaleM);
@@ -70,9 +61,9 @@ export class Memory {
           for (var j = 0; j < 8; j++) {
             switch (this.light[8*i+j]) {
               case 0: this.p.noFill(); break;
-              case 1: this.p.fill(this.p.red(this.colorC), this.p.green(this.colorC), this.p.blue(this.colorC), 100); break;
+              case 1: this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100); break;
               case 2:
-              case 3: this.p.fill(this.p.red(this.colorM), this.p.green(this.colorM), this.p.blue(this.colorM), 100); break;
+              case 3: this.p.fill(this.p.red(colorM), this.p.green(colorM), this.p.blue(colorM), 100); break;
             }
             this.p.rect(x + scaleM*xwidth(2)*j, y, scaleM*xwidth(2), scaleM);
           }
@@ -87,31 +78,19 @@ export class Memory {
           if ( this.p.mouseY > y && this.p.mouseY < y+scaleM && this.p.mouseX > x && this.p.mouseX < x+scaleM*xwidth(2)*8 ) {
             var idx = this.p.int( (this.p.mouseX - x) / xwidth(2) / scaleM );
             this.p.textSize(hoverSize);
-            this.p.fill(this.colorH);
+            this.p.fill(colorH);
             this.p.noStroke();
             this.p.text("0x" + (8*i+idx).toString(16), this.p.mouseX, this.p.mouseY);
           }
         }
         this.p.noStroke();
-        this.p.fill(this.bg);
+        this.p.fill(bg);
         this.p.rect(x, 0, this.Mwidth, this.Mtop);  // background for header
         this.p.rect(x, 0, -scaleM*2.6, this.Mtop);  // cover row address
-        this.p.fill(this.colorM);
-        this.p.stroke(this.colorM);
+        this.p.fill(colorM);
+        this.p.stroke(colorM);
         this.p.textSize(scaleM);
         this.p.textAlign(this.p.CENTER);
         this.p.text("Physical Memory", x + this.Mwidth/2, 0.85*scaleM);  // mem label
       }
 }
-
-/* Helper function for determining width of boxes for cache and mem. */
-function xwidth(w) { return 0.2 + 0.7 * w; }
-
-/* Helper function that prints d in base b, padded out to padding digits. */
-function toBase(d, b, padding) {
-    var out = Number(d).toString(b);
-    padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-    while (out.length < padding)
-      out = "0" + out;
-    return out;
-  }
