@@ -5,6 +5,16 @@ import { xwidth } from "./App.js";
 
 /* Class to represent a TLB. */
 export class TLB {
+  /**
+   * Construct a new isntance of TLB
+   * @param {*} p the p5 object assigned to current canvas
+   * @param {*} scrollBar the scroll bar to attatch the TLB to
+   * @param {*} scrollBarEnable determine whether the scroll bar is enabled
+   * @param {*} TLBSize the size in bytes of the TLB
+   * @param {*} E the assciativity of the TLB
+   * @param {*} addrWidth the bit width of the virtual address
+   * @param {*} PPNWidth the bit width of the PPN
+   */
   constructor(p, scrollBar, scrollBarEnable, TLBSize, E, addrWidth, PPNWidth) {
     this.p = p;     // p5 object of current canvas
 

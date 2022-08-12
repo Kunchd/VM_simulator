@@ -56,15 +56,15 @@ const displayTables = (p) => {
 
         // setup scroll bar
         vbarMem = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, scrollSize);
-        vbarTlb = new VScrollbar(p, 615 - scrollSize, 0, scrollSize, p.height, scrollSize);
+        vbarTlb = new VScrollbar(p, 200 - scrollSize, 0, scrollSize, p.height, scrollSize);
 
         // setup working values
-        m = p.int(inAddrWidth.value());
-        PPNWidth = p.log(p.int(inPhysMemSize.value())) / p.log(2);
-        E = p.int(inTlbE.value());
         TLBSize = p.int(inTlbSize.value());
         pgSize = p.int(inPgSize.value());
         physMemSize = p.int(inPhysMemSize.value());
+        m = p.int(inAddrWidth.value());
+        PPNWidth = p.log(physMemSize) / p.log(2);
+        E = p.int(inTlbE.value());
 
         reset(true);
     }
@@ -121,7 +121,7 @@ const displayTables = (p) => {
                     if (!histMove && explain) break;
                 case PARAMS_MEM:
                     // initialize TLB
-                    tlb = new TLB(p, vbarTlb, vbarTlbEnable, TLBSize, E, m, physMemSize);
+                    tlb = new TLB(p, vbarTlb, vbarTlbEnable, TLBSize, E, m, PPNWidth);
                     // reset cache scroll bar
                     vbarTlbEnable = (tlb.Ctop + tlb.Cheight > p.height);
                     vbarTlb.xpos = mem.x - scaleM * 2.6 - scrollSize - 10;

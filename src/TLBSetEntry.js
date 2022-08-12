@@ -1,6 +1,9 @@
-import {scaleC} from "./Constants.js";
-import {colorC, colorM, colorH} from "./App.js";
+import { scaleC } from "./Constants.js";
+import { colorC, colorM, colorH } from "./App.js";
 import { xwidth, toBase } from "./App.js";
+
+// Management bit width
+const MGNT_BIT_WIDTH = 5;
 
 // Note: WH and WM policies settings are removed 
 
@@ -123,23 +126,40 @@ export class TLBSetEntry {
         this.p.textSize(scaleC);
         // cache block boxes
         // Where the tag start
-        var xt = x + scaleC * xwidth(1) * (1 + d);
+        var xt = x + scaleC * xwidth(1) * (MGNT_BIT_WIDTH);
         // Where the PPN start
-        var xPPN = x + scaleC * (xwidth(1) * (1 + d) + xwidth(this.t < 1 ? 0 : this.p.ceil(this.t / 4)));
+        var xPPN = x + scaleC * (xwidth(1) * (MGNT_BIT_WIDTH) + xwidth(this.p.ceil(this.t / 4)));
         this.p.stroke(0);
+
+        // render valid bit
         (this.lightV ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
         this.p.rect(x, y, scaleC * xwidth(1), scaleC);  // valid
-        if (d == 1) {
-            (this.lightD ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
-            this.p.rect(x + scaleC * xwidth(1), y, scaleC * xwidth(1), scaleC);  // dirty
-        }
-        if (this.t > 0) {
-            (this.lightT ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
-            this.p.rect(xt, y, scaleC * xwidth(this.p.ceil(t / 4)), scaleC);  // tag
-        }
+
+        // render dirty bit
+        (this.lightD ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        this.p.rect(x + scaleC * xwidth(1), y, scaleC * xwidth(1), scaleC);  // dirty
+
+        // render read bit
+        (this.lightR ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        this.p.rect(x + scaleC * xwidth(1) * 2, y, scaleC * xwidth(1), scaleC);     // read
+
+        // render write bit
+        (this.lightW ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        this.p.rect(x + scaleC * xwidth(1) * 3, y, scaleC * xwidth(1), scaleC);     // write
+
+        // render exec bit
+        (this.lightE ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        this.p.rect(x + scaleC * xwidth(1) * 4, y, scaleC * xwidth(1), scaleC);     // write
+
+        // render tag bit
+        alert("PPN width:" + this.PPNWidth);
+        alert("tag width:" + this.t);
+        (this.lightT ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        this.p.rect(xt, y, scaleC * xwidth(this.p.ceil(this.t / 4)), scaleC);  // tag
+
         // for PPN
         (this.light > 0 ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
-        this.p.rect(xPPN + scaleC * xwidth(2), y, scaleC * xwidth(2), scaleC);  // data
+        this.p.rect(xPPN, y, scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)), scaleC);  // data
 
         // cache block text
         var ytext = y + 0.85 * scaleC;
