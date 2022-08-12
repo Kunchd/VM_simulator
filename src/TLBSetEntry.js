@@ -152,8 +152,8 @@ export class TLBSetEntry {
         this.p.rect(x + scaleC * xwidth(1) * 4, y, scaleC * xwidth(1), scaleC);     // write
 
         // render tag bit
-        alert("PPN width:" + this.PPNWidth);
-        alert("tag width:" + this.t);
+        // alert("PPN width:" + this.PPNWidth);
+        // alert("tag width:" + this.t);
         (this.lightT ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
         this.p.rect(xt, y, scaleC * xwidth(this.p.ceil(this.t / 4)), scaleC);  // tag
 
@@ -164,23 +164,40 @@ export class TLBSetEntry {
         // cache block text
         var ytext = y + 0.85 * scaleC;
         this.p.textAlign(this.p.CENTER);
+
+        // render valid bit text
         this.p.fill(this.lightV ? colorH : 0);
         this.p.text(this.V, x + scaleC * xwidth(1) * 0.5, ytext);  // valid
-        if (d == 1) {
-            this.p.fill(this.lightD ? colorH : 0);
-            this.p.text(this.D, x + scaleC * xwidth(1) * 1.5, ytext);  // dirty
-        }
-        if (this.t > 0) {
-            var tagText = "";
-            if (this.V)
-                tagText = toBase(this.T, 16, this.p.ceil(this.t / 4));
-            else
-                for (var i = 0; i < this.p.ceil(t / 4); i++) tagText += "-";
-            this.p.fill(this.lightT ? colorH : 0);
-            this.p.text(tagText, xt + scaleC * xwidth(this.p.ceil(t / 4)) * 0.5, ytext);  // tag
-        }
-        this.p.fill(this.light > 1 ? colorH : 0);
-        this.p.text(this.V ? toBase(this.PPN, 16, 2) : "--", xPPN + scaleC * xwidth(2) * (i + 0.5), ytext);  // data
+
+        // render dirty bits
+        this.p.fill(this.lightD ? colorH : 0);
+        this.p.text(this.D, x + scaleC * xwidth(1) * 1.5, ytext);  // dirty
+
+        // render read bits
+        this.p.fill(this.lightR ? colorH : 0);
+        this.p.text(this.R, x + scaleC * xwidth(1) * 2.5, ytext);   // read
+
+        // render write bits
+        this.p.fill(this.lightW ? colorH : 0);
+        this.p.text(this.W, x + scaleC * xwidth(1) * 3.5, ytext);   // write
+
+        // render exec bits
+        this.p.fill(this.lightE ? colorH : 0);
+        this.p.text(this.E, x + scaleC * xwidth(1) * 4.5, ytext);   // exec
+
+        // render tag bits
+        var tagText = "";
+        if (this.V)
+            tagText = toBase(this.T, 16, this.p.ceil(this.t / 4));
+        else
+            for (var i = 0; i < this.p.ceil(this.t / 4); i++) tagText += "-";
+        this.p.fill(this.lightT ? colorH : 0);
+        this.p.text(tagText, xt + scaleC * xwidth(this.p.ceil(this.t / 4)) * 0.5, ytext);  // tag
+
+        // render PPN bits
+        this.p.fill(this.lightPPN > 1 ? colorH : 0);
+        this.p.text(this.V ? toBase(this.PPN, 16, 2) : "--"
+            , xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * (0.5), ytext);  // data
 
         // hover text
         if (this.V && this.p.mouseY > y && this.p.mouseY < y + scaleC && this.p.mouseX > xPPN && this.p.mouseX < xPPN + scaleC * xwidth(2) * K) {

@@ -67,7 +67,7 @@ export class TLB {
     this.p.text("V", x + scaleC * (0.5 + xwidth(1) * 0.5), ytext);  // valid
     this.p.text("D", x + scaleC * (0.5 + xwidth(1) * 1.5), ytext);  // dirty
     if (this.t > 0) {
-      var xt = x + scaleC * (0.5 + xwidth(1) * (1 + WH));
+      var xt = x + scaleC * (0.5 + xwidth(1) * (1));
       this.p.text("T", xt + scaleC * xwidth(this.p.ceil(this.t / 4)) * 0.5, ytext);  // tag
     }
     var xb = x + scaleC * (xwidth(1) * (1) + xwidth(this.t < 1 ? 0 : this.p.ceil(this.t / 4)));
