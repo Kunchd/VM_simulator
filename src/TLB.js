@@ -34,7 +34,7 @@ export class TLB {
 
     // initialize TLB with scrollBar
     this.vbarTLBEnable = scrollBarEnable;
-    this.vBarTLB = scrollBar;
+    this.vbarTLB = scrollBar;
     this.x = scrollBar.xpos - 10 - this.Cwidth;
   }
 
@@ -51,7 +51,7 @@ export class TLB {
 
     // enable scroll bar to change the TLB position
     if (this.vbarTLBEnable)
-      offset = -(this.TLBheight + 2 * this.TLBtop - this.p.height) * vbarTLB.getPos();
+      offset = -(this.TLBheight + 2 * this.TLBtop - this.p.height) * this.vbarTLB.getPos();
 
     // display name of each set
     for (var i = 0; i < this.S; i++) {

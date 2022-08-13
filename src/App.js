@@ -1,14 +1,27 @@
 import { Memory } from "./Memory.js"
 import { VScrollbar } from "./VScrollbar.js";
-import { TLB } from "./TLB.js";
-import { INIT, PARAMS_MEM, PARAMS_TLB, scrollSize, scaleM } from "./Constants.js";
+// import { TLB } from "./TLB.js";
+// import { INIT, PARAMS_MEM, PARAMS_TLB, scrollSize, scaleM } from "./Constants.js";
+
+export const hoverSize = 16;     // size of hover text
+export const scrollSize = 16;
+export const scaleC = 20;        // scale for sizing of cache
+export const scaleM = 20;        // scale for sizing of memory
+export const seedLen = 6;        // length of random seed string
+
+export const INIT = 0, PARAMS_MEM = 1, PARAMS_TLB = 2, PARAMS_ADDR = 3, READY = 4;
+export const ACCESS_ADDR = 5, ACCESS_TIO = 6, ACCESS_SET = 7, ACCESS_HIT = 8;
+export const ACCESS_MISS = 9, MISS_WB = 10, MISS_REPLACE = 11;
+export const ACCESS_WRITE = 12, ACCESS_UPDATE = 13, ACCESS_DATA = 14;
+
+export const MGNT_BIT_WIDTH = 5;
 
 
 let canvas, diagramCanvas;
 let inAddrWidth, inPgSize, inTlbSize, inTlbE, inPhysMemSize; // system param input
 let ptSize, vmSize; // sys param calculated values
 
-export let bg, colorC, colorM, colorH;
+let bg, colorC, colorM, colorH;
 
 // System parameters
 let m, PPNWidth, E, TLBSize, pgSize, physMemSize;
@@ -56,7 +69,7 @@ const displayTables = (p) => {
 
         // setup scroll bar
         vbarMem = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, scrollSize);
-        vbarTlb = new VScrollbar(p, 200 - scrollSize, 0, scrollSize, p.height, scrollSize);
+        // vbarTlb = new VScrollbar(p, 200 - scrollSize, 0, scrollSize, p.height, scrollSize);
 
         // setup working values
         TLBSize = p.int(inTlbSize.value());
@@ -119,16 +132,16 @@ const displayTables = (p) => {
                     // msgbox.value("Press Next (left) to advance explanation.\n");
                     state = PARAMS_MEM;
                     if (!histMove && explain) break;
-                case PARAMS_MEM:
-                    // initialize TLB
-                    tlb = new TLB(p, vbarTlb, vbarTlbEnable, TLBSize, E, m, PPNWidth);
-                    // reset cache scroll bar
-                    vbarTlbEnable = (tlb.TLBtop + tlb.TLBheight > p.height);
-                    vbarTlb.xpos = mem.x - scaleM * 2.6 - scrollSize - 10;
-                    vbarTlb.spos = vbarTlb.ypos;
-                    vbarTlb.newspos = vbarTlb.ypos;
-                    state = PARAMS_TLB;
-                    if (!histMove && explain) break;
+                // case PARAMS_MEM:
+                //     // initialize TLB
+                //     tlb = new TLB(p, vbarTlb, vbarTlbEnable, TLBSize, E, m, PPNWidth);
+                //     // reset cache scroll bar
+                //     vbarTlbEnable = (tlb.TLBtop + tlb.TLBheight > p.height);
+                //     vbarTlb.xpos = mem.x - scaleM * 2.6 - scrollSize - 10;
+                //     vbarTlb.spos = vbarTlb.ypos;
+                //     vbarTlb.newspos = vbarTlb.ypos;
+                //     state = PARAMS_TLB;
+                //     if (!histMove && explain) break;
             }
         }
     }
@@ -165,15 +178,15 @@ const displayDiagram = (p) => {
 let tableP5 = new p5(displayTables);
 let diagramP5 = new p5(displayDiagram);
 
-/* Helper function for determining width of boxes for cache and mem. */
-export function xwidth(w) { return 0.2 + 0.7 * w; }
+// /* Helper function for determining width of boxes for cache and mem. */
+// export function xwidth(w) { return 0.2 + 0.7 * w; }
 
 
-/* Helper function that prints d in base b, padded out to padding digits. */
-export function toBase(d, b, padding) {
-  var out = Number(d).toString(b);
-  padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-  while (out.length < padding)
-    out = "0" + out;
-  return out;
-}
+// /* Helper function that prints d in base b, padded out to padding digits. */
+// export function toBase(d, b, padding) {
+//   var out = Number(d).toString(b);
+//   padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+//   while (out.length < padding)
+//     out = "0" + out;
+//   return out;
+// }
