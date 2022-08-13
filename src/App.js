@@ -123,7 +123,7 @@ const displayTables = (p) => {
                     // initialize TLB
                     tlb = new TLB(p, vbarTlb, vbarTlbEnable, TLBSize, E, m, PPNWidth);
                     // reset cache scroll bar
-                    vbarTlbEnable = (tlb.Ctop + tlb.Cheight > p.height);
+                    vbarTlbEnable = (tlb.TLBtop + tlb.TLBheight > p.height);
                     vbarTlb.xpos = mem.x - scaleM * 2.6 - scrollSize - 10;
                     vbarTlb.spos = vbarTlb.ypos;
                     vbarTlb.newspos = vbarTlb.ypos;

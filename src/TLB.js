@@ -2,6 +2,7 @@ import { TLBSet } from "./TLBSet.js";
 import {scaleC} from "./Constants.js";
 import {colorC, colorM, colorH, bg} from "./App.js";
 import { xwidth } from "./App.js";
+import { MGNT_BIT_WIDTH } from "./Constants.js";
 
 /* Class to represent a TLB. */
 export class TLB {
@@ -24,14 +25,16 @@ export class TLB {
     this.PPNWidth = PPNWidth;       // PPN width
     this.t = addrWidth - PPNWidth - (this.p.log(this.S / E) / this.p.log(2));    // tag width
 
-    this.Ctop = scaleC;  // initial y of top of cache
-    this.Cheight = this.S * 1.5 * this.E * scaleC;  // height of cache when drawn out
-    this.sets = [];  // sets in the cache
+    this.TLBtop = scaleC;  // initial y of top of TLB
+    this.TLBheight = this.S * 1.5 * this.E * scaleC;  // height of TLB when drawn out
+    this.sets = [];  // sets in the TLB
     for (var i = 0; i < this.S; i++)
       this.sets[i] = new TLBSet(this.p, this.E, this.t, this.PPNWidth);
-    this.Cwidth = this.sets[0].width + 2;  // width of cache when drawn out
+    this.Cwidth = this.sets[0].width + 2;  // width of TLB when drawn out
 
+    // initialize TLB with scrollBar
     this.vbarTLBEnable = scrollBarEnable;
+    this.vBarTLB = scrollBar;
     this.x = scrollBar.xpos - 10 - this.Cwidth;
   }
 
@@ -45,33 +48,45 @@ export class TLB {
   display() {
     var x = this.x;
     var offset = 0;
-    if (this.vbarCacheEnable)
-      offset = -(this.Cheight + 2 * this.Ctop - height) * vbarCache.getPos();
+
+    // enable scroll bar to change the TLB position
+    if (this.vbarTLBEnable)
+      offset = -(this.TLBheight + 2 * this.TLBtop - this.p.height) * vbarTLB.getPos();
+
+    // display name of each set
     for (var i = 0; i < this.S; i++) {
       this.p.textSize(scaleC * 0.8);
       this.p.textAlign(this.p.RIGHT);
       this.p.noStroke();
       this.p.fill(colorC);
-      this.p.text("Set " + i, x - 2, this.Ctop + offset + 1.5 * this.E * scaleC * i + scaleC * (0.75 * this.E + 0.35));
-      this.sets[i].display(x, this.Ctop + offset + 1.5 * this.E * scaleC * i);
+      this.p.text("Set " + i, x - 2, this.TLBtop + offset + 1.5 * this.E * scaleC * i + scaleC * (0.75 * this.E + 0.35));
+      this.sets[i].display(x, this.TLBtop + offset + 1.5 * this.E * scaleC * i);
     }
+
     this.p.noStroke();
     this.p.fill(bg);
-    this.p.rect(x, 0, this.Cwidth, this.Ctop);  // background for header
-    this.p.rect(x, 0, -scaleC * 3.0, this.Ctop);  // cover set numbers
+    this.p.rect(x, 0, this.Cwidth, this.TLBtop);  // background for header
+    this.p.rect(x, 0, -scaleC * 3.0, this.TLBtop);  // cover set numbers
     this.p.fill(colorC);
     this.p.stroke(colorC);
     this.p.textSize(scaleC);
     this.p.textAlign(this.p.CENTER);
+
+    // label the management bits within each entry
     var ytext = 0.85 * scaleC;
     this.p.text("V", x + scaleC * (0.5 + xwidth(1) * 0.5), ytext);  // valid
     this.p.text("D", x + scaleC * (0.5 + xwidth(1) * 1.5), ytext);  // dirty
-    if (this.t > 0) {
-      var xt = x + scaleC * (0.5 + xwidth(1) * (1));
-      this.p.text("T", xt + scaleC * xwidth(this.p.ceil(this.t / 4)) * 0.5, ytext);  // tag
-    }
-    var xb = x + scaleC * (xwidth(1) * (1) + xwidth(this.t < 1 ? 0 : this.p.ceil(this.t / 4)));
+    this.p.text("R", x + scaleC * (0.5 + xwidth(1) * 2.5), ytext);  // read
+    this.p.text("W", x + scaleC * (0.5 + xwidth(1) * 3.5), ytext);  // write
+    this.p.text("E", x + scaleC * (0.5 + xwidth(1) * 4.5), ytext);  // exec
+
+    // label the tag
+    var xt = x + scaleC * (0.5 + xwidth(1) * MGNT_BIT_WIDTH);
+    this.p.text("T", xt + scaleC * xwidth(this.p.ceil(this.t / 4)) * 0.5, ytext);  // tag
+
+    // label PPN
+    var xPPN = x + scaleC * (xwidth(1) * MGNT_BIT_WIDTH + xwidth(this.p.ceil(this.t / 4)));
     this.p.textAlign(this.p.LEFT);
-    this.p.text("PPN", xb + scaleC, ytext);  // data
+    this.p.text("PPN", xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * 0.5, ytext);  // data
   }
 }

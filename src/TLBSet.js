@@ -100,9 +100,12 @@ export class TLBSet {
   clearHighlight() { for (var i = 0; i < E; i++) this.lines[i].clearHighlight(); }
 
   display(x, y) {
+    // draw rectangle set around different entries
     this.p.stroke(colorC);  // orange set outline
     (this.active ? this.p.fill(255, 0, 0, 50) : this.p.noFill());
     this.p.rect(x, y, this.width, 1.5 * scaleC * this.E);
+
+    // draw each entry within the set
     for (var i = 0; i < this.E; i++) {
       this.lines[i].display(x + 0.5 * scaleC, y + scaleC * (1 + 6 * i) / 4);
       // if (replace != 0) {
