@@ -17,7 +17,7 @@ export class Memory {
 	 * @param {*} m the address width
 	 * @param {*} scrollBar the scroll bar associated with this table
 	 */
-	constructor(p, m, scrollBar, scrollBarEnable) {
+	constructor(p, m, scrollBar) {
 		bg = p.color(230);
 		colorC = p.color(226, 102, 26);  // orange
 		colorM = p.color(51, 153, 126);  // turquoise
@@ -30,9 +30,11 @@ export class Memory {
 		this.data = [];  // data stored in memory
 		this.light = [];  // indicate highlighting for moved/changed data
 		this.vbarMem = scrollBar;   // the scroll bar created for the memory
-		this.vbarMemEnable = scrollBarEnable;  // indicate whether current memory is enabled
 		this.p = p;
 		this.m = m;
+
+		this.vbarMemEnable = (this.Mtop + this.Mheight > this.p.height);
+
 		for (var i = 0; i < p.pow(2, this.m); i++) {
 			this.data[i] = p.floor(Math.random() * 256);  // randomize the initial memory
 			this.light[i] = 0;                 // nothing starts highlighted
@@ -50,7 +52,6 @@ export class Memory {
 	display() {
 		var x = this.x;
 		var offset = 0;
-		alert(this.vbarMemEnable);
 		if (this.vbarMemEnable) {
 			offset = -(this.Mheight + 2 * this.Mtop - this.p.height) * this.vbarMem.getPos();
 			console.log(offset);

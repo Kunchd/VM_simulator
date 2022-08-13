@@ -1,6 +1,6 @@
 import { Memory } from "./Memory.js"
 import { VScrollbar } from "./VScrollbar.js";
-// import { TLB } from "./TLB.js";
+import { TLB } from "./TLB.js";
 
 const hoverSize = 16;     // size of hover text
 const scrollSize = 16;
@@ -65,7 +65,7 @@ const displayTables = (p) => {
 
         // setup scroll bar
         vbarMem = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, scrollSize);
-        // vbarTlb = new VScrollbar(p, 200 - scrollSize, 0, scrollSize, p.height, scrollSize);
+        vbarTlb = new VScrollbar(p, 200 - scrollSize, 0, scrollSize, p.height, scrollSize);
 
         // setup working values
         TLBSize = p.int(inTlbSize.value());
@@ -85,9 +85,9 @@ const displayTables = (p) => {
             dispMsg(5, 25);
         }
         if (state >= PARAMS_MEM) { mem.display(); }
-        // if (state >= PARAMS_TLB) { tlb.display(); }
+        if (state >= PARAMS_TLB) { tlb.display(); }
         if (vbarMemEnable) { vbarMem.update(); vbarMem.display(); }
-        // if (vbarTlbEnable) { vbarTlb.update(); vbarTlb.display(); }
+        if (vbarTlbEnable) { vbarTlb.update(); vbarTlb.display(); }
     }
 
 
@@ -118,7 +118,7 @@ const displayTables = (p) => {
         if (checkParams) {
             switch (state) {
                 case INIT:
-                    mem = new Memory(p, m, vbarMem, vbarMemEnable);
+                    mem = new Memory(p, m, vbarMem);
 
                     // reset memory scroll bar
                     vbarMemEnable = (mem.Mtop + mem.Mheight > p.height);
@@ -129,16 +129,15 @@ const displayTables = (p) => {
                     // msgbox.value("Press Next (left) to advance explanation.\n");
                     state = PARAMS_MEM;
                     if (!histMove && explain) break;
-                // case PARAMS_MEM:
-                //     // initialize TLB
-                //     tlb = new TLB(p, vbarTlb, vbarTlbEnable, TLBSize, E, m, PPNWidth);
-                //     // reset cache scroll bar
-                //     vbarTlbEnable = (tlb.TLBtop + tlb.TLBheight > p.height);
-                //     vbarTlb.xpos = mem.x - scaleM * 2.6 - scrollSize - 10;
-                //     vbarTlb.spos = vbarTlb.ypos;
-                //     vbarTlb.newspos = vbarTlb.ypos;
-                //     state = PARAMS_TLB;
-                //     if (!histMove && explain) break;
+                case PARAMS_MEM:
+                    // initialize TLB
+                    tlb = new TLB(p, vbarTlb, TLBSize, E, m, PPNWidth);
+                    // reset cache scroll bar
+                    vbarTlbEnable = (tlb.TLBtop + tlb.TLBheight > p.height);
+                    vbarTlb.spos = vbarTlb.ypos;
+                    vbarTlb.newspos = vbarTlb.ypos;
+                    state = PARAMS_TLB;
+                    if (!histMove && explain) break;
             }
         }
     }
