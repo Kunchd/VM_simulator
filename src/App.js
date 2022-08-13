@@ -1,26 +1,15 @@
 import { Memory } from "./Memory.js"
 import { VScrollbar } from "./VScrollbar.js";
 import { TLB } from "./TLB.js";
-
-const hoverSize = 16;     // size of hover text
-const scrollSize = 16;
-const scaleC = 20;        // scale for sizing of cache
-const scaleM = 20;        // scale for sizing of memory
-const seedLen = 6;        // length of random seed string
-
-const INIT = 0, PARAMS_MEM = 1, PARAMS_TLB = 2, PARAMS_ADDR = 3, READY = 4;
-const ACCESS_ADDR = 5, ACCESS_TIO = 6, ACCESS_SET = 7, ACCESS_HIT = 8;
-const ACCESS_MISS = 9, MISS_WB = 10, MISS_REPLACE = 11;
-const ACCESS_WRITE = 12, ACCESS_UPDATE = 13, ACCESS_DATA = 14;
-
-const MGNT_BIT_WIDTH = 5;
+import { scrollSize, INIT, PARAMS_MEM, PARAMS_TLB } from "./Constants.js";
 
 
 let canvas, diagramCanvas;
 let inAddrWidth, inPgSize, inTlbSize, inTlbE, inPhysMemSize; // system param input
 let ptSize, vmSize; // sys param calculated values
 
-let bg;
+// colors
+export let bg, colorC, colorH, colorM;
 
 // System parameters
 let m, PPNWidth, E, TLBSize, pgSize, physMemSize;
@@ -47,7 +36,12 @@ let histMove = false;
 
 const displayTables = (p) => {
     p.setup = function () {
+        // initialize colors
         bg = p.color(230);
+        colorC = p.color(226, 102, 26);  // orange
+        colorM = p.color(51, 153, 126);  // turquoise
+        colorH = p.color(255, 0, 0);     // red
+        
         canvas = p.createCanvas(960, 400).parent("p5Canvas");
 
         // setup sys param input

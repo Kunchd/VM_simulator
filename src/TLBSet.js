@@ -1,7 +1,7 @@
 import { TLBSetEntry } from './TLBSetEntry.js';
 import { scaleC } from './Constants.js';
 import { colorC, colorM, colorH } from "./App.js";
-import { xwidth } from './App.js';
+import { xwidth } from './HelperFunctions.js';
 import { MGNT_BIT_WIDTH } from './Constants.js';
 
 /* Class to represent a TLB set (E cache lines).

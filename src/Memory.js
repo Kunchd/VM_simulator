@@ -1,8 +1,6 @@
-const scrollSize = 16;
-const hoverSize = 16;     // size of hover text
-const scaleM = 20;        // scale for sizing of memory
-
-let bg, colorC, colorM, colorH;
+import { scrollSize, hoverSize, scaleM } from "./Constants.js";
+import {bg, colorC, colorH, colorM} from "./App.js";
+import { xwidth, toBase } from "./HelperFunctions.js";
 
 /**
  * class to represent physical memory
@@ -18,11 +16,6 @@ export class Memory {
 	 * @param {*} scrollBar the scroll bar associated with this table
 	 */
 	constructor(p, m, scrollBar) {
-		bg = p.color(230);
-		colorC = p.color(226, 102, 26);  // orange
-		colorM = p.color(51, 153, 126);  // turquoise
-		colorH = p.color(255, 0, 0);     // red
-
 		this.Mtop = scaleM;  // initial y of top of memory
 		this.Mheight = 1.5 * p.pow(2, m - 3) * scaleM;  // height of memory when drawn out
 		this.Mwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
@@ -105,17 +98,4 @@ export class Memory {
 		this.p.textAlign(this.p.CENTER);
 		this.p.text("Physical Memory", x + this.Mwidth / 2, 0.85 * scaleM);  // mem label
 	}
-}
-
-/* Helper function for determining width of boxes for cache and mem. */
-function xwidth(w) { return 0.2 + 0.7 * w; }
-
-
-/* Helper function that prints d in base b, padded out to padding digits. */
-function toBase(d, b, padding) {
-	var out = Number(d).toString(b);
-	padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-	while (out.length < padding)
-		out = "0" + out;
-	return out;
 }
