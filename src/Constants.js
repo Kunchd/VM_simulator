@@ -9,4 +9,4 @@ export const ACCESS_ADDR = 5, ACCESS_TIO = 6, ACCESS_SET = 7, ACCESS_HIT = 8;
 export const ACCESS_MISS = 9, MISS_WB = 10, MISS_REPLACE = 11;
 export const ACCESS_WRITE = 12, ACCESS_UPDATE = 13, ACCESS_DATA = 14;
 
-//  not really constants in cache sim but can be changed
+export const MGNT_BIT_WIDTH = 5;

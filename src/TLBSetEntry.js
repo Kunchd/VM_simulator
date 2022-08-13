@@ -3,7 +3,7 @@ import { colorC, colorM, colorH } from "./App.js";
 import { xwidth, toBase } from "./App.js";
 
 // Management bit width
-const MGNT_BIT_WIDTH = 5;
+import { MGNT_BIT_WIDTH } from "./Constants.js";
 
 // Note: WH and WM policies settings are removed 
 
