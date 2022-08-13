@@ -1,27 +1,26 @@
 import { Memory } from "./Memory.js"
 import { VScrollbar } from "./VScrollbar.js";
 // import { TLB } from "./TLB.js";
-// import { INIT, PARAMS_MEM, PARAMS_TLB, scrollSize, scaleM } from "./Constants.js";
 
-export const hoverSize = 16;     // size of hover text
-export const scrollSize = 16;
-export const scaleC = 20;        // scale for sizing of cache
-export const scaleM = 20;        // scale for sizing of memory
-export const seedLen = 6;        // length of random seed string
+const hoverSize = 16;     // size of hover text
+const scrollSize = 16;
+const scaleC = 20;        // scale for sizing of cache
+const scaleM = 20;        // scale for sizing of memory
+const seedLen = 6;        // length of random seed string
 
-export const INIT = 0, PARAMS_MEM = 1, PARAMS_TLB = 2, PARAMS_ADDR = 3, READY = 4;
-export const ACCESS_ADDR = 5, ACCESS_TIO = 6, ACCESS_SET = 7, ACCESS_HIT = 8;
-export const ACCESS_MISS = 9, MISS_WB = 10, MISS_REPLACE = 11;
-export const ACCESS_WRITE = 12, ACCESS_UPDATE = 13, ACCESS_DATA = 14;
+const INIT = 0, PARAMS_MEM = 1, PARAMS_TLB = 2, PARAMS_ADDR = 3, READY = 4;
+const ACCESS_ADDR = 5, ACCESS_TIO = 6, ACCESS_SET = 7, ACCESS_HIT = 8;
+const ACCESS_MISS = 9, MISS_WB = 10, MISS_REPLACE = 11;
+const ACCESS_WRITE = 12, ACCESS_UPDATE = 13, ACCESS_DATA = 14;
 
-export const MGNT_BIT_WIDTH = 5;
+const MGNT_BIT_WIDTH = 5;
 
 
 let canvas, diagramCanvas;
 let inAddrWidth, inPgSize, inTlbSize, inTlbE, inPhysMemSize; // system param input
 let ptSize, vmSize; // sys param calculated values
 
-let bg, colorC, colorM, colorH;
+let bg;
 
 // System parameters
 let m, PPNWidth, E, TLBSize, pgSize, physMemSize;
@@ -49,9 +48,6 @@ let histMove = false;
 const displayTables = (p) => {
     p.setup = function () {
         bg = p.color(230);
-        colorC = p.color(226, 102, 26);  // orange
-        colorM = p.color(51, 153, 126);  // turquoise
-        colorH = p.color(255, 0, 0);     // red
         canvas = p.createCanvas(960, 400).parent("p5Canvas");
 
         // setup sys param input
@@ -89,9 +85,9 @@ const displayTables = (p) => {
             dispMsg(5, 25);
         }
         if (state >= PARAMS_MEM) { mem.display(); }
-        if (state >= PARAMS_TLB) { tlb.display(); }
+        // if (state >= PARAMS_TLB) { tlb.display(); }
         if (vbarMemEnable) { vbarMem.update(); vbarMem.display(); }
-        if (vbarTlbEnable) { vbarTlb.update(); vbarTlb.display(); }
+        // if (vbarTlbEnable) { vbarTlb.update(); vbarTlb.display(); }
     }
 
 
@@ -128,6 +124,7 @@ const displayTables = (p) => {
                     vbarMemEnable = (mem.Mtop + mem.Mheight > p.height);
                     vbarMem.spos = vbarMem.ypos;
                     vbarMem.newspos = vbarMem.ypos;
+
                     paramButton.attribute('value', 'Next');
                     // msgbox.value("Press Next (left) to advance explanation.\n");
                     state = PARAMS_MEM;
@@ -177,16 +174,3 @@ const displayDiagram = (p) => {
 
 let tableP5 = new p5(displayTables);
 let diagramP5 = new p5(displayDiagram);
-
-// /* Helper function for determining width of boxes for cache and mem. */
-// export function xwidth(w) { return 0.2 + 0.7 * w; }
-
-
-// /* Helper function that prints d in base b, padded out to padding digits. */
-// export function toBase(d, b, padding) {
-//   var out = Number(d).toString(b);
-//   padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-//   while (out.length < padding)
-//     out = "0" + out;
-//   return out;
-// }
