@@ -1,6 +1,6 @@
-import { scaleC, MGNT_BIT_WIDTH } from "./Constants.js";
-import {xwidth, toBase} from "./HelperFunctions.js";
-import {bg, colorC} from "./App.js";
+import { scaleC, MGNT_BIT_WIDTH, TLBDisplayHeight } from "./Constants.js";
+import { xwidth, bounded } from "./HelperFunctions.js";
+import { bg, colorC } from "./App.js";
 import { TLBSet } from "./TLBSet.js";
 
 /* Class to represent a TLB. */
@@ -25,7 +25,7 @@ export class TLB {
 		this.t = addrWidth - PPNWidth - (this.p.log(this.S / E) / this.p.log(2));    // tag width
 
 		this.TLBtop = scaleC;  // initial y of top of TLB
-		this.TLBheight = this.S * 1.5 * this.E * scaleC;  // height of TLB when drawn out
+		this.TLBheight = this.S * 1.5 * this.E * scaleC;  // full height of TLB
 		this.sets = [];  // sets in the TLB
 		for (var i = 0; i < this.S; i++)
 			this.sets[i] = new TLBSet(this.p, this.E, this.t, this.PPNWidth);
@@ -50,19 +50,20 @@ export class TLB {
 
 		// enable scroll bar to change the TLB position
 		if (this.vbarTLBEnable) {
-			
 			offset = -(this.TLBheight + 2 * this.TLBtop - this.p.height) * this.vbarTLB.getPos();
-			console.log(offset);
 		}
 
 		// display name of each set
 		for (var i = 0; i < this.S; i++) {
-			this.p.textSize(scaleC * 0.8);
-			this.p.textAlign(this.p.RIGHT);
-			this.p.noStroke();
-			this.p.fill(colorC);
-			this.p.text("Set " + i, x - 2, this.TLBtop + offset + 1.5 * this.E * scaleC * i + scaleC * (0.75 * this.E + 0.35));
-			this.sets[i].display(x, this.TLBtop + offset + 1.5 * this.E * scaleC * i);
+			let curY = this.TLBtop + offset + 1.5 * this.E * scaleC * i;
+			if (bounded(curY, 0, TLBDisplayHeight)) {
+				this.p.textSize(scaleC * 0.8);
+				this.p.textAlign(this.p.RIGHT);
+				this.p.noStroke();
+				this.p.fill(colorC);
+				this.p.text("Set " + i, x - 2, this.TLBtop + offset + 1.5 * this.E * scaleC * i + scaleC * (0.75 * this.E + 0.35));
+				this.sets[i].display(x, curY);
+			}
 		}
 
 		this.p.noStroke();

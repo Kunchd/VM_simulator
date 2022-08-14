@@ -10,3 +10,15 @@ export function toBase(d, b, padding) {
 		out = "0" + out;
 	return out;
 }
+
+/**
+ * helper function to determin whether the current value is within the bound of the 
+ * given bounds, inclusive
+ * @param {*} value the current value to check the bounds for
+ * @param {*} minHeight the minimum value the given value can occupy
+ * @param {*} maxHeight the maximum value the given value can occupy
+ * @returns a boolean indicating whether the given value is within bound
+ */
+export let bounded = (value, minHeight, maxHeight) => {
+	return minHeight <= value && value <= maxHeight;
+}

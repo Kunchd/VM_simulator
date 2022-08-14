@@ -1,6 +1,15 @@
 /* Vertical Scroll Bar class.
  * based on:  https://processing.org/examples/scrollbar.html */
 export class VScrollbar {
+    /**
+     * creates a new instance of scroll bar
+     * @param {*} p the p5 obect attached to the current canvas
+     * @param {*} xp x position of bar
+     * @param {*} yp y position of bar
+     * @param {*} sw width of bar
+     * @param {*} sh height of bar
+     * @param {*} l loose/heavyness of bar
+     */
     constructor(p, xp, yp, sw, sh, l) {
         // width and height of bar
         this.swidth = sw;
