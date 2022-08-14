@@ -9,7 +9,6 @@ export class TLB {
 	 * Construct a new isntance of TLB
 	 * @param {*} p the p5 object assigned to current canvas
 	 * @param {*} scrollBar the scroll bar to attatch the TLB to
-	 * @param {*} scrollBarEnable determine whether the scroll bar is enabled
 	 * @param {*} TLBSize the size in bytes of the TLB
 	 * @param {*} E the assciativity of the TLB
 	 * @param {*} addrWidth the bit width of the virtual address
@@ -32,7 +31,7 @@ export class TLB {
 		this.Cwidth = this.sets[0].width + 2;  // width of TLB when drawn out
 
 		// initialize TLB with scrollBar
-		this.vbarTLBEnable = (this.TLBtop + this.TLBheight > (this.p.height / 2));
+		this.vbarTLBEnable = (this.TLBtop + this.TLBheight > TLBDisplayHeight);
 		this.vbarTLB = scrollBar;
 		this.x = scrollBar.xpos - 10 - this.Cwidth;
 	}
@@ -50,20 +49,18 @@ export class TLB {
 
 		// enable scroll bar to change the TLB position
 		if (this.vbarTLBEnable) {
-			offset = -(this.TLBheight + 2 * this.TLBtop - this.p.height) * this.vbarTLB.getPos();
+			offset = -(this.TLBheight - 20) * this.vbarTLB.getPos();
 		}
 
 		// display name of each set
 		for (var i = 0; i < this.S; i++) {
 			let curY = this.TLBtop + offset + 1.5 * this.E * scaleC * i;
-			if (bounded(curY, 0, TLBDisplayHeight)) {
-				this.p.textSize(scaleC * 0.8);
-				this.p.textAlign(this.p.RIGHT);
-				this.p.noStroke();
-				this.p.fill(colorC);
-				this.p.text("Set " + i, x - 2, this.TLBtop + offset + 1.5 * this.E * scaleC * i + scaleC * (0.75 * this.E + 0.35));
-				this.sets[i].display(x, curY);
-			}
+			this.p.textSize(scaleC * 0.8);
+			this.p.textAlign(this.p.RIGHT);
+			this.p.noStroke();
+			this.p.fill(colorC);
+			this.p.text("Set " + i, x - 2, this.TLBtop + offset + 1.5 * this.E * scaleC * i + scaleC * (0.75 * this.E + 0.35));
+			this.sets[i].display(x, curY);
 		}
 
 		this.p.noStroke();

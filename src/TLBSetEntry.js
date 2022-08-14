@@ -1,5 +1,5 @@
 import { scaleC } from "./Constants.js";
-import { colorC, colorM, colorH } from "./App.js";
+import { colorC, colorH } from "./App.js";
 import { xwidth, toBase } from "./HelperFunctions.js";
 
 // Management bit width

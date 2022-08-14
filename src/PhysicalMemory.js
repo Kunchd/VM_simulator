@@ -47,7 +47,6 @@ export class PhysicalMemory {
 		var offset = 0;
 		if (this.vbarMemEnable) {
 			offset = -(this.Mheight + 2 * this.Mtop - this.p.height) * this.vbarMem.getPos();
-			console.log(offset);
 		}
 
 		for (var i = 0; i < this.p.pow(2, this.m - 3); i++) {
