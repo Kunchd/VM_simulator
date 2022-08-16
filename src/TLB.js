@@ -55,12 +55,14 @@ export class TLB {
 		// display name of each set
 		for (var i = 0; i < this.S; i++) {
 			let curY = this.TLBtop + offset + 1.5 * this.E * scaleC * i;
-			this.p.textSize(scaleC * 0.8);
-			this.p.textAlign(this.p.RIGHT);
-			this.p.noStroke();
-			this.p.fill(colorC);
-			this.p.text("Set " + i, x - 2, this.TLBtop + offset + 1.5 * this.E * scaleC * i + scaleC * (0.75 * this.E + 0.35));
-			this.sets[i].display(x, curY);
+			if(bounded(curY, this.TLBtop, this.TLBtop + TLBDisplayHeight)) {
+				this.p.textSize(scaleC * 0.8);
+				this.p.textAlign(this.p.RIGHT);
+				this.p.noStroke();
+				this.p.fill(colorC);
+				this.p.text("Set " + i, x - 2, this.TLBtop + offset + 1.5 * this.E * scaleC * i + scaleC * (0.75 * this.E + 0.35));
+				this.sets[i].display(x, curY);
+			}
 		}
 
 		this.p.noStroke();

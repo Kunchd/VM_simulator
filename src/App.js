@@ -87,11 +87,11 @@ const displayTables = (p) => {
         }
         if (state >= PARAMS_PHYS_MEM) { physMem.display(); }
         if (state >= PARAMS_VIR_MEM) { virMem.display(); }
-        // if (state >= PARAMS_TLB) { tlb.display(); }
+        if (state >= PARAMS_TLB) { tlb.display(); }
         if (state >= PARAMS_PT) { pt.display(); }
         if (vbarPhysMemEnable) { vbarPhysMem.update(); vbarPhysMem.display(); }
         if (vbarVirMemEnable) { vbarVirMem.update(); vbarVirMem.display(); }
-        // if (vbarTlbEnable) { vbarTlb.update(); vbarTlb.display(); }
+        if (vbarTlbEnable) { vbarTlb.update(); vbarTlb.display(); }
         if (vbarPTEnable) { vbarPT.update(); vbarPT.display(); }
     }
 
