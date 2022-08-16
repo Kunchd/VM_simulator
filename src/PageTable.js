@@ -53,7 +53,10 @@ export class PT {
 		// display name of each set
 		for (var i = 0; i < this.S; i++) {
 			let curY = this.PTtop + offset + 1.5 * scaleC * i + 20;
-			if (bounded(curY, this.PTtop, this.PTtop + PTDisplayHeight)) {
+			if(i === 0) {
+				console.log(this.PTtop + " | " + curY + ", " + offset + " | " + this.PTtop + PTDisplayHeight);
+			}
+			if (bounded(curY, this.PTtop, this.PTtop + PTDisplayHeight, 10)) {
 				this.p.textSize(scaleC * 0.8);
 				this.p.textAlign(this.p.RIGHT);
 				this.p.noStroke();
@@ -67,7 +70,7 @@ export class PT {
 		this.p.noStroke();
 		this.p.fill(bg);
 		// box shifted to the left by 60 to cover VPN
-		this.p.rect(x - 60, this.PTtop, this.PTwidth + 60, 20);  // background for header
+		this.p.rect(x - 60, this.PTtop - 20, this.PTwidth + 60, 40);  // background for header
 		this.p.fill(colorC);
 		this.p.stroke(colorC);
 		this.p.textSize(scaleC);

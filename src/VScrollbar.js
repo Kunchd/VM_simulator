@@ -82,6 +82,8 @@ export class VScrollbar {
         this.p.line(this.xpos + 0.2 * this.swidth, this.spos + 0.75 * this.swidth, this.xpos + 0.8 * this.swidth, this.spos + 0.75 * this.swidth);
     }
 
-    // return spos as percentage of bar height
+    /**
+     * @returns current bar location as percentage of bar height
+     */
     getPos() { return (this.spos - this.sposMin) / (this.sposMax - this.sposMin); }
 }

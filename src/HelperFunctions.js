@@ -17,8 +17,10 @@ export function toBase(d, b, padding) {
  * @param {*} value the current value to check the bounds for
  * @param {*} minHeight the minimum value the given value can occupy
  * @param {*} maxHeight the maximum value the given value can occupy
+ * @param {*} flex the flexibility of the bounds to accept values slightly greater than it.
+ * 				   defaults to 0
  * @returns a boolean indicating whether the given value is within bound
  */
-export let bounded = (value, minHeight, maxHeight) => {
-	return minHeight <= value && value <= maxHeight;
+export let bounded = (value, minHeight, maxHeight, flex = 0) => {
+	return minHeight - flex <= value && value <= maxHeight + flex;
 }

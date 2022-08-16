@@ -49,18 +49,18 @@ export class TLB {
 
 		// enable scroll bar to change the TLB position
 		if (this.vbarTLBEnable) {
-			offset = -(this.TLBheight - 20) * this.vbarTLB.getPos();
+			offset = -(this.TLBheight - (TLBDisplayHeight - 40)) * this.vbarTLB.getPos();
 		}
 
 		// display name of each set
 		for (var i = 0; i < this.S; i++) {
 			let curY = this.TLBtop + offset + 1.5 * this.E * scaleC * i;
-			if(bounded(curY, this.TLBtop, this.TLBtop + TLBDisplayHeight)) {
+			if(bounded(curY, this.TLBtop, this.TLBtop + TLBDisplayHeight - this.sets[0].height - 20, 10)) {
 				this.p.textSize(scaleC * 0.8);
 				this.p.textAlign(this.p.RIGHT);
 				this.p.noStroke();
 				this.p.fill(colorC);
-				this.p.text("Set " + i, x - 2, this.TLBtop + offset + 1.5 * this.E * scaleC * i + scaleC * (0.75 * this.E + 0.35));
+				this.p.text("Set " + i, x - 2, curY + scaleC * (0.75 * this.E + 0.35));
 				this.sets[i].display(x, curY);
 			}
 		}
