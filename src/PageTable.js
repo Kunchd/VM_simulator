@@ -53,9 +53,9 @@ export class PT {
 		// display name of each set
 		for (var i = 0; i < this.S; i++) {
 			let curY = this.PTtop + offset + 1.5 * scaleC * i + 20;
-			if(i === 0) {
-				console.log(this.PTtop + " | " + curY + ", " + offset + " | " + this.PTtop + PTDisplayHeight);
-			}
+			// if(i === 0) {
+			// 	console.log(this.PTtop + " | " + curY + ", " + offset + " | " + this.PTtop + PTDisplayHeight);
+			// }
 			if (bounded(curY, this.PTtop, this.PTtop + PTDisplayHeight, 10)) {
 				this.p.textSize(scaleC * 0.8);
 				this.p.textAlign(this.p.RIGHT);
