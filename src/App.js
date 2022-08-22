@@ -41,7 +41,7 @@ let histMove = false;
 
 const displayTables = (p) => {
     p.setup = function () {
-        // initialize colors
+        // initialize colors        
         bg = p.color(230);
         colorC = p.color(226, 102, 26);  // orange
         colorM = p.color(51, 153, 126);  // turquoise
