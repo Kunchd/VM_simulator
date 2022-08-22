@@ -123,7 +123,7 @@ const displayTables = (p) => {
         if (checkParams) {
             switch (state) {
                 case INIT:
-                    physMem = new PhysicalMemory(p, m, vbarPhysMem);
+                    physMem = new PhysicalMemory(p, physMemSize, pgSize, vbarPhysMem);
 
                     // reset memory scroll bar
                     vbarPhysMemEnable = (physMem.Mtop + physMem.Mheight > p.height);

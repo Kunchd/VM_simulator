@@ -20,7 +20,7 @@ export class PhysicalMemory {
 	 */
 	constructor(p, PMSize, PgSize, scrollBar) {
 		this.Mtop = scaleM;  // initial y of top of memory
-		this.Mheight = 1.5 * p.pow(2, m - 3) * scaleM;  // height of memory when drawn out
+		this.Mheight = 1.5 * (PMSize / PgSize) * scaleM;  // height of memory when drawn out
 		this.Mwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
 		this.x = p.width - this.Mwidth - scrollSize - 10; // x coordinate of this table
 		this.pages = [];	// contained pages

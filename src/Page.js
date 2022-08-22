@@ -1,5 +1,6 @@
-import { scaleM } from "./Constants";
-import { colorC, colorH, colorM } from "./App";
+import { scaleM } from "./Constants.js";
+import { colorC, colorH, colorM } from "./App.js";
+import { xwidth } from "./HelperFunctions.js";
 
 
 /**
