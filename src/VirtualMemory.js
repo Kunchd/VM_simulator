@@ -29,8 +29,8 @@ export class VirtualMemory {
 		this.vbarMemEnable = (this.Mtop + this.Mheight > this.p.height);
 
 		for (var i = 0; i < p.pow(2, this.m); i++) {
-			this.data[i] = p.floor(Math.random() * 256);  // randomize the initial memory
-			this.light[i] = 0;                 // nothing starts highlighted
+			this.data[i] = 0;	// initialize memory to empty for now
+			this.light[i] = 0;	// nothing starts highlighted
 		}
 	}
 
@@ -51,9 +51,8 @@ export class VirtualMemory {
 
 		for (var i = 0; i < this.p.pow(2, this.m - 3); i++) {
 			var y = offset + scaleM * (1 + 6 * i) / 4 + this.Mtop;
+			// only render the portion visible on screen
 			if (bounded(y, this.Mtop, this.Mtop + VMDisplayHeight, 20)) {
-
-
 				var ytext = y + 0.85 * scaleM;
 				// label word/row
 				this.p.textSize(scaleM * 0.8);
@@ -65,30 +64,40 @@ export class VirtualMemory {
 				this.p.textSize(scaleM);
 				// memory boxes
 				this.p.stroke(0);
-				for (var j = 0; j < 8; j++) {
-					switch (this.light[8 * i + j]) {
-						case 0: this.p.noFill(); break;
-						case 1: this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100); break;
-						case 2:
-						case 3: this.p.fill(this.p.red(colorM), this.p.green(colorM), this.p.blue(colorM), 100); break;
-					}
-					this.p.rect(x + scaleM * xwidth(2) * j, y, scaleM * xwidth(2), scaleM);
+				// for (var j = 0; j < 8; j++) {
+				// 	switch (this.light[8 * i + j]) {
+				// 		case 0: this.p.noFill(); break;
+				// 		case 1: this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100); break;
+				// 		case 2:
+				// 		case 3: this.p.fill(this.p.red(colorM), this.p.green(colorM), this.p.blue(colorM), 100); break;
+				// 	}
+				// 	this.p.rect(x + scaleM * xwidth(2) * j, y, scaleM * xwidth(2), scaleM);
+				// }
+				if(this.light[i]) {
+					this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC));
+				} else {
+					this.p.noFill();
 				}
+				this.p.rect(x, y, this.Mwidth, scaleM);
+
 				// memory text
 				this.p.fill(0);
 				this.p.textAlign(this.p.CENTER);
-				for (var j = 0; j < 8; j++) {
-					this.p.fill(this.light[8 * i + j] == 3 ? colorH : 0);
-					this.p.text(toBase(this.data[8 * i + j], 16, 2), x + scaleM * xwidth(2) * (j + 0.5), ytext);
-				}
-				// hover text
-				if (this.p.mouseY > y && this.p.mouseY < y + scaleM && this.p.mouseX > x && this.p.mouseX < x + scaleM * xwidth(2) * 8) {
-					var idx = this.p.int((this.p.mouseX - x) / xwidth(2) / scaleM);
-					this.p.textSize(hoverSize);
-					this.p.fill(colorH);
-					this.p.noStroke();
-					this.p.text("0x" + (8 * i + idx).toString(16), this.p.mouseX, this.p.mouseY);
-				}
+				// for (var j = 0; j < 8; j++) {
+				// 	this.p.fill(this.light[8 * i + j] == 3 ? colorH : 0);
+				// 	this.p.text(toBase(this.data[8 * i + j], 16, 2), x + scaleM * xwidth(2) * (j + 0.5), ytext);
+				// }
+				this.p.fill(this.light[i] ? colorH : 0);
+				this.p.text(this.data[i] ? "Allocated" : "Unallocated", x + this.Mwidth / 2, ytext);
+
+				// // hover text
+				// if (this.p.mouseY > y && this.p.mouseY < y + scaleM && this.p.mouseX > x && this.p.mouseX < x + scaleM * xwidth(2) * 8) {
+				// 	var idx = this.p.int((this.p.mouseX - x) / xwidth(2) / scaleM);
+				// 	this.p.textSize(hoverSize);
+				// 	this.p.fill(colorH);
+				// 	this.p.noStroke();
+				// 	this.p.text("0x" + (8 * i + idx).toString(16), this.p.mouseX, this.p.mouseY);
+				// }
 			}
 		}
 		this.p.noStroke();
