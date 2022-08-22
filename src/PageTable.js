@@ -1,5 +1,5 @@
-import { scaleC, MGNT_BIT_WIDTH } from "./Constants.js";
-import { xwidth } from "./HelperFunctions.js";
+import { scaleC, MGNT_BIT_WIDTH, PTDisplayHeight } from "./Constants.js";
+import { xwidth, bounded } from "./HelperFunctions.js";
 import { bg, colorC } from "./App.js";
 import { PTEntry } from "./PTEntry.js";
 
@@ -14,7 +14,7 @@ export class PT {
 	 */
 	constructor(p, scrollBar, addrWidth, PPNWidth) {
 		this.p = p;     // p5 object of current canvas
-        this.S = p.pow(2, addrWidth);
+		this.S = p.pow(2, addrWidth);
 
 		this.addrWidth = addrWidth;     // address width
 		this.PPNWidth = PPNWidth;       // PPN width
@@ -40,11 +40,9 @@ export class PT {
 	clearHighlight() { for (var i = 0; i < this.S; i++) this.entry[i].clearHighlight(); }
 
 	display() {
-        // this.p.fill(bg);
-        // this.p.noStroke();
-        // this.p.rect(x, this.PTtop, 200, 400);
-
-		var x = this.x;
+		// the x value where the table will be displayed, 
+		// 10 is subtracted for distancing from scroll bar
+		var x = this.x - 10;
 		var offset = 0;
 
 		// enable scroll bar to change the TLB position
@@ -54,19 +52,25 @@ export class PT {
 
 		// display name of each set
 		for (var i = 0; i < this.S; i++) {
-			let curY = this.PTtop + offset + 1.5 * scaleC * i;
-			this.p.textSize(scaleC * 0.8);
-			this.p.textAlign(this.p.RIGHT);
-			this.p.noStroke();
-			this.p.fill(colorC);
-			this.p.text("0x" + i, x - 2, this.PTtop + offset + 1.5 * this.E * scaleC * i + scaleC * (0.35));
-			this.entry[i].display(x, curY);
+			let curY = this.PTtop + offset + 1.5 * scaleC * i + 20;
+			// if(i === 0) {
+			// 	console.log(this.PTtop + " | " + curY + ", " + offset + " | " + this.PTtop + PTDisplayHeight);
+			// }
+			if (bounded(curY, this.PTtop, this.PTtop + PTDisplayHeight, 10)) {
+				this.p.textSize(scaleC * 0.8);
+				this.p.textAlign(this.p.RIGHT);
+				this.p.noStroke();
+				this.p.fill(colorC);
+				// 0.75 is hard coded so that the value is next to the box
+				this.p.text("0x" + i, x - 2, curY + scaleC * (0.75));
+				this.entry[i].display(x, curY);
+			}
 		}
 
 		this.p.noStroke();
 		this.p.fill(bg);
-		this.p.rect(x, this.PTtop, this.PTwidth, 20);  // background for header
-		this.p.rect(x, this.PTtop, -scaleC * 3.0, this.PTtop);  // cover set numbers
+		// box shifted to the left by 60 to cover VPN
+		this.p.rect(x - 60, this.PTtop - 20, this.PTwidth + 60, 40);  // background for header
 		this.p.fill(colorC);
 		this.p.stroke(colorC);
 		this.p.textSize(scaleC);
@@ -81,7 +85,7 @@ export class PT {
 		this.p.text("E", x + scaleC * (xwidth(1) * 4.5), ytext);  // exec
 
 		// label PPN
-		var xPPN = x + scaleC * (xwidth(1) * MGNT_BIT_WIDTH);
+		var xPPN = x + scaleC * (xwidth(1) * 4.2);
 		this.p.textAlign(this.p.LEFT);
 		this.p.text("PPN", xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * 0.5, ytext);  // data
 	}

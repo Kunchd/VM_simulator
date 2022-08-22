@@ -2,8 +2,8 @@ import { PhysicalMemory } from "./PhysicalMemory.js";
 import { VirtualMemory } from "./VirtualMemory.js";
 import { VScrollbar } from "./VScrollbar.js";
 import { TLB } from "./TLB.js";
-import { TLBDisplayHeight, PTDisplayHeight, scrollSize, PARAMS_VIR_MEM, PARAMS_PT } from "./Constants.js";
-import { INIT, PARAMS_PHYS_MEM, PARAMS_TLB } from "./Constants.js";
+import { TLBDisplayHeight, PTDisplayHeight, scrollSize, dampening } from "./Constants.js";
+import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT } from "./Constants.js";
 import { PT } from "./PageTable.js";
 
 
@@ -47,7 +47,7 @@ const displayTables = (p) => {
         colorM = p.color(51, 153, 126);  // turquoise
         colorH = p.color(255, 0, 0);     // red
 
-        canvas = p.createCanvas(960, 700).parent("p5Canvas");
+        canvas = p.createCanvas(960, 750).parent("p5Canvas");
 
         // setup sys param input
         inAddrWidth = p.select("#addrWidth");
@@ -63,10 +63,10 @@ const displayTables = (p) => {
         paramButton.mousePressed(changeParams);
 
         // setup scroll bar
-        vbarPhysMem = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, scrollSize);
-        vbarVirMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, scrollSize);
-        vbarTlb = new VScrollbar(p, 250 - scrollSize, 0, scrollSize, TLBDisplayHeight, scrollSize);
-        vbarPT = new VScrollbar(p, 250 - scrollSize, 300, scrollSize, PTDisplayHeight, scrollSize);
+        vbarPhysMem = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, dampening);
+        vbarVirMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
+        vbarTlb = new VScrollbar(p, 250 - scrollSize, 0, scrollSize, TLBDisplayHeight, dampening);
+        vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + 50, scrollSize, PTDisplayHeight, dampening);
 
         // setup working values
         TLBSize = p.int(inTlbSize.value());
@@ -87,11 +87,11 @@ const displayTables = (p) => {
         }
         if (state >= PARAMS_PHYS_MEM) { physMem.display(); }
         if (state >= PARAMS_VIR_MEM) { virMem.display(); }
-        // if (state >= PARAMS_TLB) { tlb.display(); }
+        if (state >= PARAMS_TLB) { tlb.display(); }
         if (state >= PARAMS_PT) { pt.display(); }
         if (vbarPhysMemEnable) { vbarPhysMem.update(); vbarPhysMem.display(); }
         if (vbarVirMemEnable) { vbarVirMem.update(); vbarVirMem.display(); }
-        // if (vbarTlbEnable) { vbarTlb.update(); vbarTlb.display(); }
+        if (vbarTlbEnable) { vbarTlb.update(); vbarTlb.display(); }
         if (vbarPTEnable) { vbarPT.update(); vbarPT.display(); }
     }
 
