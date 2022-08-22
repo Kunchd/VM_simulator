@@ -45,13 +45,12 @@ export class VScrollbar {
             this.locked = false;
         }
         if (this.locked) {
-            /**
-             * @todo changing this so that the top of the scroll bar is accoutned for may allow for better scrolling
-             */
             this.newspos = this.constrain(this.p.mouseY, this.sposMin, this.sposMax);
         }
         if (this.p.abs(this.newspos - this.spos) > 1) {
             this.spos = this.spos + (this.newspos - this.spos) / this.loose;
+        } else {
+            this.spos = this.newspos;
         }
     }
 
@@ -90,9 +89,6 @@ export class VScrollbar {
      */
     getPos() {
         let percentage = (this.spos - this.sposMin) / (this.sposMax - this.sposMin);
-        // console.log(percentage);
-        percentage = this.p.round(percentage, 3);
-        console.log(percentage);
         return percentage;
     }
 }
