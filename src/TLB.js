@@ -55,7 +55,7 @@ export class TLB {
 		// display name of each set
 		for (var i = 0; i < this.S; i++) {
 			let curY = this.TLBtop + offset + 1.5 * this.E * scaleC * i;
-			if(bounded(curY, this.TLBtop, this.TLBtop + TLBDisplayHeight - this.sets[0].height - 20, 10)) {
+			if(bounded(curY, this.TLBtop, this.TLBtop + TLBDisplayHeight - this.sets[0].height - 20, this.sets[0].height)) {
 				this.p.textSize(scaleC * 0.8);
 				this.p.textAlign(this.p.RIGHT);
 				this.p.noStroke();
@@ -90,5 +90,11 @@ export class TLB {
 		var xPPN = x + scaleC * (xwidth(1) * MGNT_BIT_WIDTH + xwidth(this.p.ceil(this.t / 4)));
 		this.p.textAlign(this.p.LEFT);
 		this.p.text("PPN", xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * 0.5, ytext);  // data
+
+		// block off bottom of TLB with background rect for better scrolling
+		this.p.noStroke();
+		this.p.fill(bg);
+		var yCutOff = this.TLBtop + TLBDisplayHeight;
+		this.p.rect(x - 50, yCutOff, this.Cwidth + 50, 100);
 	}
 }
