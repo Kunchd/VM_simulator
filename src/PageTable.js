@@ -19,14 +19,14 @@ export class PT {
 		this.addrWidth = addrWidth;     // address width
 		this.PPNWidth = PPNWidth;       // PPN width
 
-		this.PTtop = scrollBar.ypos;  // initial y of top of TLB
-		this.PTheight = this.S * 1.5 * scaleC;  // full height of TLB
-		this.entry = [];  // sets in the TLB
+		this.PTtop = scrollBar.ypos;  // initial y of top of PT
+		this.PTheight = this.S * 1.5 * scaleC;  // full height of PT
+		this.entry = [];  // sets in the PT
 		for (var i = 0; i < this.S; i++)
 			this.entry[i] = new PTEntry(p, PPNWidth);
-		this.PTwidth = this.entry[0].width + 2;  // width of TLB when drawn out
+		this.PTwidth = this.entry[0].width + 2;  // width of PT when drawn out
 
-		// initialize TLB with scrollBar
+		// initialize PT with scrollBar
 		this.vbarPTEnable = (this.PTtop + this.PTheight > (this.p.height / 2));
 		this.vbarPT = scrollBar;
 		this.x = scrollBar.xpos - 10 - this.PTwidth;

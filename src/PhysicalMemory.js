@@ -28,13 +28,15 @@ export class PhysicalMemory {
 		this.vbarMem = scrollBar;   // the scroll bar created for the memory
 		this.p = p;
 		this.PMSize = PMSize;
-		this.PSize = PgSize;
+		this.PgSize = PgSize;
+		this.PPNbits = this.p.log(this.PMSize / this.PgSize) / this.p.log(2);
+
 
 		this.vbarMemEnable = (this.Mtop + this.Mheight > this.p.height);
 
 		for (var i = 0; i < PMSize / PgSize; i++) {
 			this.light[i] = 0;                 // nothing starts highlighted
-			this.pages = new Page(this.p, this.PgSize);
+			this.pages[i] = new Page(this.p, this.PgSize);
 		}
 	}
 
@@ -50,27 +52,29 @@ export class PhysicalMemory {
 		var x = this.x;
 		var offset = 0;
 		if (this.vbarMemEnable) {
-			offset = -(this.Mheight + 2 * this.Mtop - this.p.height) * this.vbarMem.getPos();
+			offset = -(this.Mheight - 200) * this.vbarMem.getPos();
 		}
 
 		for (var i = 0; i < this.PMSize / this.PgSize; i++) {
-			var y = offset + this.Mtop + (this.pages[0].height + 2) / 2;
+			var y = offset + this.Mtop + ((this.pages[0].height + 2)) * (i + 0.5);
 			if (bounded(y, this.Mtop, this.Mtop + PMDisplayHeight, 20)) {
 
 				// draw rectangle set around different entries
 				this.p.stroke(colorC);  // orange set outline
+				// this.p.strokeWeight(5);
 				this.p.noFill();
-				this.p.rect(x, y, this.pages[0].width + 2, this.pages[0].height + 2);
+				this.p.rect(x, y - 1, this.pages[0].width + 5, this.pages[0].height - 5);
 
-				var ytext = y + 0.85 * scaleM;
+
+				var ytext = y + (this.pages[0].height + 2) / 2;
 				// label word/row
 				this.p.textSize(scaleM * 0.8);
 				this.p.textAlign(this.p.RIGHT);
 				this.p.noStroke();
-				this.p.fill(colorM);
-				this.p.text("0x" + toBase(8 * i, 16, this.p.ceil(this.m / 4)), x - 2, ytext);
+				this.p.fill(colorC);
+				this.p.text("0x" + toBase(8 * i, 16, this.p.ceil(this.PPNbits / 4)), x - 2, ytext);
 
-				this.pages[i].display(x, y);
+				this.pages[i].display(x + 2, y);
 			}
 		}
 		this.p.noStroke();

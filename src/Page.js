@@ -1,6 +1,6 @@
-import { scaleM } from "./Constants.js";
+import { scaleM, hoverSize } from "./Constants.js";
 import { colorC, colorH, colorM } from "./App.js";
-import { xwidth } from "./HelperFunctions.js";
+import { xwidth, toBase } from "./HelperFunctions.js";
 
 
 /**
@@ -18,7 +18,7 @@ export class Page {
 
         this.data = [];
         this.light = 0;
-        this.height = scaleM * (1 + 6 * (this.PgSize / 8 + 1)) / 4;
+        this.height = scaleM * (1 + 6 * (this.PgSize / 8)) / 4;
         this.width = scaleM * xwidth(2) * 8;
         for (var i = 0; i < PgSize; i++) {
             this.data[i] = p.floor(Math.random() * 256);  // randomize the initial memory
