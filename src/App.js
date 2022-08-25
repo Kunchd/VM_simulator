@@ -5,6 +5,7 @@ import { TLB } from "./TLB.js";
 import { TLBDisplayHeight, PTDisplayHeight, scrollSize, dampening, scaleM } from "./Constants.js";
 import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT } from "./Constants.js";
 import { PT } from "./PageTable.js";
+import { bounded } from "./HelperFunctions.js";
 
 
 let canvas, diagramCanvas;
@@ -100,6 +101,9 @@ const displayTables = (p) => {
         if (vbarPTEnable) { vbarPT.update(); vbarPT.display(); }
 
         displaVDHeader();
+        if(p.mouseIsPressed) {
+            updateVMDiskState();
+        }
     }
 
 
@@ -187,7 +191,7 @@ const displayTables = (p) => {
             if (VM) {
                 p.rect(virMem.x, 0, virMem.Mwidth * 0.6, 0.85 * scaleM + 5);
             } else {
-                p.rect(virMem.x - virMem.Mwidth * 0.4, 0, virMem.Mwidth * 0.4, 0.85 * scaleM + 5);
+                p.rect(virMem.x + virMem.Mwidth * 0.6, 0, virMem.Mwidth * 0.4, 0.85 * scaleM + 5);
             }
 
             // display title
@@ -227,6 +231,18 @@ const displayTables = (p) => {
     // only returns true for dev purposes for now
     function checkParams() {
         return true;
+    }
+
+    function updateVMDiskState() {
+        if(bounded(p.mouseY, 0, 0.85 * scaleM + 5)) {
+            if(bounded(p.mouseX, virMem.x, virMem.x + virMem.Mwidth * 0.6)) {
+                VM = true;
+            }
+            else if(bounded(p.mouseX, virMem.x + virMem.Mwidth * 0.6, virMem.x + virMem.Mwidth)) {
+                VM = false;
+            }
+        }
+        
     }
 }
 
