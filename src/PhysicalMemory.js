@@ -81,6 +81,8 @@ export class PhysicalMemory {
 		this.p.fill(bg);
 		this.p.rect(x, 0, this.Mwidth, this.Mtop);  // background for header
 		this.p.rect(x, 0, -scaleM * 2.6, this.Mtop);  // cover row address
+
+		// display title
 		this.p.fill(colorM);
 		this.p.stroke(colorM);
 		this.p.textSize(scaleM);

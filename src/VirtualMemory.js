@@ -64,15 +64,6 @@ export class VirtualMemory {
 				this.p.textSize(scaleM);
 				// memory boxes
 				this.p.stroke(0);
-				// for (var j = 0; j < 8; j++) {
-				// 	switch (this.light[8 * i + j]) {
-				// 		case 0: this.p.noFill(); break;
-				// 		case 1: this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100); break;
-				// 		case 2:
-				// 		case 3: this.p.fill(this.p.red(colorM), this.p.green(colorM), this.p.blue(colorM), 100); break;
-				// 	}
-				// 	this.p.rect(x + scaleM * xwidth(2) * j, y, scaleM * xwidth(2), scaleM);
-				// }
 				if(this.light[i]) {
 					this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC));
 				} else {
@@ -83,10 +74,6 @@ export class VirtualMemory {
 				// memory text
 				this.p.fill(0);
 				this.p.textAlign(this.p.CENTER);
-				// for (var j = 0; j < 8; j++) {
-				// 	this.p.fill(this.light[8 * i + j] == 3 ? colorH : 0);
-				// 	this.p.text(toBase(this.data[8 * i + j], 16, 2), x + scaleM * xwidth(2) * (j + 0.5), ytext);
-				// }
 				this.p.fill(this.light[i] ? colorH : 0);
 				this.p.text(this.data[i] ? "Allocated" : "Unallocated", x + this.Mwidth / 2, ytext);
 
@@ -100,14 +87,14 @@ export class VirtualMemory {
 				// }
 			}
 		}
-		this.p.noStroke();
-		this.p.fill(bg);
-		this.p.rect(x, 0, this.Mwidth, this.Mtop);  // background for header
-		this.p.rect(x, 0, -scaleM * 2.6, this.Mtop);  // cover row address
-		this.p.fill(colorM);
-		this.p.stroke(colorM);
-		this.p.textSize(scaleM);
-		this.p.textAlign(this.p.CENTER);
-		this.p.text("Virtual Memory", x + this.Mwidth / 2, 0.85 * scaleM);  // mem label
+		// this.p.noStroke();
+		// this.p.fill(bg);
+		// this.p.rect(x, 0, this.Mwidth, this.Mtop);  // background for header
+		// this.p.rect(x, 0, -scaleM * 2.6, this.Mtop);  // cover row address
+		// this.p.fill(colorM);
+		// this.p.stroke(colorM);
+		// this.p.textSize(scaleM);
+		// this.p.textAlign(this.p.CENTER);
+		// this.p.text("Virtual Memory", x + this.Mwidth / 2, 0.85 * scaleM);  // mem label
 	}
 }

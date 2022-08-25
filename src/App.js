@@ -2,7 +2,7 @@ import { PhysicalMemory } from "./PhysicalMemory.js";
 import { VirtualMemory } from "./VirtualMemory.js";
 import { VScrollbar } from "./VScrollbar.js";
 import { TLB } from "./TLB.js";
-import { TLBDisplayHeight, PTDisplayHeight, scrollSize, dampening } from "./Constants.js";
+import { TLBDisplayHeight, PTDisplayHeight, scrollSize, dampening, scaleM } from "./Constants.js";
 import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT } from "./Constants.js";
 import { PT } from "./PageTable.js";
 
@@ -13,6 +13,7 @@ let ptSize, vmSize; // sys param calculated values
 
 // colors
 export let bg, colorC, colorH, colorM;
+let colorG, colorB, colorW;
 
 // System parameters
 let m, PPNWidth, E, TLBSize, pgSize, physMemSize;
@@ -29,6 +30,7 @@ let vbarPT, vbarPTEnable;
 // system control buttons
 let paramButton;
 let explain = false;
+let VM = true;
 
 let msg = ""; // canvas message
 
@@ -46,6 +48,9 @@ const displayTables = (p) => {
         colorC = p.color(226, 102, 26);  // orange
         colorM = p.color(51, 153, 126);  // turquoise
         colorH = p.color(255, 0, 0);     // red
+        colorG = p.color(70, 70, 70);    // grey
+        colorB = p.color(20, 20, 20);       // black
+        colorW = p.color(230, 230, 230); // white
 
         canvas = p.createCanvas(960, 750).parent("p5Canvas");
 
@@ -93,6 +98,8 @@ const displayTables = (p) => {
         if (vbarVirMemEnable) { vbarVirMem.update(); vbarVirMem.display(); }
         if (vbarTlbEnable) { vbarTlb.update(); vbarTlb.display(); }
         if (vbarPTEnable) { vbarPT.update(); vbarPT.display(); }
+
+        displaVDHeader();
     }
 
 
@@ -159,11 +166,50 @@ const displayTables = (p) => {
                     pt = new PT(p, vbarPT, m, PPNWidth);
                     // reset cache scroll bar
                     vbarPTEnable = (pt.PTtop + pt.PTheight > PTDisplayHeight);
-                    console.log(vbarPTEnable);
                     vbarPT.spos = vbarPT.ypos;
                     vbarPT.newspos = vbarPT.ypos;
                     state = PARAMS_PT;
                     if (!histMove && explain) break;
+            }
+        }
+    }
+
+    function displaVDHeader() {
+        if (virMem !== undefined) {
+            // display background
+            p.noStroke();
+            p.fill(bg);
+            p.rect(virMem.x, 0, virMem.Mwidth + 5, virMem.Mtop);  // background for header
+            p.rect(virMem.x, 0, -scaleM * 2.6, virMem.Mtop);  // cover row address
+
+            // display selected
+            p.fill(colorG);
+            if (VM) {
+                p.rect(virMem.x, 0, virMem.Mwidth * 0.6, 0.85 * scaleM + 5);
+            } else {
+                p.rect(virMem.x - virMem.Mwidth * 0.4, 0, virMem.Mwidth * 0.4, 0.85 * scaleM + 5);
+            }
+
+            // display title
+            p.textSize(scaleM);
+            if (VM) {
+                p.stroke(colorW);
+                p.fill(colorW);
+                p.textAlign(p.LEFT);
+                p.text("Vitrual Memory", virMem.x + 5, 0.85 * scaleM);          // VM
+                p.stroke(colorB);
+                p.fill(colorB);
+                p.textAlign(p.RIGHT);
+                p.text("Disk", virMem.x + virMem.Mwidth - 5, 0.85 * scaleM);    // Disk
+            } else {
+                p.stroke(colorB);
+                p.fill(colorB);
+                p.textAlign(p.LEFT);
+                p.text("Vitrual Memory", virMem.x + 5, 0.85 * scaleM);          // VM
+                p.stroke(colorW);
+                p.fill(colorW);
+                p.textAlign(p.RIGHT);
+                p.text("Disk", virMem.x + virMem.Mwidth - 5, 0.85 * scaleM);    // Disk
             }
         }
     }
