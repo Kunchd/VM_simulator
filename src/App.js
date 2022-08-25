@@ -195,21 +195,21 @@ const displayTables = (p) => {
             if (VM) {
                 p.stroke(colorW);
                 p.fill(colorW);
-                p.textAlign(p.LEFT);
-                p.text("Vitrual Memory", virMem.x + 5, 0.85 * scaleM);          // VM
+                p.textAlign(p.CENTER);
+                p.text("Vitrual Memory", virMem.x + virMem.Mwidth * 0.3, 0.85 * scaleM);          // VM
                 p.stroke(colorB);
                 p.fill(colorB);
-                p.textAlign(p.RIGHT);
-                p.text("Disk", virMem.x + virMem.Mwidth - 5, 0.85 * scaleM);    // Disk
+                p.textAlign(p.CENTER);
+                p.text("Disk", virMem.x + virMem.Mwidth * 0.8, 0.85 * scaleM);    // Disk
             } else {
                 p.stroke(colorB);
                 p.fill(colorB);
-                p.textAlign(p.LEFT);
-                p.text("Vitrual Memory", virMem.x + 5, 0.85 * scaleM);          // VM
+                p.textAlign(p.CENTER);
+                p.text("Vitrual Memory", virMem.x + virMem.Mwidth * 0.3, 0.85 * scaleM);          // VM
                 p.stroke(colorW);
                 p.fill(colorW);
-                p.textAlign(p.RIGHT);
-                p.text("Disk", virMem.x + virMem.Mwidth - 5, 0.85 * scaleM);    // Disk
+                p.textAlign(p.CENTER);
+                p.text("Disk", virMem.x + virMem.Mwidth * 0.8, 0.85 * scaleM);    // Disk
             }
         }
     }
