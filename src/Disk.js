@@ -51,7 +51,7 @@ export class Disk {
 			offset = -(this.Dheight + 2 * this.Dtop - this.p.height) * this.vbarDisk.getPos();
 		}
 
-		for (var i = 0; i < this.p.pow(2, this.m - 3); i++) {
+		for (var i = 0; i < this.p.pow(2, this.m - this.PO); i++) {
 			var y = offset + scaleM * (1 + 6 * i) / 4 + this.Dtop;
 			// only render the portion visible on screen
 			if (bounded(y, this.Dtop, this.Dtop + DiskDisplayHeight, 20)) {
