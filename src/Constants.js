@@ -7,9 +7,10 @@ export const seedLen = 6;        // length of random seed string
 export const TLBDisplayHeight = 300;  // display height of the TLB
 export const PTDisplayHeight = 350;
 export const VMDisplayHeight = 750;
+export const DiskDisplayHeight = 750;
 export const PMDisplayHeight = 750;
 
 export const INIT = 0, PARAMS_PHYS_MEM = 1, PARAMS_VIR_MEM = 2, PARAMS_TLB = 3
-export const PARAMS_PT = 4;
+export const PARAMS_PT = 4, PARAMS_DISK = 5;
 
 export const MGNT_BIT_WIDTH = 5;

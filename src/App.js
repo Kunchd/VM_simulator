@@ -2,10 +2,12 @@ import { PhysicalMemory } from "./PhysicalMemory.js";
 import { VirtualMemory } from "./VirtualMemory.js";
 import { VScrollbar } from "./VScrollbar.js";
 import { TLB } from "./TLB.js";
-import { TLBDisplayHeight, PTDisplayHeight, scrollSize, dampening, scaleM } from "./Constants.js";
-import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT } from "./Constants.js";
+import { scrollSize, dampening, scaleM } from "./Constants.js";
+import { TLBDisplayHeight, PTDisplayHeight, DiskDisplayHeight } from "./Constants.js";
+import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT, PARAMS_DISK } from "./Constants.js";
 import { PT } from "./PageTable.js";
 import { bounded } from "./HelperFunctions.js";
+import { Disk } from "./Disk.js";
 
 
 let canvas, diagramCanvas;
@@ -17,16 +19,17 @@ export let bg, colorC, colorH, colorM;
 let colorG, colorB, colorW;
 
 // System parameters
-let m, PPNWidth, E, TLBSize, pgSize, physMemSize;
+let m, PPNWidth, E, TLBSize, pgSize, physMemSize, PO;
 
 // Main canvas table components
-let physMem, virMem, tlb, pt;
+let physMem, virMem, tlb, pt, disk;
 
 // scroll bars
 let vbarPhysMem, vbarPhysMemEnable;
-let vbarVirMem, vbarVirMemEnable;
+let vbarVirMemDisk, vbarVirMemEnable;
 let vbarTlb, vbarTlbEnable;
 let vbarPT, vbarPTEnable;
+let vbarDiskEnable;
 
 // system control buttons
 let paramButton;
@@ -70,13 +73,14 @@ const displayTables = (p) => {
 
         // setup scroll bar
         vbarPhysMem = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, dampening);
-        vbarVirMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
+        vbarVirMemDisk = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
         vbarTlb = new VScrollbar(p, 250 - scrollSize, 0, scrollSize, TLBDisplayHeight, dampening);
         vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + 50, scrollSize, PTDisplayHeight, dampening);
 
         // setup working values
         TLBSize = p.int(inTlbSize.value());
         pgSize = p.int(inPgSize.value());
+        PO = p.log(pgSize) / p.log(2);
         physMemSize = p.int(inPhysMemSize.value());
         m = p.int(inAddrWidth.value());
         PPNWidth = p.log(physMemSize) / p.log(2);
@@ -92,16 +96,18 @@ const displayTables = (p) => {
             dispMsg(5, 25);
         }
         if (state >= PARAMS_PHYS_MEM) { physMem.display(); }
-        if (state >= PARAMS_VIR_MEM) { virMem.display(); }
+        if (state >= PARAMS_VIR_MEM && VM) { virMem.display(); }
         if (state >= PARAMS_TLB) { tlb.display(); }
         if (state >= PARAMS_PT) { pt.display(); }
+        if (state >= PARAMS_DISK && !VM) { disk.display(); }
         if (vbarPhysMemEnable) { vbarPhysMem.update(); vbarPhysMem.display(); }
-        if (vbarVirMemEnable) { vbarVirMem.update(); vbarVirMem.display(); }
+        if (vbarVirMemEnable && VM) { vbarVirMemDisk.update(); vbarVirMemDisk.display(); }
+        if (vbarDiskEnable && !VM) { vbarVirMemDisk.update(); vbarVirMemDisk.display(); }
         if (vbarTlbEnable) { vbarTlb.update(); vbarTlb.display(); }
         if (vbarPTEnable) { vbarPT.update(); vbarPT.display(); }
 
         displaVDHeader();
-        if(p.mouseIsPressed) {
+        if (p.mouseIsPressed) {
             updateVMDiskState();
         }
     }
@@ -146,12 +152,12 @@ const displayTables = (p) => {
                     state = PARAMS_PHYS_MEM;
                     if (!histMove && explain) break;
                 case PARAMS_PHYS_MEM:
-                    virMem = new VirtualMemory(p, m, vbarVirMem);
+                    virMem = new VirtualMemory(p, m, vbarVirMemDisk);
 
                     // reset memory scroll bar
                     vbarVirMemEnable = (virMem.Mtop + virMem.Mheight > p.height);
-                    vbarVirMem.spos = vbarVirMem.ypos;
-                    vbarVirMem.newspos = vbarVirMem.ypos;
+                    vbarVirMemDisk.spos = vbarVirMemDisk.ypos;
+                    vbarVirMemDisk.newspos = vbarVirMemDisk.ypos;
 
                     // msgbox.value("Press Next (left) to advance explanation.\n");
                     state = PARAMS_VIR_MEM;
@@ -173,6 +179,12 @@ const displayTables = (p) => {
                     vbarPT.spos = vbarPT.ypos;
                     vbarPT.newspos = vbarPT.ypos;
                     state = PARAMS_PT;
+                    if (!histMove && explain) break;
+                case PARAMS_PT:
+                    disk = new Disk(p, m, PO, vbarVirMemDisk);
+                    vbarDiskEnable = (disk.Dtop + disk.Dheight > p.height);
+
+                    state = PARAMS_DISK;
                     if (!histMove && explain) break;
             }
         }
@@ -234,15 +246,21 @@ const displayTables = (p) => {
     }
 
     function updateVMDiskState() {
-        if(bounded(p.mouseY, 0, 0.85 * scaleM + 5)) {
-            if(bounded(p.mouseX, virMem.x, virMem.x + virMem.Mwidth * 0.6)) {
+        if (bounded(p.mouseY, 0, 0.85 * scaleM + 5)) {
+            if (bounded(p.mouseX, virMem.x, virMem.x + virMem.Mwidth * 0.6)) {
                 VM = true;
+                // reset scrollbar
+                vbarVirMemDisk.spos = vbarVirMemDisk.ypos;
+                vbarVirMemDisk.newspos = vbarVirMemDisk.ypos;
             }
-            else if(bounded(p.mouseX, virMem.x + virMem.Mwidth * 0.6, virMem.x + virMem.Mwidth)) {
+            else if (bounded(p.mouseX, virMem.x + virMem.Mwidth * 0.6, virMem.x + virMem.Mwidth)) {
                 VM = false;
+                // reset scrollbar
+                vbarVirMemDisk.spos = vbarVirMemDisk.ypos;
+                vbarVirMemDisk.newspos = vbarVirMemDisk.ypos;
             }
         }
-        
+
     }
 }
 
