@@ -82,9 +82,10 @@ export class PT {
 		this.p.text("W", x + scaleC * (xwidth(1) * 3.5), ytext);  // write
 		this.p.text("E", x + scaleC * (xwidth(1) * 4.5), ytext);  // exec
 
-		// label PPN
+		// label PPN & SSN
 		var xPPN = x + scaleC * (xwidth(1) * 4.2);
 		this.p.textAlign(this.p.LEFT);
-		this.p.text("PPN", xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * 0.5, ytext);  // data
+		this.p.text("PPN", xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * 0.5, ytext - scaleC);  // PPN
+		this.p.text("SSN", xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * 0.5, ytext);  // SSN
 	}
 }
