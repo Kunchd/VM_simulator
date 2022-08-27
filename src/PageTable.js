@@ -1,5 +1,5 @@
 import { scaleC, MGNT_BIT_WIDTH, PTDisplayHeight } from "./Constants.js";
-import { xwidth, bounded } from "./HelperFunctions.js";
+import { xwidth, bounded, toBase } from "./HelperFunctions.js";
 import { bg, colorC } from "./App.js";
 import { PTEntry } from "./PTEntry.js";
 
@@ -7,17 +7,19 @@ import { PTEntry } from "./PTEntry.js";
 export class PT {
 	/**
 	 * Construct a new isntance of PT
-	 * @param {*} p the p5 object assigned to current canvas
-	 * @param {*} scrollBar the scroll bar to attatch the PT to
-	 * @param {*} addrWidth the bit width of the virtual address
-	 * @param {*} PPNWidth the bit width of the PPN
+	 * @param {*} p p5 object assigned to current canvas
+	 * @param {*} scrollBar scroll bar to attatch the PT to
+	 * @param {*} addrWidth bit width of the virtual address
+	 * @param {*} PPNWidth bit width of the PPN
+	 * @param {*} POWidth bit width of PO
 	 */
-	constructor(p, scrollBar, addrWidth, PPNWidth) {
+	constructor(p, scrollBar, addrWidth, PPNWidth, POWidth) {
 		this.p = p;     // p5 object of current canvas
-		this.S = p.pow(2, addrWidth);
+		this.S = p.pow(2, addrWidth - POWidth);
 
 		this.addrWidth = addrWidth;     // address width
 		this.PPNWidth = PPNWidth;       // PPN width
+		this.POWidth = POWidth;
 
 		this.PTtop = scrollBar.ypos;  // initial y of top of PT
 		this.PTheight = this.S * 1.5 * scaleC;  // full height of PT
@@ -60,7 +62,7 @@ export class PT {
 				this.p.noStroke();
 				this.p.fill(colorC);
 				// 0.75 is hard coded so that the value is next to the box
-				this.p.text("0x" + i, x - 2, curY + scaleC * (0.75));
+				this.p.text("0x" + toBase(i, 16, this.p.ceil((this.addrWidth - this.POWidth) / 4)), x - 2, curY + scaleC * (0.75));
 				this.entry[i].display(x, curY);
 			}
 		}

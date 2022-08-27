@@ -173,7 +173,7 @@ const displayTables = (p) => {
                     if (!histMove && explain) break;
                 case PARAMS_TLB:
                     // initialize PT
-                    pt = new PT(p, vbarPT, m, PPNWidth);
+                    pt = new PT(p, vbarPT, m, PPNWidth, PO);
                     // reset cache scroll bar
                     vbarPTEnable = (pt.PTtop + pt.PTheight > PTDisplayHeight);
                     vbarPT.spos = vbarPT.ypos;
