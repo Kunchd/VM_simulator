@@ -77,15 +77,6 @@ const displayTables = (p) => {
         vbarTlb = new VScrollbar(p, 250 - scrollSize, 0, scrollSize, TLBDisplayHeight, dampening);
         vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + 50, scrollSize, PTDisplayHeight, dampening);
 
-        // setup working values
-        TLBSize = p.int(inTlbSize.value());
-        pgSize = p.int(inPgSize.value());
-        PO = p.log(pgSize) / p.log(2);
-        physMemSize = p.int(inPhysMemSize.value());
-        m = p.int(inAddrWidth.value());
-        PPNWidth = p.log(physMemSize) / p.log(2);
-        E = p.int(inTlbE.value());
-
         reset(true);
     }
 
@@ -137,7 +128,7 @@ const displayTables = (p) => {
     // on the current system state
     // safety measure in case someone mess with it I guess
     function changeParams() {
-        if (checkParams) {
+        if (!checkParams()) {
             switch (state) {
                 case INIT:
                     physMem = new PhysicalMemory(p, physMemSize, pgSize, vbarPhysMem);
@@ -190,6 +181,28 @@ const displayTables = (p) => {
         }
     }
 
+    /**
+     * check parameters before generating the system
+     * @returns 0 if system is setup correctly, 1 if otherwise
+     */
+    function checkParams() {
+        reset(!histMove);
+
+        // setup working values
+        TLBSize = p.int(inTlbSize.value());
+        pgSize = p.int(inPgSize.value());
+        
+        physMemSize = p.int(inPhysMemSize.value());
+        m = p.int(inAddrWidth.value());
+        E = p.int(inTlbE.value());
+
+        // calculate other cache parameters
+        PO = p.log(pgSize) / p.log(2);
+        PPNWidth = p.log(physMemSize) / p.log(2);
+
+        return 0;
+    }
+
     function displaVDHeader() {
         if (virMem !== undefined) {
             // display background
@@ -237,12 +250,6 @@ const displayTables = (p) => {
         p.textSize(20);
         p.textAlign(p.LEFT);
         p.text(msg, x, y);
-    }
-
-    // checks whether the systems initialization params are correctly set
-    // only returns true for dev purposes for now
-    function checkParams() {
-        return true;
     }
 
     function updateVMDiskState() {
