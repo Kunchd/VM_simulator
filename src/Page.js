@@ -18,7 +18,7 @@ export class Page {
 
         this.data = [];
         this.light = 0;
-        this.height = scaleM * (1 + 6 * (this.PgSize / 8)) / 4;
+        this.height = scaleM * (1.5 * (this.PgSize / 8) - 0.5);
         this.width = scaleM * xwidth(2) * 8;
         for (var i = 0; i < PgSize; i++) {
             this.data[i] = p.floor(Math.random() * 256);  // randomize the initial memory
@@ -41,8 +41,9 @@ export class Page {
     display(x, y) {
         // iterate over rows
         for (let i = 0; i < this.PgSize / 8; i++) {
-            var y = scaleM * (1 + 6 * i) / 4 + y;
-            var ytext = y + 0.85 * scaleM;
+            var iterY = scaleM * (6 * i) / 4 + y;
+            var ytext = iterY + 0.85 * scaleM;
+
 
             this.p.textSize(scaleM);
             // memory boxes
@@ -52,24 +53,23 @@ export class Page {
                     case 0: this.p.noFill(); break;
                     case 1: this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100); break;
                 }
-                this.p.rect(x + scaleM * xwidth(2) * j, y, scaleM * xwidth(2), scaleM);
+                this.p.rect(x + scaleM * xwidth(2) * j, iterY, scaleM * xwidth(2), scaleM);
             }
             // memory text
             this.p.fill(0);
             this.p.textAlign(this.p.CENTER);
             for (var j = 0; j < 8; j++) {
-                this.p.fill(this.light[8 * i + j] == 3 ? colorH : 0);
+                this.p.fill(this.light === 1 ? colorH : 0);
                 this.p.text(toBase(this.data[8 * i + j], 16, 2), x + scaleM * xwidth(2) * (j + 0.5), ytext);
             }
             // hover text
-            if (this.p.mouseY > y && this.p.mouseY < y + scaleM && this.p.mouseX > x && this.p.mouseX < x + scaleM * xwidth(2) * 8) {
+            if (this.p.mouseY > iterY && this.p.mouseY < iterY + scaleM && this.p.mouseX > x && this.p.mouseX < x + scaleM * xwidth(2) * 8) {
                 var idx = this.p.int((this.p.mouseX - x) / xwidth(2) / scaleM);
                 this.p.textSize(hoverSize);
                 this.p.fill(colorH);
                 this.p.noStroke();
                 this.p.text("0x" + (8 * i + idx).toString(16), this.p.mouseX, this.p.mouseY);
             }
-
         }
     }
 }

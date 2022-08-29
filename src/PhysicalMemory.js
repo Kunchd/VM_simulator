@@ -19,25 +19,28 @@ export class PhysicalMemory {
 	 * @param {*} scrollBar the scroll bar associated with this table
 	 */
 	constructor(p, PMSize, PgSize, scrollBar) {
-		this.Mtop = scaleM;  // initial y of top of memory
-		this.Mheight = 1.5 * (PMSize / PgSize) * scaleM;  // height of memory when drawn out
-		this.Mwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
-		this.x = p.width - this.Mwidth - scrollSize - 10; // x coordinate of this table
-		this.pages = [];	// contained pages
-		this.light = [];  // indicate highlighting for moved/changed data
-		this.vbarMem = scrollBar;   // the scroll bar created for the memory
+		// calculate input bits
 		this.p = p;
 		this.PMSize = PMSize;
 		this.PgSize = PgSize;
 		this.PPNbits = this.p.log(this.PMSize / this.PgSize) / this.p.log(2);
+		this.pages = [];	// contained pages
+		this.light = [];  // indicate highlighting for moved/changed data
 
-
-		this.vbarMemEnable = (this.Mtop + this.Mheight > this.p.height);
-
+		// initialize data
 		for (var i = 0; i < PMSize / PgSize; i++) {
 			this.light[i] = 0;                 // nothing starts highlighted
 			this.pages[i] = new Page(this.p, this.PgSize);
 		}
+
+		// calculate dimensions of this table
+		this.Mtop = scaleM;  // initial y of top of memory
+		this.Mheight = (PMSize / PgSize) * (this.pages[0].height + 5) * 1.5;  // height of memory when drawn out
+		this.Mwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
+		this.x = p.width - this.Mwidth - scrollSize - 10; // x coordinate of this table
+
+		this.vbarMem = scrollBar;   // the scroll bar created for the memory
+		this.vbarMemEnable = (this.Mtop + this.Mheight > this.p.height);
 	}
 
 	// helper methods for hightlighting
@@ -56,17 +59,17 @@ export class PhysicalMemory {
 		}
 
 		for (var i = 0; i < this.PMSize / this.PgSize; i++) {
-			var y = offset + this.Mtop + ((this.pages[0].height + 2)) * (i + 0.5);
+			var y = offset + this.Mtop + ((this.pages[0].height + 5) * 1.5) * i;
 			if (bounded(y, this.Mtop, this.Mtop + PMDisplayHeight, 20)) {
 
 				// draw rectangle set around different entries
 				this.p.stroke(colorC);  // orange set outline
 				// this.p.strokeWeight(5);
 				this.p.noFill();
-				this.p.rect(x, y - 1, this.pages[0].width + 5, this.pages[0].height - 5);
+				this.p.rect(x, y, this.pages[0].width + 5, this.pages[0].height + 5);
 
-
-				var ytext = y + (this.pages[0].height + 2) / 2;
+				// +5 hardcoded to align text with box
+				var ytext = y + (this.pages[0].height + 5) / 2 + 5;
 				// label word/row
 				this.p.textSize(scaleM * 0.8);
 				this.p.textAlign(this.p.RIGHT);
@@ -74,7 +77,7 @@ export class PhysicalMemory {
 				this.p.fill(colorC);
 				this.p.text("0x" + toBase(8 * i, 16, this.p.ceil(this.PPNbits / 4)), x - 2, ytext);
 
-				this.pages[i].display(x + 2, y);
+				this.pages[i].display(x + 2, y + 2.5);
 			}
 		}
 		this.p.noStroke();
