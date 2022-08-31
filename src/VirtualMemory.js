@@ -13,22 +13,26 @@ export class VirtualMemory {
 	 * @param {*} p the p5 object associated with the canvas which this memory
 	 *              representation will be placed in
 	 * @param {*} m the address width
+	 * @param {*} PO page offset width
 	 * @param {*} scrollBar the scroll bar associated with this table
 	 */
-	constructor(p, m, scrollBar) {
+	constructor(p, m, PO, scrollBar) {
+		this.vbarMem = scrollBar;   // the scroll bar created for the memory
+		this.p = p;
+		this.m = m;
+		this.PO = PO;
+
 		this.Mtop = scaleM;  // initial y of top of memory
-		this.Mheight = 1.5 * p.pow(2, m - 3) * scaleM;  // height of memory when drawn out
+		this.Mheight = 1.5 * p.pow(2, this.m - this.PO) * scaleM;  // height of memory when drawn out
 		this.Mwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
 		this.x = scrollBar.xpos - this.Mwidth - 10; // x coordinate of this table
 		this.data = [];  // data stored in memory
 		this.light = [];  // indicate highlighting for moved/changed data
-		this.vbarMem = scrollBar;   // the scroll bar created for the memory
-		this.p = p;
-		this.m = m;
+
 
 		this.vbarMemEnable = (this.Mtop + this.Mheight > this.p.height);
 
-		for (var i = 0; i < p.pow(2, this.m); i++) {
+		for (var i = 0; i < p.pow(2, this.m - this.PO); i++) {
 			this.data[i] = 0;	// initialize memory to empty for now
 			this.light[i] = 0;	// nothing starts highlighted
 		}
@@ -49,7 +53,7 @@ export class VirtualMemory {
 			offset = -(this.Mheight + 2 * this.Mtop - this.p.height) * this.vbarMem.getPos();
 		}
 
-		for (var i = 0; i < this.p.pow(2, this.m - 3); i++) {
+		for (var i = 0; i < this.p.pow(2, this.m - this.PO); i++) {
 			var y = offset + scaleM * (1 + 6 * i) / 4 + this.Mtop;
 			// only render the portion visible on screen
 			if (bounded(y, this.Mtop, this.Mtop + VMDisplayHeight, 20)) {
@@ -59,12 +63,12 @@ export class VirtualMemory {
 				this.p.textAlign(this.p.RIGHT);
 				this.p.noStroke();
 				this.p.fill(colorM);
-				this.p.text("0x" + toBase(8 * i, 16, this.p.ceil(this.m / 4)), x - 2, ytext);
+				this.p.text("0x" + toBase(i, 16, this.p.ceil((this.m - this.PO) / 4)), x - 2, ytext);
 
 				this.p.textSize(scaleM);
 				// memory boxes
 				this.p.stroke(0);
-				if(this.light[i]) {
+				if (this.light[i]) {
 					this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC));
 				} else {
 					this.p.noFill();

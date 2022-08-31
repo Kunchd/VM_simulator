@@ -143,7 +143,7 @@ const displayTables = (p) => {
                     state = PARAMS_PHYS_MEM;
                     if (!histMove && explain) break;
                 case PARAMS_PHYS_MEM:
-                    virMem = new VirtualMemory(p, m, vbarVirMemDisk);
+                    virMem = new VirtualMemory(p, m, PO, vbarVirMemDisk);
 
                     // reset memory scroll bar
                     vbarVirMemEnable = (virMem.Mtop + virMem.Mheight > p.height);
@@ -191,7 +191,7 @@ const displayTables = (p) => {
         // setup working values
         TLBSize = p.int(inTlbSize.value());
         pgSize = p.int(inPgSize.value());
-        
+
         physMemSize = p.int(inPhysMemSize.value());
         m = p.int(inAddrWidth.value());
         E = p.int(inTlbE.value());
@@ -240,6 +240,17 @@ const displayTables = (p) => {
                 p.textAlign(p.CENTER);
                 p.text("Disk", virMem.x + virMem.Mwidth * 0.8, 0.85 * scaleM);    // Disk
             }
+
+            // label VM
+            p.textSize(scaleM * 0.8);
+            p.textAlign(p.RIGHT);
+            p.noStroke();
+            p.fill(colorM);
+            let label = "VPN";
+            if(!VM) {
+                label = "SSN";
+            }
+            p.text(label, virMem.x - 6, scaleM * 0.8);
         }
     }
 
