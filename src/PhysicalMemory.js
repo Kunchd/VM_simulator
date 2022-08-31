@@ -37,7 +37,7 @@ export class PhysicalMemory {
 		this.Mtop = scaleM;  // initial y of top of memory
 		this.Mheight = (PMSize / PgSize) * (this.pages[0].height + 5) * 1.5;  // height of memory when drawn out
 		this.Mwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
-		this.x = p.width - this.Mwidth - scrollSize - 10; // x coordinate of this table
+		this.x = scrollBar.xpos - this.Mwidth - 10; // x coordinate of this table
 
 		this.vbarMem = scrollBar;   // the scroll bar created for the memory
 		this.vbarMemEnable = (this.Mtop + this.Mheight > this.p.height);

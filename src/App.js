@@ -72,8 +72,8 @@ const displayTables = (p) => {
         paramButton.mousePressed(changeParams);
 
         // setup scroll bar
-        vbarPhysMem = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, dampening);
-        vbarVirMemDisk = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
+        vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
+        vbarVirMemDisk = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, dampening);
         vbarTlb = new VScrollbar(p, 250 - scrollSize, 0, scrollSize, TLBDisplayHeight, dampening);
         vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + 50, scrollSize, PTDisplayHeight, dampening);
 
