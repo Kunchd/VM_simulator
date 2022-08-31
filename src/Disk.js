@@ -61,7 +61,7 @@ export class Disk {
 				this.p.textAlign(this.p.RIGHT);
 				this.p.noStroke();
 				this.p.fill(colorM);
-				this.p.text("0x" + toBase(8 * i, 16, this.p.ceil((this.m - this.PO) / 4)), x - 2, ytext);
+				this.p.text("0x" + toBase(i, 16, this.p.ceil((this.m - this.PO) / 4)), x - 2, ytext);
 
 				this.p.textSize(scaleM);
 				// memory boxes

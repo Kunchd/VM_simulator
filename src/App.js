@@ -2,7 +2,7 @@ import { PhysicalMemory } from "./PhysicalMemory.js";
 import { VirtualMemory } from "./VirtualMemory.js";
 import { VScrollbar } from "./VScrollbar.js";
 import { TLB } from "./TLB.js";
-import { scrollSize, dampening, scaleM } from "./Constants.js";
+import { scrollSize, dampening, scaleM, scaleC } from "./Constants.js";
 import { TLBDisplayHeight, PTDisplayHeight, DiskDisplayHeight } from "./Constants.js";
 import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT, PARAMS_DISK } from "./Constants.js";
 import { PT } from "./PageTable.js";
@@ -74,7 +74,7 @@ const displayTables = (p) => {
         // setup scroll bar
         vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
         vbarVirMemDisk = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, dampening);
-        vbarTlb = new VScrollbar(p, 250 - scrollSize, 0, scrollSize, TLBDisplayHeight, dampening);
+        vbarTlb = new VScrollbar(p, 250 - scrollSize, scaleC, scrollSize, TLBDisplayHeight, dampening);
         vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + 50, scrollSize, PTDisplayHeight, dampening);
 
         reset(true);

@@ -95,6 +95,6 @@ export class TLB {
 		this.p.noStroke();
 		this.p.fill(bg);
 		var yCutOff = this.TLBtop + TLBDisplayHeight;
-		this.p.rect(x - 50, yCutOff, this.Cwidth + 50, 100);
+		this.p.rect(x - 50, yCutOff, this.Cwidth + 50, 300);
 	}
 }
