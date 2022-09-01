@@ -55,7 +55,7 @@ export class PT {
 
 		// display name of each set
 		for (var i = 0; i < this.S; i++) {
-			let curY = this.PTtop + offset + 1.5 * scaleC * i + 20;
+			let curY = this.PTtop + offset + 1.5 * scaleC * i + scaleC;
 			if (bounded(curY, this.PTtop, this.PTtop + PTDisplayHeight, 10)) {
 				this.p.textSize(scaleC * 0.8);
 				this.p.textAlign(this.p.RIGHT);
@@ -73,7 +73,7 @@ export class PT {
 		this.p.rect(x - 60, this.PTtop - 20, this.PTwidth + 60, 40);  // background for header
 		this.p.fill(colorC);
 		this.p.stroke(colorC);
-		this.p.textSize(scaleC);
+		this.p.textSize(scaleC * 0.8);
 		this.p.textAlign(this.p.CENTER);
 
 		// label the management bits within each entry
@@ -87,7 +87,6 @@ export class PT {
 		// label PPN & SSN
 		var xPPN = x + scaleC * (xwidth(1) * 4.2);
 		this.p.textAlign(this.p.LEFT);
-		this.p.text("PPN", xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * 0.5, ytext - scaleC);  // PPN
-		this.p.text("SSN", xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * 0.5, ytext);  // SSN
+		this.p.text("PPN/SSN", xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * 0.5, ytext);
 	}
 }

@@ -1,4 +1,4 @@
-import { scaleC } from "./Constants.js";
+import { scaleC, PT_PPN_WIDTH } from "./Constants.js";
 import { colorC, colorH } from "./App.js";
 import { xwidth, toBase } from "./HelperFunctions.js";
 
@@ -32,7 +32,7 @@ export class PTEntry {
         this.lightW = 0;
         this.lightE = 0;
 
-        this.width = scaleC * (xwidth(1) * (MGNT_BIT_WIDTH)) + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4));
+        this.width = scaleC * (xwidth(1) * (MGNT_BIT_WIDTH)) + scaleC * xwidth(PT_PPN_WIDTH);
     }
 
     // all functional methods are temporarily commented
@@ -141,7 +141,7 @@ export class PTEntry {
 
         // for PPN
         (this.light > 0 ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
-        this.p.rect(xPPN, y, scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)), scaleC);  // data
+        this.p.rect(xPPN, y, scaleC * xwidth(PT_PPN_WIDTH), scaleC);  // data
 
         // cache block text
         var ytext = y + 0.85 * scaleC;
@@ -169,8 +169,8 @@ export class PTEntry {
 
         // render PPN bits
         this.p.fill(this.lightPPN > 1 ? colorH : 0);
-        this.p.text(this.V ? toBase(this.PPN, 16, 2) : "--"
-            , xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * (0.5), ytext);  // data
+        this.p.text(this.V ? toBase(this.PPN, 16, this.p.ceil(this.PPNWidth / 4)) : "--"
+            , xPPN + scaleC * xwidth(PT_PPN_WIDTH) * (0.5), ytext);  // data
 
         // hover text
         if (this.V && this.p.mouseY > y && this.p.mouseY < y + scaleC && this.p.mouseX > xPPN && this.p.mouseX < xPPN + scaleC * xwidth(2) * K) {
