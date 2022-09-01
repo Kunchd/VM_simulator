@@ -16,7 +16,7 @@ let ptSize, vmSize; // sys param calculated values
 
 // colors
 export let bg, colorC, colorH, colorM;
-let colorG, colorB, colorW;
+export let colorG, colorB, colorW;
 
 // System parameters
 let m, PPNWidth, E, TLBSize, pgSize, physMemSize, PO;
@@ -75,7 +75,8 @@ const displayTables = (p) => {
         vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
         vbarVirMemDisk = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, dampening);
         vbarTlb = new VScrollbar(p, 250 - scrollSize, 0, scrollSize, TLBDisplayHeight + scaleC, dampening);
-        vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + 50, scrollSize, PTDisplayHeight + scaleC, dampening);
+        vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + scaleC * 3, 
+            scrollSize, PTDisplayHeight + scaleC, dampening);
 
         reset(true);
     }

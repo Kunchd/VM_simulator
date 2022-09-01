@@ -1,6 +1,6 @@
 import { scaleC, MGNT_BIT_WIDTH, PTDisplayHeight } from "./Constants.js";
 import { xwidth, bounded, toBase } from "./HelperFunctions.js";
-import { bg, colorC } from "./App.js";
+import { bg, colorC, colorB } from "./App.js";
 import { PTEntry } from "./PTEntry.js";
 
 /* Class to represent a PT. */
@@ -55,7 +55,7 @@ export class PT {
 
 		// display name of each set
 		for (var i = 0; i < this.S; i++) {
-			let curY = this.PTtop + offset + 1.5 * scaleC * i + scaleC;
+			let curY = this.PTtop + offset + 1.5 * scaleC * i + 1.8 *scaleC;
 			if (bounded(curY, this.PTtop, this.PTtop + PTDisplayHeight, 10)) {
 				this.p.textSize(scaleC * 0.8);
 				this.p.textAlign(this.p.RIGHT);
@@ -70,14 +70,23 @@ export class PT {
 		this.p.noStroke();
 		this.p.fill(bg);
 		// box shifted to the left by 60 to cover VPN
-		this.p.rect(x - 60, this.PTtop - 20, this.PTwidth + 60, 40);  // background for header
+		this.p.rect(x - 60, this.PTtop - 20, this.PTwidth + 60, 45);  // background for header
+
+		// label title
+		let ytitle = this.PTtop;
+		this.p.fill(colorB);
+		this.p.stroke(colorB);
+		this.p.textSize(scaleC);
+		this.p.textAlign(this.p.CENTER);
+
+		this.p.text("Page Table", x + this.PTwidth / 2, ytitle);
+
 		this.p.fill(colorC);
 		this.p.stroke(colorC);
 		this.p.textSize(scaleC * 0.8);
-		this.p.textAlign(this.p.CENTER);
 
 		// label the management bits within each entry
-		var ytext = this.PTtop + 0.85 * scaleC;
+		var ytext = this.PTtop + scaleC;
 		this.p.text("V", x + scaleC * (xwidth(1) * 0.5), ytext);  // valid
 		this.p.text("D", x + scaleC * (xwidth(1) * 1.5), ytext);  // dirty
 		this.p.text("R", x + scaleC * (xwidth(1) * 2.5), ytext);  // read

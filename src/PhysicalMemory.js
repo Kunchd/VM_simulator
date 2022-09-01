@@ -1,5 +1,5 @@
 import { scrollSize, hoverSize, scaleM, PMDisplayHeight, scaleC } from "./Constants.js";
-import { bg, colorC, colorH, colorM } from "./App.js";
+import { bg, colorC, colorB, colorM } from "./App.js";
 import { bounded } from "./HelperFunctions.js";
 import { xwidth, toBase } from "./HelperFunctions.js";
 import { Page } from "./Page.js";
@@ -34,7 +34,7 @@ export class PhysicalMemory {
 		}
 
 		// calculate dimensions of this table
-		this.Mtop = scaleM;  // initial y of top of memory
+		this.Mtop = scaleM + 5;  // initial y of top of memory
 		this.Mheight = (PMSize / PgSize) * ((this.pages[0].height + 5) + scaleC);  // height of memory when drawn out
 		this.Mwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
 		this.x = scrollBar.xpos - this.Mwidth - 10; // x coordinate of this table
@@ -82,12 +82,13 @@ export class PhysicalMemory {
 		}
 		this.p.noStroke();
 		this.p.fill(bg);
-		this.p.rect(x, 0, this.Mwidth + 5, scaleM);  // background for header
-		this.p.rect(x, 0, -scaleM * 3, scaleM);  // cover row address
+		// added 5 for margin
+		this.p.rect(x, 0, this.Mwidth + 5, this.Mtop);  // background for header
+		this.p.rect(x, 0, -scaleM * 3, this.Mtop);  // cover row address
 
 		// display title
-		this.p.fill(colorM);
-		this.p.stroke(colorM);
+		this.p.fill(colorB);
+		this.p.stroke(colorB);
 		this.p.textSize(scaleM);
 		this.p.textAlign(this.p.CENTER);
 		this.p.text("Physical Memory", x + this.Mwidth / 2, 0.85 * scaleM);  // mem label
