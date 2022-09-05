@@ -12,6 +12,7 @@ import { Disk } from "./Disk.js";
 
 let canvas, diagramCanvas;
 let inAddrWidth, inPgSize, inTlbSize, inTlbE, inPhysMemSize; // system param input
+let dispPTSize, dispVMSize; // system param display
 let ptSize, vmSize; // sys param calculated values
 
 // colors
@@ -64,6 +65,8 @@ const displayTables = (p) => {
         inTlbSize = p.select("#tlbSize");
         inTlbE = p.select("#tlbE");
         inPhysMemSize = p.select("#physMemSize");
+        dispPTSize = p.select("#ptSize");
+        dispVMSize = p.select("#vmSize");
 
         // TODO: figure out how to display the calculated ptSize and vmSize are
 
@@ -139,7 +142,11 @@ const displayTables = (p) => {
                     vbarPhysMem.spos = vbarPhysMem.ypos;
                     vbarPhysMem.newspos = vbarPhysMem.ypos;
 
+                    // update system paramter display window
                     paramButton.attribute('value', 'Next');
+                    dispPTSize.html((p.pow(2, m) / pgSize) + " Entries");
+                    dispVMSize.html(p.pow(2, m) + " Bytes");
+
                     // msgbox.value("Press Next (left) to advance explanation.\n");
                     state = PARAMS_PHYS_MEM;
                     if (!histMove && explain) break;
