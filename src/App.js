@@ -21,6 +21,7 @@ export let colorG, colorB, colorW;
 
 // System parameters
 let m, PPNWidth, E, TLBSize, pgSize, physMemSize, PO;
+let VM = true;
 
 // Main canvas table components
 let physMem, virMem, tlb, pt, disk;
@@ -34,8 +35,9 @@ let vbarDiskEnable;
 
 // system control buttons
 let paramButton;
+let readButton;
+let writeButton;
 let explain = false;
-let VM = true;
 
 let msg = ""; // canvas message
 
@@ -73,6 +75,10 @@ const displayTables = (p) => {
         // setup system control buttons
         paramButton = p.select("#paramButton");
         paramButton.mousePressed(changeParams);
+        readButton = p.select("#readButton");
+        readButton.mousePressed(readVM);
+        writeButton = p.select("#writeButton");
+        writeButton.mousePressed(writeVM);
 
         // setup scroll bar
         vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
@@ -187,6 +193,20 @@ const displayTables = (p) => {
                     if (!histMove && explain) break;
             }
         }
+    }
+
+    /**
+     * handles reading from VM upon user request to read at a given address
+     */
+    function readVM() {
+        alert("read pressed");
+    }
+
+    /**
+     * handles writing to VM upon user request to write at a given address
+     */
+    function writeVM() {
+        alert("write pressed");
     }
 
     /**
