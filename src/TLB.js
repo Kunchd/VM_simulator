@@ -9,7 +9,7 @@ export class TLB {
 	 * Construct a new isntance of TLB
 	 * @param {*} p the p5 object assigned to current canvas
 	 * @param {*} scrollBar the scroll bar to attatch the TLB to
-	 * @param {*} TLBSize the size in bytes of the TLB
+	 * @param {*} TLBSize the size in entries of the TLB
 	 * @param {*} E the assciativity of the TLB
 	 * @param {*} addrWidth the bit width of the virtual address
 	 * @param {*} PPNWidth the bit width of the PPN
@@ -17,7 +17,7 @@ export class TLB {
 	constructor(p, scrollBar, TLBSize, E, addrWidth, PPNWidth) {
 		this.p = p;     // p5 object of current canvas
 
-		this.S = TLBSize / E;     // number of TLB sets
+		this.S = TLBSize / E;     // number of TLB sets, aka index
 		this.E = E;     // TLB associatibity
 		this.addrWidth = addrWidth;     // address width
 		this.PPNWidth = PPNWidth;       // PPN width
@@ -42,6 +42,19 @@ export class TLB {
 	}
 
 	clearHighlight() { for (var i = 0; i < this.S; i++) this.sets[i].clearHighlight(); }
+
+	/**
+	 * checks and gets the PPN from the TLB given the VPN
+	 * @param {*} VPN VPN
+	 * @return -1 if TLB miss, and the PPN if TLB hit
+	 */
+	getPPNWrite(VPN) {
+		let index = VPN % this.S;	// index of given VPN
+		let tag = VPN / this.S;		// tag of give VPN
+
+		// asks TLB set to check if tag exists
+		return this.sets[index].checkTagWrite(tag);
+	}
 
 	display() {
 		var x = this.x;

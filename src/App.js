@@ -12,6 +12,8 @@ import { Disk } from "./Disk.js";
 
 let canvas, diagramCanvas;
 let inAddrWidth, inPgSize, inTlbSize, inTlbE, inPhysMemSize; // system param input
+let inReadAddr, inWriteAddr, inWriteData; // mem access param input
+
 let dispPTSize, dispVMSize; // system param display
 let ptSize, vmSize; // sys param calculated values
 
@@ -69,8 +71,9 @@ const displayTables = (p) => {
         inPhysMemSize = p.select("#physMemSize");
         dispPTSize = p.select("#ptSize");
         dispVMSize = p.select("#vmSize");
-
-        // TODO: figure out how to display the calculated ptSize and vmSize are
+        inReadAddr = p.select("#rAddr");
+        inWriteAddr = p.select("#wAddr");
+        inWriteData = p.select("#wData");
 
         // setup system control buttons
         paramButton = p.select("#paramButton");
@@ -199,14 +202,38 @@ const displayTables = (p) => {
      * handles reading from VM upon user request to read at a given address
      */
     function readVM() {
-        alert("read pressed");
+        // reads readAddr from input box and converts it from base 16 to decimal
+        let rAddr = parseInt(inReadAddr.value(), 16);
+        alert("read input: " + rAddr);
     }
 
     /**
      * handles writing to VM upon user request to write at a given address
      */
     function writeVM() {
-        alert("write pressed");
+        // reads writeAddr and writeData from input box and convert to decimal
+        let wAddr = parseInt(inWriteAddr.value(), 16);
+        let wData = parseInt(inWriteData.value(), 16);
+        let VPN = wAddr >> PO;
+
+        // check input is valid
+        if(isNaN(wAddr) || isNaN(wData)) {
+            alert("Given write input is not a number");
+            return;
+        }
+        else if(wAddr >= p.pow(2, m) || wAddr < 0) {
+            alert("write address out of bound");
+            return;
+        }
+        else if(wData < 0) {
+            alert("write data out of bound");
+            return;
+        }
+        
+        // check if address is in TLB
+        let PPN = tlb.getPPNWrite(VPN);
+
+        alert("write addr: " + wAddr + "\n" + "write data: " + wData);
     }
 
     /**
@@ -225,8 +252,8 @@ const displayTables = (p) => {
         E = p.int(inTlbE.value());
 
         // calculate other cache parameters
-        PO = p.log(pgSize) / p.log(2);
-        PPNWidth = p.log(physMemSize) / p.log(2);
+        PO = p.ceil(p.log(pgSize) / p.log(2));
+        PPNWidth = p.ceil(p.log(physMemSize) / p.log(2));
 
         return 0;
     }

@@ -9,7 +9,13 @@ import { MGNT_BIT_WIDTH } from "./Constants.js";
 
 /* Class to represent a TLB entry (tag + PPN + management bits) */
 export class TLBSetEntry {
-    // undefined for PPN means no value
+    /**
+     * Constructs a TLB set entry.
+     * Undefined for PPN means no value
+     * @param {*} p p5 object for the current canvas
+     * @param {*} t tag width
+     * @param {*} PPNWidth PPN width
+     */
     constructor(p, t, PPNWidth) {
         this.p = p;       // p5 object of the current canvas
 
@@ -24,7 +30,7 @@ export class TLBSetEntry {
         this.E = 0;       // execute bit value
         this.T = 0;       // tag value
         this.addr = -1;   // address of beginning of block (-1 is dummy addr)
-        this.PPN = 0;     // PPN value
+        this.PPN = undefined;     // PPN value
 
         // lighting values
         this.lightPPN = 0;  // indicate highlighting for moved/changed data
@@ -35,58 +41,6 @@ export class TLBSetEntry {
         this.lightE = 0;
         this.lightT = 0;
     }
-
-    // all functional methods are temporarily commented
-
-    // invalidate() {
-    //   if (this.D == 1) this.writeMem();
-    //   this.V = 0;
-    //   this.lightV = 1;
-    // }
-
-    // readMem( addr ) {
-    //   this.addr = int(addr/K)*K;  // store address of beginning of block
-    //   this.T = int(addr/K/S);
-    //   this.lightT = 1;
-    //   for (var i = 0; i < K; i++) {
-    //     this.block[i] = mem.data[this.addr+i];
-    //     mem.highlight(this.addr+i, 1);
-    //     this.light[i] = 1;
-    //   }
-    //   this.lightV = !this.V;  // only highlight if it was previously invalid
-    //   this.V = 1;
-    //   msgbox.value(msgbox.value() + "Block read into cache from memory at address 0x" + toBase(this.addr, 16, 1) + ".\n");
-    //   msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
-    // }
-
-    // writeMem( ) {
-    //   for (var i = 0; i < K; i++) {
-    //     mem.highlight(this.addr+i, mem.data[this.addr+i] == this.block[i] ? 2 : 3);
-    //     mem.data[this.addr+i] = this.block[i];
-    //   }
-    //   this.D = this.D < 0 ? -1 : 0;
-    //   this.lightD = 1;
-    //   msgbox.value(msgbox.value() + "block written to memory at address 0x" + toBase(this.addr, 16, 1) + ".\n");
-    //   msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
-    // }
-
-    // readByte( addr ) {
-    //   this.light[addr%K] = 2;
-    //   return this.block[addr%K];
-    // }
-
-    // writeByte( addr, data ) {
-    //   this.block[addr%K] = data;
-    //   this.light[addr%K] = 2;
-    //   if (this.D < 0) {
-    //     msgbox.value(msgbox.value() + "Write through: ");
-    //     this.writeMem(this.addr);  // write through to Mem
-    //   } else {
-    //     msgbox.value(msgbox.value() + "Write back: set Dirty bit.");
-    //     this.D = 1;  // set dirty bit
-    //     this.lightD = 1;
-    //   }
-    // }
 
     // highlights the currently focused lines
     highlightData() { this.lightPPN = 1; }
@@ -112,16 +66,27 @@ export class TLBSetEntry {
     }
 
     /**
-     * @todo change math for the TLB to work
+     * check if this entry contain the following valid tag
+     * @param {*} tag 
+     * @retun true if a valid tag exist, false otherwise
      */
+    containTagWrite(tag) {
+        return this.T === tag && this.V && this.W;
+    }
 
     /**
-     * 
+     * return the PPN of this entry
+     */
+    getPPN() {
+        return this.PPN;
+    }
+
+    /**
+     * display this TLB set entry at given coordinates
      * @param {*} x 
      * @param {*} y 
      */
     display(x, y) {
-        // var d = this.D < 0 ? 0 : 1;    a write policy thing
         var d = 1;
         this.p.textSize(scaleC);
         // cache block boxes
@@ -196,7 +161,7 @@ export class TLBSetEntry {
 
         // render PPN bits
         this.p.fill(this.lightPPN > 1 ? colorH : 0);
-        this.p.text(this.V ? toBase(this.PPN, 16, 2) : "--"
+        this.p.text(this.V && !isNaN(this.PPN) ? toBase(this.PPN, 16, 2) : "--"
             , xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * (0.5), ytext);  // data
 
         // hover text
