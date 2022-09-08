@@ -23,10 +23,10 @@ export class PT {
 
 		this.PTtop = scrollBar.ypos;  // initial y of top of PT
 		this.PTheight = this.S * 1.5 * scaleC;  // full height of PT
-		this.entry = [];  // sets in the PT
+		this.entries = [];  // collection of entries representing the PT
 		for (var i = 0; i < this.S; i++)
-			this.entry[i] = new PTEntry(p, PPNWidth);
-		this.PTwidth = this.entry[0].width + 2;  // width of PT when drawn out
+			this.entries[i] = new PTEntry(p, PPNWidth);
+		this.PTwidth = this.entries[0].width + 2;  // width of PT when drawn out
 
 		// initialize PT with scrollBar
 		this.vbarPTEnable = (this.PTtop + this.PTheight > (this.p.height / 2));
@@ -36,10 +36,28 @@ export class PT {
 
 	flush() {
 		for (var i = 0; i < this.S; i++)
-			this.entry[i].flush();
+			this.entries[i].flush();
 	}
 
-	clearHighlight() { for (var i = 0; i < this.S; i++) this.entry[i].clearHighlight(); }
+	clearHighlight() { for (var i = 0; i < this.S; i++) this.entries[i].clearHighlight(); }
+
+	/**
+	 * Get PPN for the corresponding VPN
+	 * @param {*} VPN VPN used to get the PPN
+	 * @return a string containing an identifier for PPN or SSN and this number itself
+     *          separated by a space. Returns null if invalid. 
+	 */
+	getPPNWrite(VPN) {
+		let res = this.entries[VPN].getPPNW();
+
+		if(res == null) {
+			alert("page fault");
+			// handle page fault
+		}
+
+		return res;
+		
+	}
 
 	display() {
 		// the x value where the table will be displayed, 
@@ -63,7 +81,7 @@ export class PT {
 				this.p.fill(colorC);
 				// 0.75 is hard coded so that the value is next to the box
 				this.p.text("0x" + toBase(i, 16, this.p.ceil((this.addrWidth - this.POWidth) / 4)), x - 2, curY + scaleC * (0.75));
-				this.entry[i].display(x, curY);
+				this.entries[i].display(x, curY);
 			}
 		}
 

@@ -49,6 +49,16 @@ export class PhysicalMemory {
 	clearHighlight() { for (var i = 0; i < this.light.length; i++) this.light[i] = 0; }
 
 	/**
+	 * Write the given data to the page corresponding to the PPN at the PO
+	 * @param {*} PPN physical page number
+	 * @param {*} PO page offset
+	 * @param {*} data data to be written
+	 */
+	writeToPage(PPN, PO, data) {
+		this.pages[PPN].write(PO, data);
+	}
+
+	/**
 	 * Displays the memory table
 	 */
 	display() {

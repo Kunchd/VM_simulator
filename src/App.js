@@ -22,7 +22,7 @@ export let bg, colorC, colorH, colorM;
 export let colorG, colorB, colorW;
 
 // System parameters
-let m, PPNWidth, E, TLBSize, pgSize, physMemSize, PO;
+let m, PPNWidth, E, TLBSize, pgSize, physMemSize, POwidth;
 let VM = true;
 
 // Main canvas table components
@@ -160,7 +160,7 @@ const displayTables = (p) => {
                     state = PARAMS_PHYS_MEM;
                     if (!histMove && explain) break;
                 case PARAMS_PHYS_MEM:
-                    virMem = new VirtualMemory(p, m, PO, vbarVirMemDisk);
+                    virMem = new VirtualMemory(p, m, POwidth, vbarVirMemDisk);
 
                     // reset memory scroll bar
                     vbarVirMemEnable = (virMem.Mtop + virMem.Mheight > p.height);
@@ -181,7 +181,7 @@ const displayTables = (p) => {
                     if (!histMove && explain) break;
                 case PARAMS_TLB:
                     // initialize PT
-                    pt = new PT(p, vbarPT, m, PPNWidth, PO);
+                    pt = new PT(p, vbarPT, m, PPNWidth, POwidth);
                     // reset cache scroll bar
                     vbarPTEnable = (pt.PTtop + pt.PTheight > PTDisplayHeight);
                     vbarPT.spos = vbarPT.ypos;
@@ -189,7 +189,7 @@ const displayTables = (p) => {
                     state = PARAMS_PT;
                     if (!histMove && explain) break;
                 case PARAMS_PT:
-                    disk = new Disk(p, m, PO, vbarVirMemDisk);
+                    disk = new Disk(p, m, POwidth, vbarVirMemDisk);
                     vbarDiskEnable = (disk.Dtop + disk.Dheight > p.height);
 
                     state = PARAMS_DISK;
@@ -214,7 +214,8 @@ const displayTables = (p) => {
         // reads writeAddr and writeData from input box and convert to decimal
         let wAddr = parseInt(inWriteAddr.value(), 16);
         let wData = parseInt(inWriteData.value(), 16);
-        let VPN = wAddr >> PO;
+        let VPN = wAddr >> POwidth;     // virtual page number
+        let PO = wAddr % pgSize;        // page offset
 
         // check input is valid
         if(isNaN(wAddr) || isNaN(wData)) {
@@ -231,9 +232,22 @@ const displayTables = (p) => {
         }
         
         // check if address is in TLB
+        alert("VPN: " + VPN);
         let PPN = tlb.getPPNWrite(VPN);
+        alert("PPN: " + PPN);
 
-        alert("write addr: " + wAddr + "\n" + "write data: " + wData);
+        // if TLB did not yield PPN, check Page Table
+        if(PPN === -1) {
+            PPN = pt.getPPNWrite(VPN);
+        }
+        alert("PPN: " + PPN);
+
+        if(PPN === null) {
+            // handle page fault, aka bring something randomly in from disk
+        }
+
+        // access and write to physical memory with PPN
+        physMem.writeToPage(PPN, PO, wData);
     }
 
     /**
@@ -244,16 +258,16 @@ const displayTables = (p) => {
         reset(!histMove);
 
         // setup working values
-        TLBSize = p.int(inTlbSize.value());
-        pgSize = p.int(inPgSize.value());
+        TLBSize = p.int(inTlbSize.value());         // TLB size in number of entries
+        pgSize = p.int(inPgSize.value());           // page size in bytes
 
-        physMemSize = p.int(inPhysMemSize.value());
-        m = p.int(inAddrWidth.value());
-        E = p.int(inTlbE.value());
+        physMemSize = p.int(inPhysMemSize.value()); // physical memory size
+        m = p.int(inAddrWidth.value());             // address width
+        E = p.int(inTlbE.value());                  // associativity
 
         // calculate other cache parameters
-        PO = p.ceil(p.log(pgSize) / p.log(2));
-        PPNWidth = p.ceil(p.log(physMemSize) / p.log(2));
+        POwidth = p.ceil(p.log(pgSize) / p.log(2));         // bit width of PO
+        PPNWidth = p.ceil(p.log(physMemSize) / p.log(2));   // bit width of PPN
 
         return 0;
     }

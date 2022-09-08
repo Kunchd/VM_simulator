@@ -23,6 +23,7 @@ export class PTEntry {
         this.E = 0;       // execute bit value
         this.addr = -1;   // address of beginning of block (-1 is dummy addr)
         this.PPN = 0;     // PPN value
+        this.isSSN = false;     // check if this entry contain
 
         // lighting values
         this.lightPPN = 0;  // indicate highlighting for moved/changed data
@@ -34,58 +35,6 @@ export class PTEntry {
 
         this.width = scaleC * (xwidth(1) * (MGNT_BIT_WIDTH)) + scaleC * xwidth(PT_PPN_WIDTH);
     }
-
-    // all functional methods are temporarily commented
-
-    // invalidate() {
-    //   if (this.D == 1) this.writeMem();
-    //   this.V = 0;
-    //   this.lightV = 1;
-    // }
-
-    // readMem( addr ) {
-    //   this.addr = int(addr/K)*K;  // store address of beginning of block
-    //   this.T = int(addr/K/S);
-    //   this.lightT = 1;
-    //   for (var i = 0; i < K; i++) {
-    //     this.block[i] = mem.data[this.addr+i];
-    //     mem.highlight(this.addr+i, 1);
-    //     this.light[i] = 1;
-    //   }
-    //   this.lightV = !this.V;  // only highlight if it was previously invalid
-    //   this.V = 1;
-    //   msgbox.value(msgbox.value() + "Block read into cache from memory at address 0x" + toBase(this.addr, 16, 1) + ".\n");
-    //   msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
-    // }
-
-    // writeMem( ) {
-    //   for (var i = 0; i < K; i++) {
-    //     mem.highlight(this.addr+i, mem.data[this.addr+i] == this.block[i] ? 2 : 3);
-    //     mem.data[this.addr+i] = this.block[i];
-    //   }
-    //   this.D = this.D < 0 ? -1 : 0;
-    //   this.lightD = 1;
-    //   msgbox.value(msgbox.value() + "block written to memory at address 0x" + toBase(this.addr, 16, 1) + ".\n");
-    //   msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
-    // }
-
-    // readByte( addr ) {
-    //   this.light[addr%K] = 2;
-    //   return this.block[addr%K];
-    // }
-
-    // writeByte( addr, data ) {
-    //   this.block[addr%K] = data;
-    //   this.light[addr%K] = 2;
-    //   if (this.D < 0) {
-    //     msgbox.value(msgbox.value() + "Write through: ");
-    //     this.writeMem(this.addr);  // write through to Mem
-    //   } else {
-    //     msgbox.value(msgbox.value() + "Write back: set Dirty bit.");
-    //     this.D = 1;  // set dirty bit
-    //     this.lightD = 1;
-    //   }
-    // }
 
     // highlights the currently focused lines
     highlightData() { this.lightPPN = 1; }
@@ -106,6 +55,23 @@ export class PTEntry {
         this.lightR = 0;
         this.lightW = 0;
         this.lightE = 0;
+    }
+
+    /**
+     * check if this entry is valid and can be written and get the PPN/SSN of this entry
+     * @returns a string containing an identifier for PPN or SSN and this number itself
+     *          separated by a space. Or null if the entry is invalid.
+     */
+    getPPNW() {
+        if(this.V && this.W) {
+            if(!this.isSSN) {
+                return "PPN " + this.PPN;
+            } else {
+                return "SSN " + this.PPN;
+            }
+        }
+
+        return null;
     }
 
     /**

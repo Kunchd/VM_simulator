@@ -34,6 +34,15 @@ export class Page {
     }
 
     /**
+     * write the given data at the give page offset
+     * @param {*} PO page offset
+     * @param {*} data data to write
+     */
+    write(PO, data) {
+        this.data[PO] = data;
+    }
+
+    /**
      * display the current page at the given coordinate
      * @param {*} x the x coordinate of the top left corner
      * @param {*} y the y coordinate of the top left corner

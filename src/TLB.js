@@ -49,8 +49,9 @@ export class TLB {
 	 * @return -1 if TLB miss, and the PPN if TLB hit
 	 */
 	getPPNWrite(VPN) {
+		let Sbit = this.p.ceil(this.p.log(this.S) / this.p.log(2));	// bits to represent number of set
 		let index = VPN % this.S;	// index of given VPN
-		let tag = VPN / this.S;		// tag of give VPN
+		let tag = VPN >> Sbit;		// tag of give VPN
 
 		// asks TLB set to check if tag exists
 		return this.sets[index].checkTagWrite(tag);
