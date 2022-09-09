@@ -151,13 +151,13 @@ export class PTEntry {
         this.p.text(this.V ? toBase(this.PPN, 16, this.p.ceil(this.PPNWidth / 4)) : "--"
             , xPPN + scaleC * xwidth(PT_PPN_WIDTH) * (0.5), ytext);  // data
 
-        // hover text
-        if (this.V && this.p.mouseY > y && this.p.mouseY < y + scaleC && this.p.mouseX > xPPN && this.p.mouseX < xPPN + scaleC * xwidth(2) * K) {
-            var idx = int((mouseX - xPPN) / xwidth(2) / scaleC);
-            this.p.textSize(hoverSize);
-            this.p.fill(colorH);
-            this.p.noStroke();
-            this.p.text("0x" + (this.addr + idx).toString(16), mouseX, mouseY);
-        }
+        // // hover text
+        // if (this.V && this.p.mouseY > y && this.p.mouseY < y + scaleC && this.p.mouseX > xPPN && this.p.mouseX < xPPN + scaleC * xwidth(2) * K) {
+        //     var idx = int((mouseX - xPPN) / xwidth(2) / scaleC);
+        //     this.p.textSize(hoverSize);
+        //     this.p.fill(colorH);
+        //     this.p.noStroke();
+        //     this.p.text("0x" + (this.addr + idx).toString(16), mouseX, mouseY);
+        // }
     }
 }

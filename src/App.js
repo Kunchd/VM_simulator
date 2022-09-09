@@ -242,22 +242,24 @@ const displayTables = (p) => {
             res = pt.getPPNWrite(VPN);
         }
         
-
+        // handles pagefault and load in a new page
         if(res === null) {
             // handle page fault, aka bring something randomly in from disk
             let SSN = disk.allocatePage();
             let perm = {
-                V: true,
-                D: true,
-                R: true,
-                W: true,
-                E: false
+                V: 1,
+                D: 1,
+                R: 1,
+                W: 1,
+                E: 0
             }
 
             pt.setPPN(VPN, SSN, true, perm);
             writeVM();
+            return;
         }
 
+        // if given page isSSN, load it into memory
         let [pageNumber, isSSN, isDirty] = res;
         if(isSSN) {
             PPN = swapPageFromDiskToMem(pageNumber);
