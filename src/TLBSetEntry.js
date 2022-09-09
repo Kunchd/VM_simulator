@@ -28,7 +28,7 @@ export class TLBSetEntry {
         this.R = 0;       // read bit value
         this.W = 0;       // write bit value
         this.E = 0;       // execute bit value
-        this.T = 0;       // tag value
+        this.tag = 0;       // tag value
         this.addr = -1;   // address of beginning of block (-1 is dummy addr)
         this.PPN = undefined;     // PPN value
 
@@ -71,7 +71,15 @@ export class TLBSetEntry {
      * @retun true if a valid tag exist, false otherwise
      */
     containTagWrite(tag) {
-        return this.T === tag && this.V && this.W;
+        return this.tag === tag && this.V && this.W;
+    }
+
+    /**
+     * checks if the current entry is used via the valid bit
+     * @returns whether the current entry is valid
+     */
+    checkValid() {
+        return this.V;
     }
 
     /**
@@ -79,6 +87,22 @@ export class TLBSetEntry {
      */
     getPPN() {
         return this.PPN;
+    }
+
+    /**
+     * set the current entry to the given permissions, tag, and PPN
+     * @param {*} permissions object containing permissions for management bits
+     * @param {*} tag tag to be set
+     * @param {*} PPN PPN to be set
+     */
+    setPPN(permissions, tag, PPN) {
+        this.V = permissions.V;
+        this.D = permissions.D;
+        this.R = permissions.R;
+        this.W = permissions.W;
+        this.E = permissions.E;
+        this.tag = tag;
+        this.PPN = PPN;
     }
 
     /**
@@ -153,7 +177,7 @@ export class TLBSetEntry {
         // render tag bits
         var tagText = "";
         if (this.V)
-            tagText = toBase(this.T, 16, this.p.ceil(this.t / 4));
+            tagText = toBase(this.tag, 16, this.p.ceil(this.t / 4));
         else
             for (var i = 0; i < this.p.ceil(this.t / 4); i++) tagText += "-";
         this.p.fill(this.lightT ? colorH : 0);
@@ -164,13 +188,13 @@ export class TLBSetEntry {
         this.p.text(this.V && !isNaN(this.PPN) ? toBase(this.PPN, 16, 2) : "--"
             , xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * (0.5), ytext);  // data
 
-        // hover text
-        if (this.V && this.p.mouseY > y && this.p.mouseY < y + scaleC && this.p.mouseX > xPPN && this.p.mouseX < xPPN + scaleC * xwidth(2) * K) {
-            var idx = int((mouseX - xPPN) / xwidth(2) / scaleC);
-            this.p.textSize(hoverSize);
-            this.p.fill(colorH);
-            this.p.noStroke();
-            this.p.text("0x" + (this.addr + idx).toString(16), mouseX, mouseY);
-        }
+        // // hover text
+        // if (this.V && this.p.mouseY > y && this.p.mouseY < y + scaleC && this.p.mouseX > xPPN && this.p.mouseX < xPPN + scaleC * xwidth(2) * K) {
+        //     var idx = int((mouseX - xPPN) / xwidth(2) / scaleC);
+        //     this.p.textSize(hoverSize);
+        //     this.p.fill(colorH);
+        //     this.p.noStroke();
+        //     this.p.text("0x" + (this.addr + idx).toString(16), mouseX, mouseY);
+        // }
     }
 }

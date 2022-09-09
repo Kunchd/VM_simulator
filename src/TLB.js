@@ -57,6 +57,20 @@ export class TLB {
 		return this.sets[index].checkTagWrite(tag);
 	}
 
+	/**
+	 * set a new entry with given PPN at the given VPN within tlb
+	 * @param {*} VPN VPN indicating the location of the new entry within the tlb
+	 * @param {*} permissions an object containing permission to V, D, R, W, E bits
+	 * @param {*} PPN physical page number to be stored within the tlb
+	 */
+	setEntry(VPN, permissions, PPN) {
+		let Sbit = this.p.ceil(this.p.log(this.S) / this.p.log(2));	// bits to represent number of set
+		let index = VPN % this.S;
+		let tag = VPN >> Sbit;
+
+		this.sets[index].setEntry(permissions, tag, PPN);
+	} 
+
 	display() {
 		var x = this.x;
 		var offset = 0;

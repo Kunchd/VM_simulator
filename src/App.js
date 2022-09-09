@@ -87,7 +87,7 @@ const displayTables = (p) => {
         vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
         vbarVirMemDisk = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, dampening);
         vbarTlb = new VScrollbar(p, 250 - scrollSize, 0, scrollSize, TLBDisplayHeight + scaleC, dampening);
-        vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + scaleC * 3, 
+        vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + scaleC * 3,
             scrollSize, PTDisplayHeight + scaleC, dampening);
 
         reset(true);
@@ -218,51 +218,55 @@ const displayTables = (p) => {
         let PO = wAddr % pgSize;        // page offset
 
         // check input is valid
-        if(isNaN(wAddr) || isNaN(wData)) {
+        if (isNaN(wAddr) || isNaN(wData)) {
             alert("Given write input is not a number");
             return;
         }
-        else if(wAddr >= p.pow(2, m) || wAddr < 0) {
+        else if (wAddr >= p.pow(2, m) || wAddr < 0) {
             alert("write address out of bound");
             return;
         }
-        else if(wData < 0) {
+        else if (wData < 0) {
             alert("write data out of bound");
             return;
         }
-        
+
         // check if address is in TLB
-        alert("VPN: " + VPN);
+        // alert("VPN: " + VPN);
         let PPN = tlb.getPPNWrite(VPN);
-        alert("PPN: " + PPN);
+        // alert("PPN: " + PPN);
 
         // if TLB did not yield PPN, check Page Table
-        let res;
-        if(PPN === -1) {
-            res = pt.getPPNWrite(VPN);
-        }
-        
-        // handles pagefault and load in a new page
-        if(res === null) {
-            // handle page fault, aka bring something randomly in from disk
-            let SSN = disk.allocatePage();
-            let perm = {
-                V: 1,
-                D: 1,
-                R: 1,
-                W: 1,
-                E: 0
+        if (PPN === -1) {
+            let res = pt.getPPNWrite(VPN);  // PPN result from PT
+
+            // handles pagefault and load in a new page
+            if (res === null) {
+                // handle page fault, aka bring something randomly in from disk
+                let SSN = disk.allocatePage();
+                // permission for the newly allocated page
+                let perm = {
+                    V: 1,
+                    D: 1,
+                    R: 1,
+                    W: 1,
+                    E: 0
+                }
+
+                pt.setPPN(VPN, SSN, true, perm);
+                // re-start write process
+                writeVM();
+                return;
             }
 
-            pt.setPPN(VPN, SSN, true, perm);
-            writeVM();
-            return;
-        }
+            // if given page isSSN, load it into memory
+            let [pageNumber, isSSN, isDirty] = res;
+            if (isSSN) {
+                PPN = swapPageFromDiskToMem(pageNumber);
+            }
 
-        // if given page isSSN, load it into memory
-        let [pageNumber, isSSN, isDirty] = res;
-        if(isSSN) {
-            PPN = swapPageFromDiskToMem(pageNumber);
+            // update tlb
+            tlb.setEntry(VPN, pt.getPagePermissions(VPN), PPN);
         }
 
         // access and write to physical memory with PPN
@@ -335,7 +339,7 @@ const displayTables = (p) => {
             p.noStroke();
             p.fill(colorM);
             let label = "VPN";
-            if(!VM) {
+            if (!VM) {
                 label = "SSN";
             }
             p.text(label, virMem.x - 6, scaleM * 0.8);

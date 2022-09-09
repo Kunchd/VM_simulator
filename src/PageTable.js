@@ -42,21 +42,23 @@ export class PT {
 	clearHighlight() { for (var i = 0; i < this.S; i++) this.entries[i].clearHighlight(); }
 
 	/**
+	 * get the management bits of the page assciated with this VPN
+	 * @param {*} VPN VPN to get the management bits for
+	 * @returns an object with V, D, R, W, E bits
+	 */
+	getPagePermissions(VPN) {
+		return this.entries[VPN].getPermissions();
+	}
+
+	/**
 	 * Get PPN for the corresponding VPN
 	 * @param {*} VPN VPN used to get the PPN
-     * @returns an array where the first value is the data and the second is a conditional
-     *          determining whether the data is SSN or PPN. Return null if this page cannot
-     *          be accessed.
+	 * @returns an array where the first value is the data and the second is a conditional
+	 *          determining whether the data is SSN or PPN. Return null if this page cannot
+	 *          be accessed.
 	 */
 	getPPNWrite(VPN) {
-		let res = this.entries[VPN].getPPNW();
-
-		if(res == null) {
-			alert("page fault");
-		}
-
-		return res;
-		
+		return this.entries[VPN].getPPNW();
 	}
 
 	/**
@@ -84,7 +86,7 @@ export class PT {
 
 		// display name of each set
 		for (var i = 0; i < this.S; i++) {
-			let curY = this.PTtop + offset + 1.5 * scaleC * i + 1.8 *scaleC;
+			let curY = this.PTtop + offset + 1.5 * scaleC * i + 1.8 * scaleC;
 			if (bounded(curY, this.PTtop, this.PTtop + PTDisplayHeight, 10)) {
 				this.p.textSize(scaleC * 0.8);
 				this.p.textAlign(this.p.RIGHT);

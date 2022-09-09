@@ -60,6 +60,26 @@ export class TLBSet {
 		return -1;
 	}
 
+	/**
+	 * set the first available space within this set to the given PPN and tag.
+	 * If no space is available, Least Recently Used is repalced
+	 * @todo implement LRU replacement policy
+	 * 
+	 * @param {*} permissions an object containing permission to V, D, R, W, E bits
+	 * @param {*} tag tag for the newly added PPN
+	 * @param {*} PPN PPN to add to this set
+	 */
+	setEntry(permissions, tag, PPN) {
+		for(let i = 0; i < this.entries.length; i++) {
+			if(!this.entries[i].checkValid()) {
+				this.entries[i].setPPN(permissions, tag, PPN);
+				return;
+			}
+		}
+
+		// else implement LRU
+	}
+
 	display(x, y) {
 		// draw rectangle set around different entries
 		this.p.stroke(colorC);  // orange set outline

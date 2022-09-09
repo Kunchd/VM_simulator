@@ -58,6 +58,20 @@ export class PTEntry {
     }
 
     /**
+     * get the management bits for this Physical page entry
+     * @returns the V, D, R, W, E management bits
+     */
+    getPermissions() {
+        return {
+            V: this.V,
+            D: this.D,
+            R: this.R,
+            W: this.W,
+            E: this.E
+        }
+    }
+
+    /**
      * set the current PPN/SSN to the given data
      * @param {*} data the value to set as PPN/SSN
      * @param {*} inIsSSN boolean determining whether this is SSN

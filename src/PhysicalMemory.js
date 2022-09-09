@@ -83,8 +83,9 @@ export class PhysicalMemory {
 	}
 
 	/**
-	 * naively finds first available, unused page 
-	 * @returns 
+	 * naively finds first available, unused page.
+	 * If all pages are taken, the PPN of the Least Recently used page is returned
+	 * @returns PPN of the page to be replaced
 	 */
 	findPage() {
 		for(let i = 0; i < this.light.length; i++) {
@@ -93,8 +94,7 @@ export class PhysicalMemory {
 			}
 		}
 
-		// if no unused space available, randomly find a page to replace
-		return this.p.floor(Math.random() * this.light.length);
+		// implement LRU
 	}
 
 	/**
