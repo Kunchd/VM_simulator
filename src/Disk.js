@@ -1,6 +1,7 @@
 import { scrollSize, hoverSize, scaleM, DiskDisplayHeight } from "./Constants.js";
 import { bg, colorC, colorH, colorM } from "./App.js";
 import { xwidth, toBase, bounded } from "./HelperFunctions.js";
+import { Page } from "./Page.js";
 
 /**
  * class to represent physical memory
@@ -13,25 +14,26 @@ export class Disk {
 	 * @param {*} p p5 object associated with the canvas which this memory
 	 *              representation will be placed in
 	 * @param {*} m address width
-     * @param {*} pgOffsetBits page offset bits
+     * @param {*} pgSize page offset bits
 	 * @param {*} scrollBar scroll bar associated with this table
 	 */
-	constructor(p, m, pgOffsetBits, scrollBar) {
-        this.PO = pgOffsetBits;
+	constructor(p, m, pgSize, scrollBar) {
         this.p = p;
+		this.pgSize = pgSize;
+		this.PO = this.p.ceil(this.p.log(pgSize) / this.p.log(2));
 		this.m = m;
 		this.Dtop = scaleM;  // initial y of top of memory
 		this.Dheight = 1.5 * p.pow(2, m - this.PO) * scaleM;  // height of memory when drawn out
 		this.Dwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
 		this.x = scrollBar.xpos - this.Dwidth - 10; // x coordinate of this table
-		this.data = [];  // data stored in memory
+		this.data = [];  // array of pages representing data in disk
 		this.light = [];  // indicate highlighting for moved/changed data
 		this.vbarDisk = scrollBar;   // the scroll bar created for the memory
 
 		this.vbarDiskEnable = (this.Dtop + this.Dheight > this.p.height);
 
 		for (var i = 0; i < p.pow(2, this.m - this.PO); i++) {
-			this.data[i] = 0;	// initialize memory to empty for now
+			this.data[i] = null;	// initialize memory to empty for now
 			this.light[i] = 0;	// nothing starts highlighted
 		}
 	}
@@ -40,6 +42,34 @@ export class Disk {
 	// highlighting:  0 - no highlight, 1 - background, 2 - background + text
 	highlight(addr, light) { this.light[addr] = light; }
 	clearHighlight() { for (var i = 0; i < this.light.length; i++) this.light[i] = 0; }
+
+	/**
+	 * allocate an unallocated page within disk to contain data for current process
+	 * @returns the SSN associated with the newly allocated page
+	 */
+	allocatePage() {
+		let SSN = this.p.floor(Math.random() * this.p.pow(2, this.m - this.PO));
+		this.data[SSN] = new Page(this.p, this.pgSize);
+		return SSN;
+	}
+
+	/**
+	 * return the page at the given SSN
+	 * @param {*} SSN swap space number to retrieve the page
+	 * @returns the desired page at the swap space, or null if no valid page is there
+	 */
+	getPage(SSN) {
+		return this.data[SSN];
+	}
+
+	/**
+	 * set the page at given SSN to given page
+	 * @param {*} SSN swap space number to set the new page
+	 * @param {*} page the new page to set
+	 */
+	setPage(SSN, page) {
+		this.data[SSN] = page;
+	}
 
 	/**
 	 * Displays the memory table

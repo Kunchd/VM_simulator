@@ -189,7 +189,7 @@ const displayTables = (p) => {
                     state = PARAMS_PT;
                     if (!histMove && explain) break;
                 case PARAMS_PT:
-                    disk = new Disk(p, m, POwidth, vbarVirMemDisk);
+                    disk = new Disk(p, m, pgSize, vbarVirMemDisk);
                     vbarDiskEnable = (disk.Dtop + disk.Dheight > p.height);
 
                     state = PARAMS_DISK;
@@ -237,13 +237,30 @@ const displayTables = (p) => {
         alert("PPN: " + PPN);
 
         // if TLB did not yield PPN, check Page Table
+        let res;
         if(PPN === -1) {
-            PPN = pt.getPPNWrite(VPN);
+            res = pt.getPPNWrite(VPN);
         }
-        alert("PPN: " + PPN);
+        
 
-        if(PPN === null) {
+        if(res === null) {
             // handle page fault, aka bring something randomly in from disk
+            let SSN = disk.allocatePage();
+            let perm = {
+                V: true,
+                D: true,
+                R: true,
+                W: true,
+                E: false
+            }
+
+            pt.setPPN(VPN, SSN, true, perm);
+            writeVM();
+        }
+
+        let [pageNumber, isSSN, isDirty] = res;
+        if(isSSN) {
+            PPN = swapPageFromDiskToMem(pageNumber);
         }
 
         // access and write to physical memory with PPN
@@ -347,7 +364,21 @@ const displayTables = (p) => {
                 vbarVirMemDisk.newspos = vbarVirMemDisk.ypos;
             }
         }
+    }
 
+    /**
+     * swap the given SSN page from disk with a page within physical memory
+     * @param {*} SSN 
+     * @returns new PPN given to the page from the given SSN
+     */
+    function swapPageFromDiskToMem(SSN) {
+        let PPN = physMem.findPage();
+        let diskPage = disk.getPage(SSN);
+
+        disk.setPage(SSN, physMem.getPage(PPN));
+        physMem.setPage(PPN, diskPage);
+
+        return PPN;
     }
 }
 

@@ -25,6 +25,12 @@ export class PhysicalMemory {
 		this.PgSize = PgSize;
 		this.PPNbits = this.p.log(this.PMSize / this.PgSize) / this.p.log(2);
 		this.pages = [];	// contained pages
+
+		/*
+		 * 0 stands for unused
+		 * 1 stands for used by current process
+		 * 2 stands for highlighted for change
+		 */
 		this.light = [];  // indicate highlighting for moved/changed data
 
 		// initialize data
@@ -56,6 +62,39 @@ export class PhysicalMemory {
 	 */
 	writeToPage(PPN, PO, data) {
 		this.pages[PPN].write(PO, data);
+	}
+
+	/**
+	 * get page at the given PPN
+	 * @param {*} PPN the page number to get the page of
+	 * @returns the page located at the given PPN
+	 */
+	getPage(PPN) {
+		return this.pages[PPN];
+	}
+
+	/**
+	 * set the page at PPN in PhysMem to the given page
+	 * @param {*} PPN the page number for the page to set
+	 * @param {*} page the page to replace previous page
+	 */
+	setPage(PPN, page) {
+		this.pages[PPN] = page;
+	}
+
+	/**
+	 * naively finds first available, unused page 
+	 * @returns 
+	 */
+	findPage() {
+		for(let i = 0; i < this.light.length; i++) {
+			if(this.light[i] === 0) {
+				return i;
+			}
+		}
+
+		// if no unused space available, randomly find a page to replace
+		return this.p.floor(Math.random() * this.light.length);
 	}
 
 	/**

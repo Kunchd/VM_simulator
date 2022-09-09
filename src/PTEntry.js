@@ -58,17 +58,30 @@ export class PTEntry {
     }
 
     /**
+     * set the current PPN/SSN to the given data
+     * @param {*} data the value to set as PPN/SSN
+     * @param {*} inIsSSN boolean determining whether this is SSN
+     * @param {*} permissions an object with V, D, R, W, E attributes
+     */
+    setData(data, inIsSSN, permissions) {
+        this.PPN = data;
+        this.isSSN = inIsSSN;
+        this.V = permissions.V;
+        this.D = permissions.D;
+        this.R = permissions.R;
+        this.W = permissions.W;
+        this.E = permissions.E;
+    }
+
+    /**
      * check if this entry is valid and can be written and get the PPN/SSN of this entry
-     * @returns a string containing an identifier for PPN or SSN and this number itself
-     *          separated by a space. Or null if the entry is invalid.
+     * @returns an array where the first value is the data and the second is a conditional
+     *          determining whether the data is SSN or PPN. Return null if this page cannot
+     *          be accessed.
      */
     getPPNW() {
         if(this.V && this.W) {
-            if(!this.isSSN) {
-                return "PPN " + this.PPN;
-            } else {
-                return "SSN " + this.PPN;
-            }
+            return [this.PPN, this.isSSN, this.D];
         }
 
         return null;

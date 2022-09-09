@@ -44,19 +44,30 @@ export class PT {
 	/**
 	 * Get PPN for the corresponding VPN
 	 * @param {*} VPN VPN used to get the PPN
-	 * @return a string containing an identifier for PPN or SSN and this number itself
-     *          separated by a space. Returns null if invalid. 
+     * @returns an array where the first value is the data and the second is a conditional
+     *          determining whether the data is SSN or PPN. Return null if this page cannot
+     *          be accessed.
 	 */
 	getPPNWrite(VPN) {
 		let res = this.entries[VPN].getPPNW();
 
 		if(res == null) {
 			alert("page fault");
-			// handle page fault
 		}
 
 		return res;
 		
+	}
+
+	/**
+	 * set the PT entry for the VPN to the given PPN with given permissions
+	 * @param {*} VPN VPN to set the PPN for
+	 * @param {*} data the PPN/SSN to write to the entry
+	 * @param {*} isSSN determine whether the given PPN is a PPN or SSN
+	 * @param {*} permissions permissions given this page
+	 */
+	setPPN(VPN, data, isSSN, permissions) {
+		this.entries[VPN].setData(data, isSSN, permissions);
 	}
 
 	display() {
