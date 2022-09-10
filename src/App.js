@@ -380,7 +380,7 @@ const displayTables = (p) => {
      * @returns new PPN given to the page from the given SSN
      */
     function swapPageFromDiskToMem(SSN) {
-        let PPN = physMem.findPage();
+        let PPN = physMem.findVictim();
         let diskPage = disk.getPage(SSN);
 
         disk.setPage(SSN, physMem.getPage(PPN));

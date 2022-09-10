@@ -26,6 +26,7 @@ export class PhysicalMemory {
 		this.PgSize = PgSize;
 		this.PPNbits = this.p.log(this.PMSize / this.PgSize) / this.p.log(2);
 		this.pages = [];	// contained pages
+		this.used = [];		// time since usage for each page (for LRU)
 
 		/*
 		 * 0 stands for unused
@@ -36,8 +37,9 @@ export class PhysicalMemory {
 
 		// initialize data
 		for (var i = 0; i < PMSize / PgSize; i++) {
-			this.light[i] = 0;                 // nothing starts highlighted
+			this.light[i] = 0;                 	// nothing starts highlighted
 			this.pages[i] = new Page(this.p, this.PgSize);
+			this.used[i] = PMSize/ PgSize;		// initialize all page to not recently used
 		}
 
 		// calculate dimensions of this table
@@ -63,6 +65,8 @@ export class PhysicalMemory {
 	 */
 	writeToPage(PPN, PO, data) {
 		this.pages[PPN].write(PO, data);
+		this.used[PPN] = 0;					// reset usage for this page
+		this.updateUsed(PPN);
 	}
 
 	/**
@@ -88,7 +92,7 @@ export class PhysicalMemory {
 	 * If all pages are taken, the PPN of the Least Recently used page is returned
 	 * @returns PPN of the page to be replaced
 	 */
-	findPage() {
+	findVictim() {
 		for(let i = 0; i < this.light.length; i++) {
 			if(this.light[i] === 0) {
 				// update status to used page
@@ -97,7 +101,17 @@ export class PhysicalMemory {
 			}
 		}
 
-		// implement LRU
+		// if all page taken, find LRU page
+		let max = -Number.MAX_VALUE;
+		let maxIndex = -1;
+		for(let i = 0; i < this.used; i++) {
+			if(this.used[i] > max) {
+				min = this.used[i];
+				maxIndex = i;
+			}
+		}
+
+		return i;
 	}
 
 	/**
@@ -148,5 +162,17 @@ export class PhysicalMemory {
 		this.p.textSize(scaleM);
 		this.p.textAlign(this.p.CENTER);
 		this.p.text("Physical Memory", x + this.Mwidth / 2, 0.85 * scaleM);  // mem label
+	}
+
+	/**
+	 * increment used for all pages except for the currently udpated one
+	 * @param {*} PPN the page number that has been updated
+	 */
+	updateUsed(PPN) {
+		for(let i = 0; i < this.used.length; i++) {
+			if(i !== PPN) {
+				this.used[i]++;
+			}
+		}
 	}
 }
