@@ -1,4 +1,5 @@
 import { scrollSize, hoverSize, scaleM, VMDisplayHeight } from "./Constants.js";
+import { VIR_MEM_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorH, colorM } from "./App.js";
 import { xwidth, toBase, bounded } from "./HelperFunctions.js";
 
@@ -27,21 +28,22 @@ export class VirtualMemory {
 		this.Mwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
 		this.x = scrollBar.xpos - this.Mwidth - 10; // x coordinate of this table
 		this.data = [];  // data stored in memory
-		this.light = [];  // indicate highlighting for moved/changed data
 
 
 		this.vbarMemEnable = (this.Mtop + this.Mheight > this.p.height);
 
 		for (var i = 0; i < p.pow(2, this.m - this.PO); i++) {
 			this.data[i] = 0;	// initialize memory to empty for now
-			this.light[i] = 0;	// nothing starts highlighted
 		}
 	}
 
-	// helper methods for hightlighting
-	// highlighting:  0 - no highlight, 1 - background, 2 - background + text
-	highlight(addr, light) { this.light[addr] = light; }
-	clearHighlight() { for (var i = 0; i < this.light.length; i++) this.light[i] = 0; }
+	/**
+	 * allocate page for the given VPN
+	 * @param {*} VPN the page number to allocate
+	 */
+	allocatePage(VPN) {
+		this.data[VPN] = 1;
+	}
 
 	/**
 	 * Displays the memory table
@@ -68,8 +70,8 @@ export class VirtualMemory {
 				this.p.textSize(scaleM);
 				// memory boxes
 				this.p.stroke(0);
-				if (this.light[i]) {
-					this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC));
+				if (this.data[i]) {
+					this.p.fill(VIR_MEM_HIGHLIGHT);
 				} else {
 					this.p.noFill();
 				}
@@ -78,7 +80,6 @@ export class VirtualMemory {
 				// memory text
 				this.p.fill(0);
 				this.p.textAlign(this.p.CENTER);
-				this.p.fill(this.light[i] ? colorH : 0);
 				this.p.text(this.data[i] ? "Allocated" : "Unallocated", x + this.Mwidth / 2, ytext);
 
 				// // hover text

@@ -1,4 +1,5 @@
 import { scrollSize, hoverSize, scaleM, PMDisplayHeight, scaleC } from "./Constants.js";
+import { PHYS_MEM_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorB, colorM } from "./App.js";
 import { bounded } from "./HelperFunctions.js";
 import { xwidth, toBase } from "./HelperFunctions.js";
@@ -90,6 +91,8 @@ export class PhysicalMemory {
 	findPage() {
 		for(let i = 0; i < this.light.length; i++) {
 			if(this.light[i] === 0) {
+				// update status to used page
+				this.light[i] = 1;
 				return i;
 			}
 		}
@@ -114,7 +117,11 @@ export class PhysicalMemory {
 				// draw rectangle set around different entries
 				this.p.stroke(colorC);  // orange set outline
 				// this.p.strokeWeight(5);
-				this.p.noFill();
+				if(this.light[i]) {
+					this.p.fill(PHYS_MEM_HIGHLIGHT);
+				} else {
+					this.p.noFill();
+				}
 				this.p.rect(x, y, this.pages[0].width + 5, this.pages[0].height + 5);
 
 				// +5 hardcoded to align text with box

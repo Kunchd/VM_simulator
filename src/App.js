@@ -265,6 +265,8 @@ const displayTables = (p) => {
                 PPN = swapPageFromDiskToMem(pageNumber);
             }
 
+            // show allocation on VPN
+            virMem.allocatePage(VPN);
             // update tlb
             tlb.setEntry(VPN, pt.getPagePermissions(VPN), PPN);
         }

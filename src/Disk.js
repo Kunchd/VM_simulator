@@ -1,4 +1,5 @@
 import { scrollSize, hoverSize, scaleM, DiskDisplayHeight } from "./Constants.js";
+import { DISK_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorH, colorM } from "./App.js";
 import { xwidth, toBase, bounded } from "./HelperFunctions.js";
 import { Page } from "./Page.js";
@@ -27,21 +28,14 @@ export class Disk {
 		this.Dwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
 		this.x = scrollBar.xpos - this.Dwidth - 10; // x coordinate of this table
 		this.data = [];  // array of pages representing data in disk
-		this.light = [];  // indicate highlighting for moved/changed data
 		this.vbarDisk = scrollBar;   // the scroll bar created for the memory
 
 		this.vbarDiskEnable = (this.Dtop + this.Dheight > this.p.height);
 
 		for (var i = 0; i < p.pow(2, this.m - this.PO); i++) {
 			this.data[i] = null;	// initialize memory to empty for now
-			this.light[i] = 0;	// nothing starts highlighted
 		}
 	}
-
-	// helper methods for hightlighting
-	// highlighting:  0 - no highlight, 1 - background, 2 - background + text
-	highlight(addr, light) { this.light[addr] = light; }
-	clearHighlight() { for (var i = 0; i < this.light.length; i++) this.light[i] = 0; }
 
 	/**
 	 * allocate an unallocated page within disk to contain data for current process
@@ -96,8 +90,8 @@ export class Disk {
 				this.p.textSize(scaleM);
 				// memory boxes
 				this.p.stroke(0);
-				if(this.light[i]) {
-					this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC));
+				if(this.data[i]) {
+					this.p.fill(DISK_HIGHLIGHT);
 				} else {
 					this.p.noFill();
 				}
@@ -106,7 +100,6 @@ export class Disk {
 				// memory text
 				this.p.fill(0);
 				this.p.textAlign(this.p.CENTER);
-				this.p.fill(this.light[i] ? colorH : 0);
 				this.p.text(this.data[i] ? "Allocated" : "Unallocated", x + this.Dwidth / 2, ytext);
 
 				// // hover text

@@ -15,3 +15,8 @@ export const PARAMS_PT = 4, PARAMS_DISK = 5;
 
 export const MGNT_BIT_WIDTH = 5;
 export const PT_PPN_WIDTH = 5;
+
+// system color constants
+export const PHYS_MEM_HIGHLIGHT = "#bdfa61";
+export const VIR_MEM_HIGHLIGHT = "#88B5F8";
+export const DISK_HIGHLIGHT = "#6DF8B5";
