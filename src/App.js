@@ -236,6 +236,11 @@ const displayTables = (p) => {
         let PPN = tlb.getPPNWrite(VPN);
         // alert("PPN: " + PPN);
 
+        /**
+         * @todo implement auto focus when new things are updated
+         */
+
+
         // if TLB did not yield PPN, check Page Table
         if (PPN === -1) {
             let res = pt.getPPNWrite(VPN);  // PPN result from PT
