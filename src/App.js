@@ -4,7 +4,7 @@ import { VScrollbar } from "./VScrollbar.js";
 import { TLB } from "./TLB.js";
 import { scrollSize, dampening, scaleM, scaleC } from "./Constants.js";
 import { TLBDisplayHeight, PTDisplayHeight, DiskDisplayHeight } from "./Constants.js";
-import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT, PARAMS_DISK } from "./Constants.js";
+// import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT, PARAMS_DISK } from "./Constants.js";
 import { PT } from "./PageTable.js";
 import { bounded } from "./HelperFunctions.js";
 import { Disk } from "./Disk.js";
@@ -45,6 +45,13 @@ let msg = ""; // canvas message
 
 // state variables and constants
 let state;
+const INIT = 0, PARAMS_PHYS_MEM = 1, PARAMS_VIR_MEM = 2, PARAMS_TLB = 3;
+const PARAMS_PT = 4, PARAMS_DISK = 5;
+const READY = 6, CHECK_TLB = 7;
+const PROTECTION_CHECK = 8, PYSICAL_PAGE_ACCESS = 9;
+const CHECK_PAGE_TABLE = 10, UPDATE_TLB = 11, PAGE_FAULT = 12;
+
+
 
 // history related variables
 let histArray = [];
@@ -81,7 +88,7 @@ const displayTables = (p) => {
         readButton = p.select("#readButton");
         readButton.mousePressed(readVM);
         writeButton = p.select("#writeButton");
-        writeButton.mousePressed(writeVM);
+        writeButton.mousePressed(readWriteDFA);
 
         // setup scroll bar
         vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
@@ -199,8 +206,119 @@ const displayTables = (p) => {
 
                     state = PARAMS_DISK;
                     if (!histMove && explain) break;
+                case PARAMS_DISK:
+                  /**
+                   * @TODO fix
+                   */
+                  state = READY;
             }
         }
+    }
+
+  var wAddr;
+  var wData;
+  var VPN;
+  var PO;
+  var res;
+  var PPN;
+
+    function readWriteDFA() {
+      /** @TODO explain = ...*/
+      
+      switch (state) {
+        case READY:
+          alert("ready");
+          wAddr = parseInt(inWriteAddr.value(), 16);
+          wData = parseInt(inWriteData.value(), 16);
+              // check input is valid
+          if (isNaN(wAddr) || isNaN(wData)) {
+            alert("Given write input is not a number");
+            return;
+          } else if (wAddr >= p.pow(2, m) || wAddr < 0) {
+            alert("write address out of bound");
+            return;
+          } else if (wData < 0) {
+            alert("write data out of bound");
+            return;
+          }
+            VPN = wAddr >> POwidth;     // virtual page number
+            PO = wAddr % pgSize;        // page offset
+            state = CHECK_TLB;
+            readWriteDFA();
+            break;
+        case CHECK_TLB:
+          alert("check tlb");
+          // check if address is in TLB
+          alert("VPN: " + VPN);
+          PPN = tlb.getPPN(true, VPN);
+          alert("PPN: " + PPN);
+
+          
+          if (PPN === -1) {
+            // TLB miss
+            state = CHECK_PAGE_TABLE;
+          } else {
+            // TLB hit
+            state = PROTECTION_CHECK;
+          }
+          readWriteDFA();
+          break;
+        case PROTECTION_CHECK:
+          alert("pro check");
+          state = PYSICAL_PAGE_ACCESS;
+          readWriteDFA();
+          break;
+        case PYSICAL_PAGE_ACCESS:
+          alert("PP access");
+          // access and write to physical memory with PPN
+          physMem.writeToPage(PPN, PO, wData);
+          // done
+          state = READY;
+          break;
+        case CHECK_PAGE_TABLE:
+          alert("check PT");
+          res = pt.getPPN(true, VPN);  // PPN result from PT
+          if (res === null) {
+            state = PAGE_FAULT;
+          } else {
+            state = UPDATE_TLB;
+          }
+          readWriteDFA();
+          break;
+        case UPDATE_TLB:
+          alert("update tlb");
+            // if given page isSSN, load it into memory
+            let [pageNumber, isSSN, isDirty] = res;
+            if (isSSN) {
+                PPN = swapPageFromDiskToMem(pageNumber);
+            }
+            // show allocation on VPN
+            virMem.allocatePage(VPN);
+            // update tlb
+            tlb.setEntry(VPN, pt.getPagePermissions(VPN), PPN);
+            state = PROTECTION_CHECK;
+            readWriteDFA();
+            break;
+        case PAGE_FAULT:
+          alert("page fault");
+          // handle page fault, aka bring something randomly in from disk
+              let SSN = disk.allocatePage();
+              // permission for the newly allocated page
+              let perm = {
+                  V: 1,
+                  D: 1,
+                  R: 1,
+                  W: 1,
+                  E: 0
+              }
+
+              pt.setPPN(VPN, SSN, true, perm);
+              state = READY;  // @TODO fix
+              readWriteDFA();
+              break;
+        default:
+          alert("default case");
+      }
     }
 
     /**
