@@ -1,7 +1,7 @@
 import { scrollSize, hoverSize, scaleM, VMDisplayHeight } from "./Constants.js";
 import { VIR_MEM_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorH, colorM } from "./App.js";
-import { xwidth, toBase, bounded } from "./HelperFunctions.js";
+import { xwidth, toBase, bounded, getVbarPercentage } from "./HelperFunctions.js";
 
 /**
  * class to represent physical memory
@@ -28,7 +28,6 @@ export class VirtualMemory {
 		this.Mwidth = scaleM * xwidth(2) * 8 + 2;  // width of memory when drawn out
 		this.x = scrollBar.xpos - this.Mwidth - 10; // x coordinate of this table
 		this.data = [];  // data stored in memory
-
 
 		this.vbarMemEnable = (this.Mtop + this.Mheight > this.p.height);
 
