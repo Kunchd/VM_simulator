@@ -1,5 +1,5 @@
 import { scaleC, MGNT_BIT_WIDTH, PTDisplayHeight } from "./Constants.js";
-import { xwidth, bounded, toBase } from "./HelperFunctions.js";
+import { xwidth, bounded, toBase, setScrollBarToDesiredPos } from "./HelperFunctions.js";
 import { bg, colorC, colorB } from "./App.js";
 import { PTEntry } from "./PTEntry.js";
 
@@ -47,6 +47,11 @@ export class PT {
 	 * @returns an object with V, D, R, W, E bits
 	 */
 	getPagePermissions(VPN) {
+		setScrollBarToDesiredPos((this.PTtop * 2 + PTDisplayHeight) / 2,
+			this.PTtop + 1.5 * scaleC * VPN + 1.8 * scaleC,
+			this.PTheight - (PTDisplayHeight - scaleC),
+			this.vbarPT);
+
 		return this.entries[VPN].getPermissions();
 	}
 
@@ -61,6 +66,11 @@ export class PT {
 	 *          be accessed.
 	 */
 	getPPN(flag, VPN) {
+		setScrollBarToDesiredPos((this.PTtop * 2 + PTDisplayHeight) / 2,
+			this.PTtop + 1.5 * scaleC * VPN + 1.8 * scaleC,
+			this.PTheight - (PTDisplayHeight - scaleC),
+			this.vbarPT);
+
 		return this.entries[VPN].getPPN(flag);
 	}
 
@@ -72,6 +82,11 @@ export class PT {
 	 * @param {*} permissions permissions given this page
 	 */
 	setPPN(VPN, data, isSSN, permissions) {
+		setScrollBarToDesiredPos((this.PTtop * 2 + PTDisplayHeight) / 2,
+			this.PTtop + 1.5 * scaleC * VPN + 1.8 * scaleC,
+			this.PTheight - (PTDisplayHeight - scaleC),
+			this.vbarPT);
+
 		this.entries[VPN].setData(data, isSSN, permissions);
 	}
 

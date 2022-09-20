@@ -37,17 +37,17 @@ export let bounded = (value, minHeight, maxHeight, flex = 0) => {
  * @param {*} desiredY desired Y value to display the entry
  * @param {*} sheerY sheer Y value of the entry without any offsets
  * @param {*} percentageScaler the scalar scalling the percentage to the correct offset
- * @returns percentage needed to display an entry at the desired Y. Rounded to 1 if the 
- * 			percentage is greater than 1, and 0 if the percentage is less than 0.
+ * @param {*} scrollBar the scroll bar to set the position for
  */
-export function getVbarPercentage(desiredY, sheerY, percentageScaler) {
+export function setScrollBarToDesiredPos(desiredY, sheerY, percentageScaler, scrollBar) {
 	let percentage = -(desiredY - sheerY) / percentageScaler;
 
 	if(percentage < 0) {
-		return 0;
+		percentage = 0;
 	}
-	if(percentage > 1) {
-		return 1;
+	else if(percentage > 1) {
+		percentage = 1;
 	}
-	return percentage;
+	
+	scrollBar.setPos(percentage);
 }

@@ -144,9 +144,7 @@ export class TLBSetEntry {
         (this.lightE ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
         this.p.rect(x + scaleC * xwidth(1) * 4, y, scaleC * xwidth(1), scaleC);     // write
 
-        // render tag bit
-        // alert("PPN width:" + this.PPNWidth);
-        // alert("tag width:" + this.t);
+        // render tag bits
         (this.lightT ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
         this.p.rect(xt, y, scaleC * xwidth(this.p.ceil(this.t / 4)), scaleC);  // tag
 

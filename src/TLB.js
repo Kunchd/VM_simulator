@@ -1,5 +1,5 @@
 import { scaleC, MGNT_BIT_WIDTH, TLBDisplayHeight } from "./Constants.js";
-import { xwidth, bounded } from "./HelperFunctions.js";
+import { xwidth, bounded, setScrollBarToDesiredPos } from "./HelperFunctions.js";
 import { bg, colorC, colorB } from "./App.js";
 import { TLBSet } from "./TLBSet.js";
 
@@ -56,6 +56,11 @@ export class TLB {
 		let index = VPN % this.S;	// index of given VPN
 		let tag = VPN >> Sbit;		// tag of give VPN
 
+		setScrollBarToDesiredPos((this.TLBtop * 2 + TLBDisplayHeight - this.sets[0].height - 20) / 2,
+			this.TLBtop + 1.5 * this.E * scaleC * index,
+			this.TLBheight - (TLBDisplayHeight - this.sets[0].height),
+			this.vbarTLB);
+
 		// asks TLB set to check if tag exists
 		return this.sets[index].checkTag(flag, tag);
 	}
@@ -70,6 +75,11 @@ export class TLB {
 		let Sbit = this.p.ceil(this.p.log(this.S) / this.p.log(2));	// bits to represent number of set
 		let index = VPN % this.S;
 		let tag = VPN >> Sbit;
+
+		setScrollBarToDesiredPos((this.TLBtop * 2 + TLBDisplayHeight - this.sets[0].height - 20) / 2,
+			this.TLBtop + 1.5 * this.E * scaleC * index,
+			this.TLBheight - (TLBDisplayHeight - this.sets[0].height),
+			this.vbarTLB);
 
 		this.sets[index].setEntry(permissions, tag, PPN);
 	} 

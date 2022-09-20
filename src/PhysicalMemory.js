@@ -2,7 +2,7 @@ import { scrollSize, hoverSize, scaleM, PMDisplayHeight, scaleC } from "./Consta
 import { PHYS_MEM_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorB, colorM } from "./App.js";
 import { bounded } from "./HelperFunctions.js";
-import { xwidth, toBase } from "./HelperFunctions.js";
+import { xwidth, toBase, setScrollBarToDesiredPos } from "./HelperFunctions.js";
 import { Page } from "./Page.js";
 
 /**
@@ -39,7 +39,7 @@ export class PhysicalMemory {
 		for (var i = 0; i < PMSize / PgSize; i++) {
 			this.light[i] = 0;                 	// nothing starts highlighted
 			this.pages[i] = new Page(this.p, this.PgSize);
-			this.used[i] = PMSize/ PgSize;		// initialize all page to not recently used
+			this.used[i] = PMSize / PgSize;		// initialize all page to not recently used
 		}
 
 		// calculate dimensions of this table
@@ -67,6 +67,11 @@ export class PhysicalMemory {
 		this.pages[PPN].write(PO, data);
 		this.used[PPN] = 0;					// reset usage for this page
 		this.updateUsed(PPN);
+
+		setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
+			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
+			this.Mheight - (PMDisplayHeight - this.pages[0].height),
+			this.vbarMem);
 	}
 
 	/**
@@ -75,6 +80,10 @@ export class PhysicalMemory {
 	 * @returns the page located at the given PPN
 	 */
 	getPage(PPN) {
+		setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
+			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
+			this.Mheight - (PMDisplayHeight - this.pages[0].height),
+			this.vbarMem);
 		return this.pages[PPN];
 	}
 
@@ -84,6 +93,10 @@ export class PhysicalMemory {
 	 * @param {*} page the page to replace previous page
 	 */
 	setPage(PPN, page) {
+		setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
+			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
+			this.Mheight - (PMDisplayHeight - this.pages[0].height),
+			this.vbarMem);
 		this.pages[PPN] = page;
 	}
 
@@ -93,8 +106,8 @@ export class PhysicalMemory {
 	 * @returns PPN of the page to be replaced
 	 */
 	findVictim() {
-		for(let i = 0; i < this.light.length; i++) {
-			if(this.light[i] === 0) {
+		for (let i = 0; i < this.light.length; i++) {
+			if (this.light[i] === 0) {
 				// update status to used page
 				this.light[i] = 1;
 				return i;
@@ -104,8 +117,8 @@ export class PhysicalMemory {
 		// if all page taken, find LRU page
 		let max = -Number.MAX_VALUE;
 		let maxIndex = -1;
-		for(let i = 0; i < this.used; i++) {
-			if(this.used[i] > max) {
+		for (let i = 0; i < this.used; i++) {
+			if (this.used[i] > max) {
 				min = this.used[i];
 				maxIndex = i;
 			}
@@ -131,7 +144,7 @@ export class PhysicalMemory {
 				// draw rectangle set around different entries
 				this.p.stroke(colorC);  // orange set outline
 				// this.p.strokeWeight(5);
-				if(this.light[i]) {
+				if (this.light[i]) {
 					this.p.fill(PHYS_MEM_HIGHLIGHT);
 				} else {
 					this.p.noFill();
@@ -169,8 +182,8 @@ export class PhysicalMemory {
 	 * @param {*} PPN the page number that has been updated
 	 */
 	updateUsed(PPN) {
-		for(let i = 0; i < this.used.length; i++) {
-			if(i !== PPN) {
+		for (let i = 0; i < this.used.length; i++) {
+			if (i !== PPN) {
 				this.used[i]++;
 			}
 		}

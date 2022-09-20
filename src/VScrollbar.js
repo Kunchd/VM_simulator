@@ -91,4 +91,13 @@ export class VScrollbar {
         let percentage = (this.spos - this.sposMin) / (this.sposMax - this.sposMin);
         return percentage;
     }
+
+    /**
+     * set position of current scroll bar based on given percentage
+     * @param {*} percentage 
+     */
+    setPos(percentage) {
+        this.spos = percentage * (this.sposMax - this.sposMin) + this.sposMin;
+        this.newspos = this.spos;
+    }
 }

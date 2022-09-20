@@ -1,7 +1,7 @@
 import { scrollSize, hoverSize, scaleM, VMDisplayHeight } from "./Constants.js";
 import { VIR_MEM_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorH, colorM } from "./App.js";
-import { xwidth, toBase, bounded, getVbarPercentage } from "./HelperFunctions.js";
+import { xwidth, toBase, bounded, setScrollBarToDesiredPos } from "./HelperFunctions.js";
 
 /**
  * class to represent physical memory
@@ -42,6 +42,10 @@ export class VirtualMemory {
 	 */
 	allocatePage(VPN) {
 		this.data[VPN] = 1;
+		setScrollBarToDesiredPos((this.Mtop + this.Mtop + VMDisplayHeight) / 2,
+			scaleM * (1 + 6 * VPN) / 4 + this.Mtop,
+			this.Mheight - (VMDisplayHeight - scaleM),
+			this.vbarMem);
 	}
 
 	/**

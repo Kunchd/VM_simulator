@@ -1,7 +1,7 @@
 import { scrollSize, hoverSize, scaleM, DiskDisplayHeight } from "./Constants.js";
 import { DISK_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorH, colorM } from "./App.js";
-import { xwidth, toBase, bounded } from "./HelperFunctions.js";
+import { xwidth, toBase, bounded, setScrollBarToDesiredPos } from "./HelperFunctions.js";
 import { Page } from "./Page.js";
 
 /**
@@ -15,11 +15,11 @@ export class Disk {
 	 * @param {*} p p5 object associated with the canvas which this memory
 	 *              representation will be placed in
 	 * @param {*} m address width
-     * @param {*} pgSize page offset bits
+	 * @param {*} pgSize page offset bits
 	 * @param {*} scrollBar scroll bar associated with this table
 	 */
 	constructor(p, m, pgSize, scrollBar) {
-        this.p = p;
+		this.p = p;
 		this.pgSize = pgSize;
 		this.PO = this.p.ceil(this.p.log(pgSize) / this.p.log(2));
 		this.m = m;
@@ -44,6 +44,12 @@ export class Disk {
 	allocatePage() {
 		let SSN = this.p.floor(Math.random() * this.p.pow(2, this.m - this.PO));
 		this.data[SSN] = new Page(this.p, this.pgSize);
+
+		setScrollBarToDesiredPos((2 * this.Dtop + DiskDisplayHeight) / 2,
+			scaleM * (1 + 6 * SSN) / 4 + this.Dtop,
+			this.Dheight - (DiskDisplayHeight - scaleM),
+			this.vbarDisk);
+
 		return SSN;
 	}
 
@@ -53,6 +59,12 @@ export class Disk {
 	 * @returns the desired page at the swap space, or null if no valid page is there
 	 */
 	getPage(SSN) {
+
+		setScrollBarToDesiredPos((2 * this.Dtop + DiskDisplayHeight) / 2,
+			scaleM * (1 + 6 * SSN) / 4 + this.Dtop,
+			this.Dheight - (DiskDisplayHeight - scaleM),
+			this.vbarDisk);
+
 		return this.data[SSN];
 	}
 
@@ -62,6 +74,11 @@ export class Disk {
 	 * @param {*} page the new page to set
 	 */
 	setPage(SSN, page) {
+		setScrollBarToDesiredPos((2 * this.Dtop + DiskDisplayHeight) / 2,
+			scaleM * (1 + 6 * SSN) / 4 + this.Dtop,
+			this.Dheight - (DiskDisplayHeight - scaleM),
+			this.vbarDisk);
+			
 		this.data[SSN] = page;
 	}
 
@@ -90,7 +107,7 @@ export class Disk {
 				this.p.textSize(scaleM);
 				// memory boxes
 				this.p.stroke(0);
-				if(this.data[i]) {
+				if (this.data[i]) {
 					this.p.fill(DISK_HIGHLIGHT);
 				} else {
 					this.p.noFill();
