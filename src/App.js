@@ -227,7 +227,7 @@ const displayTables = (p) => {
       
       switch (state) {
         case READY:
-          alert("ready");
+          console.log("ready");
           wAddr = parseInt(inWriteAddr.value(), 16);
           wData = parseInt(inWriteData.value(), 16);
               // check input is valid
@@ -247,11 +247,11 @@ const displayTables = (p) => {
             readWriteDFA();
             break;
         case CHECK_TLB:
-          alert("check tlb");
+          console.log("check tlb");
           // check if address is in TLB
-          alert("VPN: " + VPN);
+          console.log("VPN: " + VPN);
           PPN = tlb.getPPN(true, VPN);
-          alert("PPN: " + PPN);
+          console.log("PPN: " + PPN);
 
           
           if (PPN === -1) {
@@ -264,19 +264,19 @@ const displayTables = (p) => {
           readWriteDFA();
           break;
         case PROTECTION_CHECK:
-          alert("pro check");
+          console.log("pro check");
           state = PYSICAL_PAGE_ACCESS;
           readWriteDFA();
           break;
         case PYSICAL_PAGE_ACCESS:
-          alert("PP access");
+          console.log("PP access");
           // access and write to physical memory with PPN
           physMem.writeToPage(PPN, PO, wData);
           // done
           state = READY;
           break;
         case CHECK_PAGE_TABLE:
-          alert("check PT");
+          console.log("check PT");
           res = pt.getPPN(true, VPN);  // PPN result from PT
           if (res === null) {
             state = PAGE_FAULT;
@@ -286,7 +286,7 @@ const displayTables = (p) => {
           readWriteDFA();
           break;
         case UPDATE_TLB:
-          alert("update tlb");
+          console.log("update tlb");
             // if given page isSSN, load it into memory
             let [pageNumber, isSSN, isDirty] = res;
             if (isSSN) {
@@ -300,7 +300,7 @@ const displayTables = (p) => {
             readWriteDFA();
             break;
         case PAGE_FAULT:
-          alert("page fault");
+          console.log("page fault");
           // handle page fault, aka bring something randomly in from disk
               let SSN = disk.allocatePage();
               // permission for the newly allocated page
