@@ -52,7 +52,7 @@ export class VirtualMemory {
 		var x = this.x;
 		var offset = 0;
 		if (this.vbarMemEnable) {
-			offset = -(this.Mheight + 2 * this.Mtop - this.p.height) * this.vbarMem.getPos();
+			offset = -(this.Mheight - (VMDisplayHeight - scaleM)) * this.vbarMem.getPos();
 		}
 
 		for (var i = 0; i < this.p.pow(2, this.m - this.PO); i++) {

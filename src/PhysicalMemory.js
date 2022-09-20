@@ -121,7 +121,7 @@ export class PhysicalMemory {
 		var x = this.x;
 		var offset = 0;
 		if (this.vbarMemEnable) {
-			offset = -(this.Mheight - 200) * this.vbarMem.getPos();
+			offset = -(this.Mheight - (PMDisplayHeight - this.pages[0].height)) * this.vbarMem.getPos();
 		}
 
 		for (var i = 0; i < this.PMSize / this.PgSize; i++) {

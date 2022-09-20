@@ -72,7 +72,7 @@ export class Disk {
 		var x = this.x;
 		var offset = 0;
 		if (this.vbarDiskEnable) {
-			offset = -(this.Dheight + 2 * this.Dtop - this.p.height) * this.vbarDisk.getPos();
+			offset = -(this.Dheight - (DiskDisplayHeight - scaleM)) * this.vbarDisk.getPos();
 		}
 
 		for (var i = 0; i < this.p.pow(2, this.m - this.PO); i++) {

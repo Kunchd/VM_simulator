@@ -84,7 +84,7 @@ export class PT {
 		// enable scroll bar to change the TLB position
 		if (this.vbarPTEnable) {
 			// subtract 100 to decrease how far we scroll down
-			offset = -(this.PTheight - 100) * this.vbarPT.getPos();
+			offset = -(this.PTheight - (PTDisplayHeight - scaleC)) * this.vbarPT.getPos();
 		}
 
 		// display name of each set

@@ -80,7 +80,7 @@ export class TLB {
 
 		// enable scroll bar to change the TLB position
 		if (this.vbarTLBEnable) {
-			offset = -(this.TLBheight - (TLBDisplayHeight - 40)) * this.vbarTLB.getPos();
+			offset = -(this.TLBheight - (TLBDisplayHeight - this.sets[0].height)) * this.vbarTLB.getPos();
 		}
 
 		// display name of each set
