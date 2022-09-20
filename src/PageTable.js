@@ -52,13 +52,16 @@ export class PT {
 
 	/**
 	 * Get PPN for the corresponding VPN
+	 * @param {*} flag a boolean flag indicating read/write status. 
+	 * 				   true: write
+	 * 				   false: read
 	 * @param {*} VPN VPN used to get the PPN
 	 * @returns an array where the first value is the data and the second is a conditional
 	 *          determining whether the data is SSN or PPN. Return null if this page cannot
 	 *          be accessed.
 	 */
-	getPPNWrite(VPN) {
-		return this.entries[VPN].getPPNW();
+	getPPN(flag, VPN) {
+		return this.entries[VPN].getPPN(flag);
 	}
 
 	/**

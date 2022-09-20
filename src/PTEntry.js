@@ -89,14 +89,16 @@ export class PTEntry {
 
     /**
      * check if this entry is valid and can be written and get the PPN/SSN of this entry
+	 * @param {*} flag a boolean flag indicating read/write status. 
+	 * 				   true: write
+	 * 				   false: read
      * @returns an array where the first value is the data and the second is a conditional
      *          determining whether the data is SSN or PPN. Return null if this page cannot
      *          be accessed.
      */
-    getPPNW() {
-        if(this.V && this.W) {
+    getPPN(flag) {
+        if((flag && this.V && this.W) || (!flag && this.V && this.R)) 
             return [this.PPN, this.isSSN, this.D];
-        }
 
         return null;
     }

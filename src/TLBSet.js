@@ -51,12 +51,15 @@ export class TLBSet {
 
 	/**
 	 * Checks the current set for tag match.
+	 * @param {*} flag a boolean flag indicating read/write status. 
+	 * 				   true: write
+	 * 				   false: read
 	 * @param {*} tag 
 	 * @return PPN if there's a valid matching tag or -1 otherwise
 	 */
-	checkTagWrite(tag) {
+	checkTag(flag, tag) {
 		for (let i = 0; i < this.entries.length; i++) {
-			if (this.entries[i].containTagWrite(tag)) {
+			if (this.entries[i].containTag(flag, tag)) {
 				// update used
 				this.used[i] = 0;
 				this.updateUsed(i);

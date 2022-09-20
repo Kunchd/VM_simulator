@@ -67,11 +67,15 @@ export class TLBSetEntry {
 
     /**
      * check if this entry contain the following valid tag
-     * @param {*} tag 
+	 * @param {*} flag a boolean flag indicating read/write status. 
+	 * 				   true: write
+	 * 				   false: read
+     * @param {*} tag tag to match with the tag stored in this entry
      * @retun true if a valid tag exist, false otherwise
      */
-    containTagWrite(tag) {
-        return this.tag === tag && this.V && this.W;
+    containTag(flag, tag) {
+        if(flag) return this.tag === tag && this.V && this.W;
+        return this.tag === tag && this.V && this.R;
     }
 
     /**

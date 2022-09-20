@@ -233,7 +233,7 @@ const displayTables = (p) => {
 
         // check if address is in TLB
         // alert("VPN: " + VPN);
-        let PPN = tlb.getPPNWrite(VPN);
+        let PPN = tlb.getPPN(true, VPN);
         // alert("PPN: " + PPN);
 
         /**
@@ -243,7 +243,7 @@ const displayTables = (p) => {
 
         // if TLB did not yield PPN, check Page Table
         if (PPN === -1) {
-            let res = pt.getPPNWrite(VPN);  // PPN result from PT
+            let res = pt.getPPN(true, VPN);  // PPN result from PT
 
             // handles pagefault and load in a new page
             if (res === null) {
