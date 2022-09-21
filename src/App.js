@@ -48,7 +48,7 @@ let state;
 const INIT = 0, PARAMS_PHYS_MEM = 1, PARAMS_VIR_MEM = 2, PARAMS_TLB = 3;
 const PARAMS_PT = 4, PARAMS_DISK = 5;
 const READY = 6, CHECK_TLB = 7;
-const PROTECTION_CHECK = 8, PYSICAL_PAGE_ACCESS = 9;
+const PROTECTION_CHECK = 8, PHYSICAL_PAGE_ACCESS = 9;
 const CHECK_PAGE_TABLE = 10, UPDATE_TLB = 11, PAGE_FAULT = 12;
 
 
@@ -274,7 +274,7 @@ const displayTables = (p) => {
           state = PYSICAL_PAGE_ACCESS;
           readWriteDFA(writing);
           break;
-        case PYSICAL_PAGE_ACCESS:
+        case PHYSICAL_PAGE_ACCESS:
           console.log("PP access");
           if (writing) {
             console.log("writing");
