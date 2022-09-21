@@ -271,7 +271,7 @@ const displayTables = (p) => {
           break;
         case PROTECTION_CHECK:
           console.log("pro check");
-          state = PYSICAL_PAGE_ACCESS;
+          state = PHYSICAL_PAGE_ACCESS;
           readWriteDFA(writing);
           break;
         case PHYSICAL_PAGE_ACCESS:
