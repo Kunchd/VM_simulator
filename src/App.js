@@ -4,7 +4,7 @@ import { VScrollbar } from "./VScrollbar.js";
 import { TLB } from "./TLB.js";
 import { scrollSize, dampening, scaleM, scaleC } from "./Constants.js";
 import { TLBDisplayHeight, PTDisplayHeight, DiskDisplayHeight } from "./Constants.js";
-import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT, PARAMS_DISK } from "./Constants.js";
+// import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT, PARAMS_DISK } from "./Constants.js";
 import { PT } from "./PageTable.js";
 import { bounded } from "./HelperFunctions.js";
 import { Disk } from "./Disk.js";
@@ -45,6 +45,13 @@ let msg = ""; // canvas message
 
 // state variables and constants
 let state;
+const INIT = 0, PARAMS_PHYS_MEM = 1, PARAMS_VIR_MEM = 2, PARAMS_TLB = 3;
+const PARAMS_PT = 4, PARAMS_DISK = 5;
+const READY = 6, CHECK_TLB = 7;
+const PROTECTION_CHECK = 8, PHYSICAL_PAGE_ACCESS = 9;
+const CHECK_PAGE_TABLE = 10, UPDATE_TLB = 11, PAGE_FAULT = 12;
+
+
 
 // history related variables
 let histArray = [];
@@ -199,90 +206,158 @@ const displayTables = (p) => {
 
                     state = PARAMS_DISK;
                     if (!histMove && explain) break;
+                case PARAMS_DISK:
+                  /**
+                   * @TODO fix
+                   */
+                  state = READY;
             }
         }
+    }
+
+  var addr;
+  var data;
+  var VPN;
+  var PO;
+  var res;
+  var PPN;
+
+    /**
+     * DFA that handles the address translation 
+     * @param {*} writing set to true if writing, false if reading
+     * 
+     */
+    function readWriteDFA(writing) {
+      /** @TODO explain = ...*/
+      
+      switch (state) {
+        case READY:
+          console.log("ready");
+          if (writing) {
+            addr = parseInt(inWriteAddr.value(), 16);
+            data = parseInt(inWriteData.value(), 16);
+          } else {
+            addr = parseInt(inReadAddr.value(), 16);
+            data = 0;  // we are not writing so data is irrelevant 
+          }
+          
+          // check input is valid
+          if (isNaN(addr) || isNaN(data)) {
+            alert("Given write input is not a number");
+            return;
+          } else if (addr >= p.pow(2, m) || addr < 0) {
+            alert("write address out of bound");
+            return;
+          } else if (data < 0) {
+            alert("write data out of bound");
+            return;
+          }
+          VPN = addr >> POwidth;     // virtual page number
+          PO = addr % pgSize;        // page offset
+
+          // this is how the DFA works, set next state and call again to trigger state code.
+          state = CHECK_TLB;
+          readWriteDFA(writing);
+          break;
+        case CHECK_TLB:
+          console.log("check tlb");
+          // check if address is in TLB
+          console.log("VPN: " + VPN);
+          PPN = tlb.getPPN(true, VPN);
+          console.log("PPN: " + PPN);
+
+          
+          if (PPN === -1) {
+            // TLB miss
+            state = CHECK_PAGE_TABLE;
+          } else {
+            // TLB hit
+            state = PROTECTION_CHECK;
+          }
+          readWriteDFA(writing);
+          break;
+        case PROTECTION_CHECK:
+          console.log("pro check");
+          /**
+           * @todo implement PTE bit check
+           */
+          state = PHYSICAL_PAGE_ACCESS;
+          readWriteDFA(writing);
+          break;
+        case PHYSICAL_PAGE_ACCESS:
+          console.log("PP access");
+          if (writing) {
+            console.log("writing");
+            // access and write to physical memory with PPN
+            physMem.writeToPage(PPN, PO, data);
+          } else {
+            console.log("reading");
+            // read
+          }
+          
+          // done so we done call again 
+          state = READY;
+          break;
+        case CHECK_PAGE_TABLE:
+          console.log("check PT");
+          res = pt.getPPN(true, VPN);  // PPN result from PT
+          if (res === null) {
+            // page table miss
+            state = PAGE_FAULT;
+          } else {
+            // page table hit
+            state = UPDATE_TLB;
+          }
+          readWriteDFA(writing);
+          break;
+        case UPDATE_TLB:
+          console.log("update tlb");
+            // if given page isSSN, load it into memory
+            let [pageNumber, isSSN, isDirty] = res;
+            if (isSSN) {
+                PPN = swapPageFromDiskToMem(pageNumber);
+            }
+            // show allocation on VPN
+            virMem.allocatePage(VPN);
+            // update tlb
+            tlb.setEntry(VPN, pt.getPagePermissions(VPN), PPN);
+            state = PROTECTION_CHECK;
+            readWriteDFA(writing);
+            break;
+        case PAGE_FAULT:
+          console.log("page fault");
+          // handle page fault, aka bring something randomly in from disk
+              let SSN = disk.allocatePage();
+              // permission for the newly allocated page
+              let perm = {
+                  V: 1,
+                  D: 1,
+                  R: 1,
+                  W: 1,
+                  E: 0
+              }
+
+              pt.setPPN(VPN, SSN, true, perm);
+              state = READY;
+              readWriteDFA(writing);
+              break;
+        default:
+          alert("default case");
+      }
     }
 
     /**
      * handles reading from VM upon user request to read at a given address
      */
     function readVM() {
-        // reads readAddr from input box and converts it from base 16 to decimal
-        let rAddr = parseInt(inReadAddr.value(), 16);
-        alert("read input: " + rAddr);
+      readWriteDFA(false);
     }
 
     /**
      * handles writing to VM upon user request to write at a given address
      */
     function writeVM() {
-        // reads writeAddr and writeData from input box and convert to decimal
-        let wAddr = parseInt(inWriteAddr.value(), 16);
-        let wData = parseInt(inWriteData.value(), 16);
-        let VPN = wAddr >> POwidth;     // virtual page number
-        let PO = wAddr % pgSize;        // page offset
-
-        // check input is valid
-        if (isNaN(wAddr) || isNaN(wData)) {
-            alert("Given write input is not a number");
-            return;
-        }
-        else if (wAddr >= p.pow(2, m) || wAddr < 0) {
-            alert("write address out of bound");
-            return;
-        }
-        else if (wData < 0) {
-            alert("write data out of bound");
-            return;
-        }
-
-        // check if address is in TLB
-        // alert("VPN: " + VPN);
-        let PPN = tlb.getPPN(true, VPN);
-        // alert("PPN: " + PPN);
-
-        /**
-         * @todo implement auto focus when new things are updated
-         */
-
-
-        // if TLB did not yield PPN, check Page Table
-        if (PPN === -1) {
-            let res = pt.getPPN(true, VPN);  // PPN result from PT
-
-            // handles pagefault and load in a new page
-            if (res === null) {
-                // handle page fault, aka bring something randomly in from disk
-                let SSN = disk.allocatePage();
-                // permission for the newly allocated page
-                let perm = {
-                    V: 1,
-                    D: 1,
-                    R: 1,
-                    W: 1,
-                    E: 0
-                }
-
-                pt.setPPN(VPN, SSN, true, perm);
-                // re-start write process
-                writeVM();
-                return;
-            }
-
-            // if given page isSSN, load it into memory
-            let [pageNumber, isSSN, isDirty] = res;
-            if (isSSN) {
-                PPN = swapPageFromDiskToMem(pageNumber);
-            }
-
-            // show allocation on VPN
-            virMem.allocatePage(VPN);
-            // update tlb
-            tlb.setEntry(VPN, pt.getPagePermissions(VPN), PPN);
-        }
-
-        // access and write to physical memory with PPN
-        physMem.writeToPage(PPN, PO, wData);
+      readWriteDFA(true);
     }
 
     /**

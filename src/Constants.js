@@ -10,9 +10,6 @@ export const VMDisplayHeight = 750;
 export const DiskDisplayHeight = 750;
 export const PMDisplayHeight = 750;
 
-export const INIT = 0, PARAMS_PHYS_MEM = 1, PARAMS_VIR_MEM = 2, PARAMS_TLB = 3
-export const PARAMS_PT = 4, PARAMS_DISK = 5;
-
 export const MGNT_BIT_WIDTH = 5;
 export const PT_PPN_WIDTH = 5;
 
