@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CSE 351 VM Simulator</title>
+
+    <script src="../p5lib/p5.min.js"></script>
+    <!-- <script src="libraries/p5.sound.min.js"></script> -->
+
+    <script language="javascript" type="module" src="./src/App.js"></script>
+
+    <link rel="stylesheet" href="./css/App.css">
+</head>
+
+<body>
+    <h1>351 VM Simulator</h1>
+
+    <div class="grid-container">
+
+        <!-- System Parameters -->
+        <div id="sysParam">
+            <fieldset id="pFieldset">
+                <legend><b>System Parameters</b></legend>
+                <table>
+                    <tr>
+                        <!-- The page size choices are temporary for now -->
+                        <td>Address width:</td>
+                        <td>
+                            <select id="addrWidth" name="addrWidth">
+                                <option value="10">10</option>
+                                <option value="12" selected>12</option>
+                                <option value="16">16</option>
+                            </select> bits
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Page Size:</td>
+                        <td>
+                            <select name="pgSize" id="pgSize">
+                                <option value="16" selected>16</option>
+                                <option value="32">32</option>
+                            </select> bytes
+                        </td>
+                    <tr>
+                        <!-- The physical memory choices are temporary for now -->
+                        <td>TLB Size:</td>
+                        <td><select id="tlbSize" name="tlbSize">
+                                <option value="4">4</option>
+                                <option value="8">8</option>
+                                <option value="16" selected>16</option>
+                                <option value="32">32</option>
+                            </select> entries
+                        </td>
+                    <tr>
+                        <td>TLB Associativity:</td>
+                        <td><select name="tlbE" id="tlbE">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="4" selected>4</option>
+                                <option value="8">8</option>
+                            </select> - way
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Page Table Size:</td>
+                        <!-- value to be calculated -->
+                        <td id="ptSize">To be calculated</td>
+                    </tr>
+                    <tr>
+                        <td>Physical Memory Size:</td>
+                        <td><select name="physMemSize" id="physMemSize">
+                                <option value="128">128</option>
+                                <option value="256" selected>256</option>
+                                <option value="512">512</option>
+                            </select> Bytes </td>
+                    </tr>
+                    <tr>
+                        <!-- value t be calculated -->
+                        <td>Virtual Memory Size:</td>
+                        <td id="vmSize">To be calculated</td>
+                    </tr>
+                    <tr>
+                        <td class="center-align">
+                            <br><input id="paramButton" type="submit" value="Generate System">
+                        </td>
+                        <td class="center-align bottom-vertical-align">
+                            <input id="explain" type="checkbox" name="explain">
+                            <label for="explain">Explain</label>
+                        </td>
+                    </tr>
+                </table>
+            </fieldset>
+        </div>
+
+        <!-- Manual Memory Access -->
+        <div id="mma">
+            <fieldset>
+                <legend><b>Manual Memory Access:</b></legend>
+                <table>
+                    <tr>
+                        <td><input id="readButton" type="submit" value="Read"></td>
+                        <td colspan="2">Addr: 0x<input id="rAddr" type="text" name="rAddr" size="3" maxlength="3"></td>
+                    </tr>
+                    <tr>
+                        <td><input id="writeButton" type="submit" value="Write"></td>
+                        <td>Addr: 0x<input id="wAddr" type="text" name="wAddr" size="3" maxlength="3"></td>
+                        <td> Byte: 0x<input id="wData" type="text" name="wData" size="2" maxlength="2"></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="showSteps" type="checkbox" name="showSteps">
+                            <label for="showSteps">Step By Step</label>
+                        </td>
+                        <td colspan="2"><input id="nextBtn" type="submit" value="Next Step"></td>
+                    </tr>
+                </table>
+
+                <table class="even-width-cell">
+                    <tr class="grey-bg center-align">
+                        <td>VPN</td>
+                        <td>Offset</td>
+                        <td class="white-bg"></td>
+                        <td>TLB Tag</td>
+                        <td>TLB Index</td>
+                        <td class="white-bg"></td>
+                        <td>PPN</td>
+                    </tr>
+                    <!-- note the id dispO was renamed to dispPO -->
+                    <tr class="white-bg center-align">
+                        <td id="dispVPN" class="green-bg">-</td>
+                        <td id="dispPO" class="green-bg">-</td>
+                        <td></td>
+                        <td id="dispTLBTag" class="yellow-bg">-</td>
+                        <td id="dispTLBIndex" class="yellow-bg">-</td>
+                        <td></td>
+                        <td id="PPN" class="purple-bg">-</td>
+                    </tr>
+                    <tr class="grey-bg center-align">
+                        <td>TLB Hits</td>
+                        <td>TLB Misses</td>
+                        <td class="white-bg"></td>
+                        <td>PT Hits</td>
+                        <td>PT Misses</td>
+                    </tr>
+                    <tr class="white-bg center-align">
+                        <td id="dispTLBHit" class="blue-bg">-</td>
+                        <td id="dispTLBMiss" class="blue-bg">-</td>
+                        <td></td>
+                        <td id="dispPTHit" class="pink-bg">-</td>
+                        <td id="dispPTMiss" class="pink-bg">-</td>
+                    </tr>
+                </table>
+            </fieldset>
+        </div>
+
+        <!-- History -->
+        <div id="history">
+            <fieldset id="historyFieldset" style="text-align: center">
+                <legend style="text-align: left;"><b>History:</b></legend>
+                <textarea id="hist" rows="12" cols="19" disabled style="margin-top: 10px; resize: none;"></textarea>
+                <p></p>
+                <input id="loadHist" type="submit" value="Load"> ||
+                <input id="upButton" type="submit" value="&uarr;">
+                <input id="dnButton" type="submit" value="&darr;">
+            </fieldset>
+        </div>
+
+        <!-- Simulation Messages -->
+        <div id="statusMsg">
+            <fieldset>
+                <legend><b>Simulation Messages</b></legend>
+                <textarea id="msgbox" rows="10" cols="50" disabled></textarea>
+            </fieldset>
+        </div>
+
+        <!-- Address Translation Diagram -->
+        <div id="addrTranslation">
+            <fieldset>
+                <legend><b>Address Translation</b></legend>
+                <div id="p5addrTranslationCanvas"></div>
+            </fieldset>
+        </div>
+    </div>
+
+    <!-- p5 Canvas to display TLB, PT, VM, Memory, and Disk -->
+    <div id="p5Canvas"></div>
+</body>
+
+</html>
