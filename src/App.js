@@ -222,6 +222,11 @@ const displayTables = (p) => {
   var res;
   var PPN;
 
+    /**
+     * DFA that handles the address translation 
+     * @param {*} writing set to true if writing, false if reading
+     * 
+     */
     function readWriteDFA(writing) {
       /** @TODO explain = ...*/
       
@@ -233,10 +238,10 @@ const displayTables = (p) => {
             data = parseInt(inWriteData.value(), 16);
           } else {
             addr = parseInt(inReadAddr.value(), 16);
-            data = 0;
+            data = 0;  // we are not writing so data is irrelevant 
           }
           
-              // check input is valid
+          // check input is valid
           if (isNaN(addr) || isNaN(data)) {
             alert("Given write input is not a number");
             return;
@@ -247,11 +252,13 @@ const displayTables = (p) => {
             alert("write data out of bound");
             return;
           }
-            VPN = addr >> POwidth;     // virtual page number
-            PO = addr % pgSize;        // page offset
-            state = CHECK_TLB;
-            readWriteDFA(writing);
-            break;
+          VPN = addr >> POwidth;     // virtual page number
+          PO = addr % pgSize;        // page offset
+
+          // this is how the DFA works, set next state and call again to trigger state code.
+          state = CHECK_TLB;
+          readWriteDFA(writing);
+          break;
         case CHECK_TLB:
           console.log("check tlb");
           // check if address is in TLB
@@ -271,6 +278,9 @@ const displayTables = (p) => {
           break;
         case PROTECTION_CHECK:
           console.log("pro check");
+          /**
+           * @todo implement PTE bit check
+           */
           state = PHYSICAL_PAGE_ACCESS;
           readWriteDFA(writing);
           break;
@@ -285,15 +295,17 @@ const displayTables = (p) => {
             // read
           }
           
-          // done
+          // done so we done call again 
           state = READY;
           break;
         case CHECK_PAGE_TABLE:
           console.log("check PT");
           res = pt.getPPN(true, VPN);  // PPN result from PT
           if (res === null) {
+            // page table miss
             state = PAGE_FAULT;
           } else {
+            // page table hit
             state = UPDATE_TLB;
           }
           readWriteDFA(writing);
@@ -326,7 +338,7 @@ const displayTables = (p) => {
               }
 
               pt.setPPN(VPN, SSN, true, perm);
-              state = READY;  // @TODO fix
+              state = READY;
               readWriteDFA(writing);
               break;
         default:
