@@ -14,7 +14,7 @@ export class PTEntry {
         this.p = p;       // p5 object of the current canvas
 
         this.PPNWidth = PPNWidth;   // PPN width
-        this.PPN = -1;     // PPN value
+        this.pageNumber = -1;     // PPN/SSN value
 
         this.V = 0;       // valid bit value
         this.D = 0;       // Dirty bit value
@@ -22,7 +22,6 @@ export class PTEntry {
         this.W = 0;       // write bit value
         this.E = 0;       // execute bit value
         this.addr = -1;   // address of beginning of block (-1 is dummy addr)
-        this.PPN = 0;     // PPN value
         this.isSSN = false;     // check if this entry contain
 
         // lighting values
@@ -78,7 +77,7 @@ export class PTEntry {
      * @param {*} permissions an object with V, D, R, W, E attributes
      */
     setData(data, inIsSSN, permissions) {
-        this.PPN = data;
+        this.pageNumber = data;
         this.isSSN = inIsSSN;
         this.V = permissions.V;
         this.D = permissions.D;
@@ -88,17 +87,33 @@ export class PTEntry {
     }
 
     /**
-     * check if this entry is valid and can be written and get the PPN/SSN of this entry
+     * check if this entry is valid and can be written and get the PPN of this entry
 	 * @param {*} flag a boolean flag indicating read/write status. 
 	 * 				   true: write
 	 * 				   false: read
-     * @returns an array where the first value is the data and the second is a conditional
-     *          determining whether the data is SSN or PPN. Return null if this page cannot
-     *          be accessed.
+     * @returns an array where the first value is the PPN and the second is the dirty bit. 
+     *          Return null if this page cannot be accessed.
      */
     getPPN(flag) {
         if((flag && this.V && this.W) || (!flag && this.V && this.R)) 
-            return [this.PPN, this.isSSN, this.D];
+            return [this.pageNumber, this.D];
+
+        return null;
+    }
+
+    /**
+     * check if this entry contains SSN and can be accessed based on permission and get
+     * the SSN of this entry
+     * @param {*} flag a boolean flag indicating read/write status. 
+	 * 				   true: write
+	 * 				   false: read
+     * @returns an array where the first value is the SSN and the second is the dirty bit.
+     *          Return null if this page cannot be accessed.
+     */
+    getSSN(flag) {
+        if(this.isSSN && ((flag && !this.V && this.W) || (!flag && !this.V && this.R))) {
+            return [this.pageNumber, this.D];
+        }
 
         return null;
     }
@@ -164,7 +179,7 @@ export class PTEntry {
 
         // render PPN bits
         this.p.fill(this.lightPPN > 1 ? colorH : 0);
-        this.p.text(this.V ? toBase(this.PPN, 16, this.p.ceil(this.PPNWidth / 4)) : "--"
+        this.p.text(this.V ? toBase(this.pageNumber, 16, this.p.ceil(this.PPNWidth / 4)) : "--"
             , xPPN + scaleC * xwidth(PT_PPN_WIDTH) * (0.5), ytext);  // data
 
         // // hover text

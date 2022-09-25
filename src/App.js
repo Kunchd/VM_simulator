@@ -312,13 +312,9 @@ const displayTables = (p) => {
 				break;
 			case UPDATE_TLB:
 				console.log("update tlb");
-				// if given page isSSN, load it into memory
-				let [pageNumber, isSSN, isDirty] = res;
-				if (isSSN) {
-					PPN = swapPageFromDiskToMem(pageNumber);
-				}
-				// show allocation on VPN
-				virMem.allocatePage(VPN);
+				// get the PPN from page table result
+				let [PPN, isDirty] = res;
+
 				// update tlb
 				tlb.setEntry(VPN, pt.getPagePermissions(VPN), PPN);
 				state = PROTECTION_CHECK;
@@ -326,18 +322,25 @@ const displayTables = (p) => {
 				break;
 			case PAGE_FAULT:
 				console.log("page fault");
-				// handle page fault, aka bring something randomly in from disk
-				let SSN = disk.allocatePage();
-				// permission for the newly allocated page
-				let perm = {
-					V: 1,
-					D: 1,
-					R: 1,
-					W: 1,
-					E: 0
+
+				let res = pt.getSSN(VPN, writing);
+
+				// page not found in disk
+				if (res === null) {
+					// segfault
+				}
+				// page found in disk
+				else {
+					let [SSN, dirty] = res;
+					// bring this page into mem
+					/**
+					 * @todo track where the previous entry went
+					 */
+					let PPN = swapPageFromDiskToMem(SSN);
+					// update PT
+					pt.setPTE(VPN, PPN, false, perm);
 				}
 
-				pt.setPPN(VPN, SSN, true, perm);
 				state = READY;
 				readWriteDFA(writing);
 				break;
@@ -366,23 +369,34 @@ const displayTables = (p) => {
 	 * @param {*} VPN virtual page number of the page user is allocating
 	 */
 	function handleVPAllocation(VPN) {
-		let PN = physMem.findUnusedPage();
+		// if current page not already allocated
+		if (pt.getPPN(true, VPN) === null && pt.getSSN(true, VPN) === null) {
+			let PN = physMem.findUnusedPage();
 
-		// temporary place holder for perm, need method to determine based on VA placement
-		let perm = {
-			V: 1,
-			D: 1,
-			R: 1,
-			W: 1,
-			E: 0
-		}
+			// temporary place holder for perm, need method to determine based on VA placement
+			let permMem = {
+				V: 1,
+				D: 1,
+				R: 1,
+				W: 1,
+				E: 0
+			}
 
-		if(PN !== -1) {
-			physMem.allocatePage(PN);
-			pt.setPPN(VPN, PN, false, perm);
-		} else {
-			PN = disk.allocatePage();
-			pt.setPPN(VPN, PN, true, perm);
+			let permDisk = {
+				V: 0,
+				D: 1,
+				R: 1,
+				W: 1,
+				E: 0
+			}
+
+			if (PN !== -1) {
+				physMem.allocatePage(PN);
+				pt.setPTE(VPN, PN, false, permMem);
+			} else {
+				PN = disk.allocatePage();
+				pt.setPTE(VPN, PN, true, permDisk);
+			}
 		}
 	}
 
