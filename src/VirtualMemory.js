@@ -49,9 +49,12 @@ export class VirtualMemory {
 	}
 
 	/**
-	 * Displays the memory table
+	 * Checks for user input and Displays the memory table
+	 * @param {*} handleAllocate callback function to handle case when user allocate 
+	 * 							 a new virtual page. The given function should take the 
+	 * 							 VPN as an input
 	 */
-	display() {
+	updateAndDisplay(handleAllocate) {
 		var x = this.x;
 		var offset = 0;
 		if (this.vbarMemEnable) {
@@ -69,6 +72,14 @@ export class VirtualMemory {
 				this.p.noStroke();
 				this.p.fill(colorM);
 				this.p.text("0x" + toBase(i, 16, this.p.ceil((this.m - this.PO) / 4)), x - 2, ytext);
+
+				// checks if user is allocating current page
+				if(this.p.mouseIsPressed) {
+					if(bounded(this.p.mouseX, x, x + this.Mwidth) && bounded(this.p.mouseY, y, y + scaleM)) {
+						this.data[i] = 1;
+						handleAllocate(i);
+					}
+				}
 
 				this.p.textSize(scaleM);
 				// memory boxes

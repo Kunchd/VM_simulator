@@ -98,14 +98,52 @@ export class PhysicalMemory {
 			this.Mheight - (PMDisplayHeight - this.pages[0].height),
 			this.vbarMem);
 		this.pages[PPN] = page;
+		this.updateUsed(PPN);
 	}
 
 	/**
-	 * naively finds first available, unused page.
+	 * allocate the page at the given PPN for the current process
+	 * @param {*} PPN physical page number of the page to allocate
+	 */
+	allocatePage(PPN) {
+		setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
+			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
+			this.Mheight - (PMDisplayHeight - this.pages[0].height),
+			this.vbarMem);
+		this.light[PPN] = 1;
+		this.updateUsed(PPN);
+	}
+
+	/**
+	 * identify victim to evict from PM
 	 * If all pages are taken, the PPN of the Least Recently used page is returned
 	 * @returns PPN of the page to be replaced
 	 */
 	findVictim() {
+		let unusedPPN = this.findUnusedPage();
+
+		if (unusedPPN !== -1) {
+			return unusedPPN;
+		} else {
+			// if all page taken, find LRU page
+			let max = -Number.MAX_VALUE;
+			let maxIndex = -1;
+			for (let i = 0; i < this.used; i++) {
+				if (this.used[i] > max) {
+					max = this.used[i];
+					maxIndex = i;
+				}
+			}
+
+			return maxIndex;
+		}
+	}
+
+	/**
+	 * naively finds first available, unused page.
+	 * @returns PPN of unused page or -1 if all pages are used
+	 */
+	findUnusedPage() {
 		for (let i = 0; i < this.light.length; i++) {
 			if (this.light[i] === 0) {
 				// update status to used page
@@ -114,17 +152,7 @@ export class PhysicalMemory {
 			}
 		}
 
-		// if all page taken, find LRU page
-		let max = -Number.MAX_VALUE;
-		let maxIndex = -1;
-		for (let i = 0; i < this.used; i++) {
-			if (this.used[i] > max) {
-				min = this.used[i];
-				maxIndex = i;
-			}
-		}
-
-		return i;
+		return -1;
 	}
 
 	/**

@@ -42,6 +42,9 @@ export class Disk {
 	 * @returns the SSN associated with the newly allocated page
 	 */
 	allocatePage() {
+		/**
+		 * @todo this random allocation might step on something allocated
+		 */
 		let SSN = this.p.floor(Math.random() * this.p.pow(2, this.m - this.PO));
 		this.data[SSN] = new Page(this.p, this.pgSize);
 
