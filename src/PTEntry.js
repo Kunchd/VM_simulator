@@ -57,6 +57,13 @@ export class PTEntry {
     }
 
     /**
+     * @returns dirty bit of this PTE
+     */
+    getDirty() {
+        return this.D;
+    }
+
+    /**
      * get the management bits for this Physical page entry
      * @returns the V, D, R, W, E management bits
      */

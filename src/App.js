@@ -333,15 +333,22 @@ const displayTables = (p) => {
 				else {
 					let [SSN, dirty] = res;
 					// bring this page into mem
-					/**
-					 * @todo track where the previous entry went
-					 */
-					let PPN = swapPageFromDiskToMem(SSN);
+					let [PPN, victimVPN] = swapPageFromDiskToMem(SSN, VPN);
 					
-					// get correct management bit permissions
-					let perm = getPermForVPN(VPN);
-					// update PT
-					pt.setPTE(VPN, PPN, false, perm);
+					// get correct management bit permissions for newly brought in page
+					let evictingPerm = pt.getPagePermissions(VPN);
+					evictingPerm.V = 1;
+
+					// if victim is in the current process and is dirty, update its PTE
+					if(victimVPN !== -1 && pt.getDirty(victimVPN)) {
+						let evictedPerm = pt.getPagePermissions(victimVPN);
+						evictedPerm.V = 0;
+						evictedPerm.D = 0;
+						pt.setPTE(victimVPN, SSN, true, evictedPerm);
+					}
+
+					// update PT for newly brought in page
+					pt.setPTE(VPN, PPN, false, evictingPerm);
 				}
 
 				state = READY;
@@ -374,18 +381,18 @@ const displayTables = (p) => {
 	function handleVPAllocation(VPN) {
 		// if current page not already allocated
 		if (pt.getPPN(true, VPN) === null && pt.getSSN(true, VPN) === null) {
-			let PN = physMem.findUnusedPage();
+			let PPN = physMem.findUnusedPage();
 
 			let perm = getPermForVPN(VPN);
 
-			if (PN !== -1) {
+			if (PPN !== -1) {
 				perm.V = 1;		// this page is in memory
 
-				physMem.allocatePage(PN);
-				pt.setPTE(VPN, PN, false, perm);
+				physMem.allocatePage(PPN, VPN);
+				pt.setPTE(VPN, PPN, false, perm);
 			} else {
-				PN = disk.allocatePage();
-				pt.setPTE(VPN, PN, true, perm);
+				PPN = disk.allocatePage();
+				pt.setPTE(VPN, PPN, true, perm);
 			}
 		}
 	}
@@ -531,17 +538,21 @@ const displayTables = (p) => {
 
 	/**
 	 * swap the given SSN page from disk with a page within physical memory
-	 * @param {*} SSN 
-	 * @returns new PPN given to the page from the given SSN
+	 * @param {*} SSN number of the page being brought in
+	 * @param {*} VPN virtual page number that will map to the page being brought in at SSN
+	 * @returns an array where the first is the newly allocated PPN which contains the page 
+	 * 			from the old SSN, and the second is the VPN of the victim removed.
 	 */
-	function swapPageFromDiskToMem(SSN) {
+	function swapPageFromDiskToMem(SSN, VPN) {
 		let PPN = physMem.findVictim();
+		let victimVPN = physMem.getAssociatingVPN(PPN);
+
 		let diskPage = disk.getPage(SSN);
 
 		disk.setPage(SSN, physMem.getPage(PPN));
-		physMem.setPage(PPN, diskPage);
+		physMem.setPage(PPN, VPN, diskPage);
 
-		return PPN;
+		return [PPN, victimVPN];
 	}
 }
 

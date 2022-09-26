@@ -88,29 +88,44 @@ export class PhysicalMemory {
 	}
 
 	/**
+	 * get the associating VPN for the page located at the given PPN
+	 * @param {*} PPN page number of the page to retrieve the VPN for
+	 * @returns VPN of the page at given PPN or -1 if no association exists
+	 */
+	getAssociatingVPN(PPN) {
+		return this.pages[PPN].getAssociatingVPN();
+	}
+
+	/**
 	 * set the page at PPN in PhysMem to the given page
 	 * @param {*} PPN the page number for the page to set
+	 * @param {*} VPN virtual page number mapping to this page
 	 * @param {*} page the page to replace previous page
 	 */
-	setPage(PPN, page) {
+	setPage(PPN, VPN, page) {
 		setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
 			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
 			this.Mheight - (PMDisplayHeight - this.pages[0].height),
 			this.vbarMem);
+
 		this.pages[PPN] = page;
+		this.pages[PPN].setAssociatingVPN(VPN);
 		this.updateUsed(PPN);
 	}
 
 	/**
 	 * allocate the page at the given PPN for the current process
 	 * @param {*} PPN physical page number of the page to allocate
+	 * @param {*} VPN virtual page number mapping to this page
 	 */
-	allocatePage(PPN) {
+	allocatePage(PPN, VPN) {
 		setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
 			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
 			this.Mheight - (PMDisplayHeight - this.pages[0].height),
 			this.vbarMem);
+
 		this.light[PPN] = 1;
+		this.pages[PPN].setAssociatingVPN(VPN);
 		this.updateUsed(PPN);
 	}
 

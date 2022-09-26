@@ -18,6 +18,7 @@ export class Page {
 
         this.data = [];
         this.light = 0;
+        this.VPN = -1;      // VPN associated with this page, for easier swapping
         this.height = scaleM * (1.5 * (this.PgSize / 8) - 0.5);
         this.width = scaleM * xwidth(2) * 8;
         for (var i = 0; i < PgSize; i++) {
@@ -31,6 +32,21 @@ export class Page {
 
     clearHighlight() {
         this.light = 0;
+    }
+
+    /**
+     * set the associating VPN of this page to the given VPN
+     * @param {*} VPN new associating VPN
+     */
+    setAssociatingVPN(VPN) {
+        this.VPN = VPN;
+    }
+
+    /**
+     * @returns associating VPN of this page, or -1 if no association exists
+     */
+    getAssociatingVPN() {
+        return this.VPN
     }
 
     /**

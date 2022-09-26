@@ -42,6 +42,20 @@ export class PT {
 	clearHighlight() { for (var i = 0; i < this.S; i++) this.entries[i].clearHighlight(); }
 
 	/**
+	 * get dirty bit of PTE at the given VPN
+	 * @param {*} VPN number to check dirty bit for
+	 * @returns dirty bit
+	 */
+	getDirty(VPN) {
+		setScrollBarToDesiredPos((this.PTtop * 2 + PTDisplayHeight) / 2,
+			this.PTtop + 1.5 * scaleC * VPN + 1.8 * scaleC,
+			this.PTheight - (PTDisplayHeight - scaleC),
+			this.vbarPT);
+		
+		return this.entries[VPN].getDirty();
+	}
+
+	/**
 	 * get the management bits of the page assciated with this VPN
 	 * @param {*} VPN VPN to get the management bits for
 	 * @returns an object with V, D, R, W, E bits
