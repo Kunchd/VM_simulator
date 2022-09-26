@@ -337,6 +337,9 @@ const displayTables = (p) => {
 					 * @todo track where the previous entry went
 					 */
 					let PPN = swapPageFromDiskToMem(SSN);
+					
+					// get correct management bit permissions
+					let perm = getPermForVPN(VPN);
 					// update PT
 					pt.setPTE(VPN, PPN, false, perm);
 				}
@@ -373,31 +376,64 @@ const displayTables = (p) => {
 		if (pt.getPPN(true, VPN) === null && pt.getSSN(true, VPN) === null) {
 			let PN = physMem.findUnusedPage();
 
-			// temporary place holder for perm, need method to determine based on VA placement
-			let permMem = {
-				V: 1,
-				D: 1,
-				R: 1,
-				W: 1,
-				E: 0
-			}
-
-			let permDisk = {
-				V: 0,
-				D: 1,
-				R: 1,
-				W: 1,
-				E: 0
-			}
+			let perm = getPermForVPN(VPN);
 
 			if (PN !== -1) {
+				perm.V = 1;		// this page is in memory
+
 				physMem.allocatePage(PN);
-				pt.setPTE(VPN, PN, false, permMem);
+				pt.setPTE(VPN, PN, false, perm);
 			} else {
 				PN = disk.allocatePage();
-				pt.setPTE(VPN, PN, true, permDisk);
+				pt.setPTE(VPN, PN, true, perm);
 			}
 		}
+	}
+
+	/**
+	 * get the management permission for the given VPN based on its location within VM
+	 * @param {*} VPN virtual page number to get permission for
+	 * @returns management permission for the VPN without populated V, D, E bits
+	 */
+	function getPermForVPN(VPN) {
+		let totalVP = pow(2, m - POwidth);	// total number of virtual pages
+		let percentage = VPN / totalVP;		// the percentage of the current page with
+											// respect to total number of pages
+
+		let perm;	// permission attached to the current VPN
+
+		// read only segment
+		if(0 <= percentage &&percentage <= 0.2) {
+			perm = {
+				V: 0,
+				D: 0,
+				R: 1,
+				W: 0,
+				E: 0
+			}
+		}
+		// read write segment
+		else if(0.2 < percentage && percentage <= 0.4) {
+			perm = {
+				V: 0,
+				D: 0,
+				R: 1,
+				W: 1,
+				E: 0
+			}
+		}
+		// shared heap/stack space
+		else if(0.4 < percentage && percentage <= 1) {
+			perm = {
+				V: 0,
+				D: 0,
+				R: 1,
+				W: 1,
+				E: 0
+			}
+		}
+
+		return perm;
 	}
 
 	/**
