@@ -328,7 +328,6 @@ const displayTables = (p) => {
 
 				// page not found in disk
 				if (SSNRes === null) {
-					// segfault
 					console.log("segfault");
 					return;
 				}
