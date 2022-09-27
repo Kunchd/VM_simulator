@@ -300,8 +300,8 @@ const displayTables = (p) => {
 				break;
 			case CHECK_PAGE_TABLE:
 				console.log("check PT");
-				res = pt.getPPN(true, VPN);  // PPN result from PT
-				if (res === null) {
+				let PPNRes = pt.getPPN(true, VPN);  // PPN result from PT
+				if (PPNRes === null) {
 					// page table miss
 					state = PAGE_FAULT;
 				} else {
@@ -313,7 +313,8 @@ const displayTables = (p) => {
 			case UPDATE_TLB:
 				console.log("update tlb");
 				// get the PPN from page table result
-				let [PPN, isDirty] = res;
+				PPN = PPNRes[0];
+				let dirty = PPNRes[1];
 
 				// update tlb
 				tlb.setEntry(VPN, pt.getPagePermissions(VPN), PPN);
@@ -323,15 +324,17 @@ const displayTables = (p) => {
 			case PAGE_FAULT:
 				console.log("page fault");
 
-				let res = pt.getSSN(VPN, writing);
+				let SSNRes = pt.getSSN(writing, VPN);
 
 				// page not found in disk
-				if (res === null) {
+				if (SSNRes === null) {
 					// segfault
+					console.log("segfault");
+					return;
 				}
 				// page found in disk
 				else {
-					let [SSN, dirty] = res;
+					let [SSN, dirty] = SSNRes;
 					// bring this page into mem
 					let [PPN, victimVPN] = swapPageFromDiskToMem(SSN, VPN);
 					
@@ -379,11 +382,12 @@ const displayTables = (p) => {
 	 * @param {*} VPN virtual page number of the page user is allocating
 	 */
 	function handleVPAllocation(VPN) {
-		// if current page not already allocated
-		if (pt.getPPN(true, VPN) === null && pt.getSSN(true, VPN) === null) {
-			let PPN = physMem.findUnusedPage();
+		let perm = getPermForVPN(VPN);	// get management bit permission for this VA
 
-			let perm = getPermForVPN(VPN);
+		// if current page not already allocated
+		if (pt.getPPN(perm.W, VPN) === null && pt.getSSN(perm.W, VPN) === null) {
+			virMem.allocatePage(VPN);
+			let PPN = physMem.findUnusedPage();
 
 			if (PPN !== -1) {
 				perm.V = 1;		// this page is in memory
@@ -391,8 +395,8 @@ const displayTables = (p) => {
 				physMem.allocatePage(PPN, VPN);
 				pt.setPTE(VPN, PPN, false, perm);
 			} else {
-				PPN = disk.allocatePage();
-				pt.setPTE(VPN, PPN, true, perm);
+				let SSN = disk.allocatePage();
+				pt.setPTE(VPN, SSN, true, perm);
 			}
 		}
 	}
@@ -403,7 +407,7 @@ const displayTables = (p) => {
 	 * @returns management permission for the VPN without populated V, D, E bits
 	 */
 	function getPermForVPN(VPN) {
-		let totalVP = pow(2, m - POwidth);	// total number of virtual pages
+		let totalVP = p.pow(2, m - POwidth);	// total number of virtual pages
 		let percentage = VPN / totalVP;		// the percentage of the current page with
 											// respect to total number of pages
 

@@ -4,6 +4,7 @@ import { xwidth, toBase } from "./HelperFunctions.js";
 
 // Management bit width
 import { MGNT_BIT_WIDTH } from "./Constants.js";
+import { EMPHASIS_HIGHLIGHT } from "./Constants.js";
 
 // Note: WH and WM policies settings are removed 
 
@@ -37,6 +38,10 @@ export class PTEntry {
 
     // highlights the currently focused lines
     highlightData() { this.lightPPN = 1; }
+
+    /**
+     * highlight this entry
+     */
     highlightAll() {
         this.lightV = 1;
         this.lightD = 1;
@@ -137,27 +142,27 @@ export class PTEntry {
         this.p.stroke(0);
 
         // render valid bit
-        (this.lightV ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        (this.lightV ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
         this.p.rect(x, y, scaleC * xwidth(1), scaleC);  // valid
 
         // render dirty bit
-        (this.lightD ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        (this.lightD ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
         this.p.rect(x + scaleC * xwidth(1), y, scaleC * xwidth(1), scaleC);  // dirty
 
         // render read bit
-        (this.lightR ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        (this.lightR ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
         this.p.rect(x + scaleC * xwidth(1) * 2, y, scaleC * xwidth(1), scaleC);     // read
 
         // render write bit
-        (this.lightW ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        (this.lightW ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
         this.p.rect(x + scaleC * xwidth(1) * 3, y, scaleC * xwidth(1), scaleC);     // write
 
         // render exec bit
-        (this.lightE ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        (this.lightE ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
         this.p.rect(x + scaleC * xwidth(1) * 4, y, scaleC * xwidth(1), scaleC);     // write
 
         // for PPN
-        (this.light > 0 ? this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100) : this.p.noFill());
+        (this.lightPPN > 0 ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
         this.p.rect(xPPN, y, scaleC * xwidth(PT_PPN_WIDTH), scaleC);  // data
 
         // cache block text
@@ -165,27 +170,22 @@ export class PTEntry {
         this.p.textAlign(this.p.CENTER);
 
         // render valid bit text
-        this.p.fill(this.lightV ? colorH : 0);
+        this.p.fill(0);
         this.p.text(this.V, x + scaleC * xwidth(1) * 0.5, ytext);  // valid
 
         // render dirty bits
-        this.p.fill(this.lightD ? colorH : 0);
         this.p.text(this.D, x + scaleC * xwidth(1) * 1.5, ytext);  // dirty
 
         // render read bits
-        this.p.fill(this.lightR ? colorH : 0);
         this.p.text(this.R, x + scaleC * xwidth(1) * 2.5, ytext);   // read
 
         // render write bits
-        this.p.fill(this.lightW ? colorH : 0);
         this.p.text(this.W, x + scaleC * xwidth(1) * 3.5, ytext);   // write
 
         // render exec bits
-        this.p.fill(this.lightE ? colorH : 0);
         this.p.text(this.E, x + scaleC * xwidth(1) * 4.5, ytext);   // exec
 
         // render PPN bits
-        this.p.fill(this.lightPPN > 1 ? colorH : 0);
         this.p.text(this.V ? toBase(this.pageNumber, 16, this.p.ceil(this.PPNWidth / 4)) : "--"
             , xPPN + scaleC * xwidth(PT_PPN_WIDTH) * (0.5), ytext);  // data
 

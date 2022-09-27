@@ -30,8 +30,7 @@ export class PhysicalMemory {
 
 		/*
 		 * 0 stands for unused
-		 * 1 stands for used by current process
-		 * 2 stands for highlighted for change
+		 * 2 stands for identification highlight
 		 */
 		this.light = [];  // indicate highlighting for moved/changed data
 
@@ -67,6 +66,10 @@ export class PhysicalMemory {
 		this.pages[PPN].write(PO, data);
 		this.used[PPN] = 0;					// reset usage for this page
 		this.updateUsed(PPN);
+
+		// emphasize byte written
+		this.pages[PPN].clearHighlight();
+		this.pages[PPN].highlight(PO);
 
 		setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
 			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
@@ -124,7 +127,7 @@ export class PhysicalMemory {
 			this.Mheight - (PMDisplayHeight - this.pages[0].height),
 			this.vbarMem);
 
-		this.light[PPN] = 1;
+		this.light[PPN] = 2;
 		this.pages[PPN].setAssociatingVPN(VPN);
 		this.updateUsed(PPN);
 	}
@@ -187,7 +190,7 @@ export class PhysicalMemory {
 				// draw rectangle set around different entries
 				this.p.stroke(colorC);  // orange set outline
 				// this.p.strokeWeight(5);
-				if (this.light[i]) {
+				if (this.light[i] === 2) {
 					this.p.fill(PHYS_MEM_HIGHLIGHT);
 				} else {
 					this.p.noFill();
@@ -201,7 +204,7 @@ export class PhysicalMemory {
 				this.p.textAlign(this.p.RIGHT);
 				this.p.noStroke();
 				this.p.fill(colorC);
-				this.p.text("0x" + toBase(8 * i, 16, this.p.ceil(this.PPNbits / 4)), x - 2, ytext);
+				this.p.text("0x" + toBase(i, 16, this.p.ceil(this.PPNbits / 4)), x - 2, ytext);
 
 				this.pages[i].display(x + 2, y + 2.5);
 			}
@@ -218,6 +221,13 @@ export class PhysicalMemory {
 		this.p.textSize(scaleM);
 		this.p.textAlign(this.p.CENTER);
 		this.p.text("Physical Memory", x + this.Mwidth / 2, 0.85 * scaleM);  // mem label
+
+		// display PPN label
+		this.p.textSize(scaleM * 0.8);
+		this.p.textAlign(this.p.RIGHT);
+		this.p.noStroke();
+		this.p.fill(colorM);
+		this.p.text("PPN", x, scaleM * 0.8);
 	}
 
 	/**

@@ -39,6 +39,9 @@ export class PT {
 			this.entries[i].flush();
 	}
 
+	/**
+	 * clear emphasis highlight for all entries
+	 */
 	clearHighlight() { for (var i = 0; i < this.S; i++) this.entries[i].clearHighlight(); }
 
 	/**
@@ -84,6 +87,10 @@ export class PT {
 			this.PTheight - (PTDisplayHeight - scaleC),
 			this.vbarPT);
 
+		// emphasize current entry
+		this.clearHighlight();
+		this.entries[VPN].highlightAll();
+
 		return this.entries[VPN].getPPN(flag);
 	}
 
@@ -102,6 +109,10 @@ export class PT {
 			this.PTheight - (PTDisplayHeight - scaleC),
 			this.vbarPT);
 		
+		// emphasize current entry
+		this.clearHighlight();
+		this.entries[VPN].highlightAll();
+
 		return this.entries[VPN].getSSN(flag);
 	}
 
@@ -117,6 +128,10 @@ export class PT {
 			this.PTtop + 1.5 * scaleC * VPN + 1.8 * scaleC,
 			this.PTheight - (PTDisplayHeight - scaleC),
 			this.vbarPT);
+
+		// emphasize current entry
+		this.clearHighlight();
+		this.entries[VPN].highlightAll();
 
 		this.entries[VPN].setData(data, isSSN, permissions);
 	}

@@ -1,6 +1,7 @@
 import { scaleM, hoverSize } from "./Constants.js";
 import { colorC, colorH, colorM } from "./App.js";
 import { xwidth, toBase } from "./HelperFunctions.js";
+import { EMPHASIS_HIGHLIGHT } from "./Constants.js";
 
 
 /**
@@ -17,21 +18,34 @@ export class Page {
         this.PgSize = PgSize;
 
         this.data = [];
-        this.light = 0;
+
+        /*
+		 * 0 stands for unused
+		 * 1 stands for emphasis highlight
+		 */
+        this.light = [];
         this.VPN = -1;      // VPN associated with this page, for easier swapping
         this.height = scaleM * (1.5 * (this.PgSize / 8) - 0.5);
         this.width = scaleM * xwidth(2) * 8;
         for (var i = 0; i < PgSize; i++) {
             this.data[i] = p.floor(Math.random() * 256);  // randomize the initial memory
+            this.light[i] = 0;  // initialize with no emphasis highlight
         }
     }
 
-    highlight() {
-        this.light = 1;
+    /**
+     * emphasize highlight for the given byte
+     * @param {*} byteIndex PO of the byte to highlight
+     */
+    highlight(byteIndex) {
+        this.light[byteIndex] = 1;
     }
 
+    /**
+     * clear emphasis highlight
+     */
     clearHighlight() {
-        this.light = 0;
+        for(let i = 0; i < this.light.length; i++) this.light[i] = 0;
     }
 
     /**
@@ -74,9 +88,9 @@ export class Page {
             // memory boxes
             this.p.stroke(0);
             for (var j = 0; j < 8; j++) {
-                switch (this.light) {
+                switch (this.light[8 * i + j]) {
                     case 0: this.p.noFill(); break;
-                    case 1: this.p.fill(this.p.red(colorC), this.p.green(colorC), this.p.blue(colorC), 100); break;
+                    case 1: this.p.fill(EMPHASIS_HIGHLIGHT); break;
                 }
                 this.p.rect(x + scaleM * xwidth(2) * j, iterY, scaleM * xwidth(2), scaleM);
             }

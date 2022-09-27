@@ -61,6 +61,9 @@ export class TLB {
 			this.TLBheight - (TLBDisplayHeight - this.sets[0].height),
 			this.vbarTLB);
 
+		// cleaer highlight so the emphasis is prominent
+		this.clearHighlight();
+
 		// asks TLB set to check if tag exists
 		return this.sets[index].checkTag(flag, tag);
 	}
@@ -80,6 +83,9 @@ export class TLB {
 			this.TLBtop + 1.5 * this.E * scaleC * index,
 			this.TLBheight - (TLBDisplayHeight - this.sets[0].height),
 			this.vbarTLB);
+
+		// cleaer highlight so the emphasis is prominent
+		this.clearHighlight();
 
 		this.sets[index].setEntry(permissions, tag, PPN);
 	} 

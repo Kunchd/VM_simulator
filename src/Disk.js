@@ -1,5 +1,5 @@
 import { scrollSize, hoverSize, scaleM, DiskDisplayHeight } from "./Constants.js";
-import { DISK_HIGHLIGHT } from "./Constants.js";
+import { DISK_HIGHLIGHT, EMPHASIS_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorH, colorM } from "./App.js";
 import { xwidth, toBase, bounded, setScrollBarToDesiredPos } from "./HelperFunctions.js";
 import { Page } from "./Page.js";
@@ -30,10 +30,27 @@ export class Disk {
 		this.data = [];  // array of pages representing data in disk
 		this.vbarDisk = scrollBar;   // the scroll bar created for the memory
 
+		/*
+		 * 0 stands for unused
+		 * 1 stands for emphasis highlight
+		 * 2 stands for identification highlight
+		 */
+		this.light = [];  // indicate highlighting for moved/changed data
+
 		this.vbarDiskEnable = (this.Dtop + this.Dheight > this.p.height);
 
 		for (var i = 0; i < p.pow(2, this.m - this.PO); i++) {
 			this.data[i] = null;	// initialize memory to empty for now
+			this.light[i] = 0;
+		}
+	}
+
+	/**
+	 * clear emphsis highlight
+	 */
+	 clearHighlight() {
+		for(let i = 0; i < this.light.length; i++) {
+			if(this.light[i] === 1) this.light[i] = 2;
 		}
 	}
 
@@ -47,6 +64,10 @@ export class Disk {
 		 */
 		let SSN = this.p.floor(Math.random() * this.p.pow(2, this.m - this.PO));
 		this.data[SSN] = new Page(this.p, this.pgSize);
+
+		// emphasize change
+		this.clearHighlight();
+		this.light[SSN] = 1;
 
 		setScrollBarToDesiredPos((2 * this.Dtop + DiskDisplayHeight) / 2,
 			scaleM * (1 + 6 * SSN) / 4 + this.Dtop,
@@ -83,6 +104,10 @@ export class Disk {
 			this.vbarDisk);
 			
 		this.data[SSN] = page;
+
+		// emphasize change
+		this.clearHighlight();
+		this.light[SSN] = 1;
 	}
 
 	/**
@@ -110,8 +135,11 @@ export class Disk {
 				this.p.textSize(scaleM);
 				// memory boxes
 				this.p.stroke(0);
-				if (this.data[i]) {
+				if (this.light[i] === 2) {
 					this.p.fill(DISK_HIGHLIGHT);
+				}
+				else if(this.light[i] === 1) {
+					this.p.fill(EMPHASIS_HIGHLIGHT);
 				} else {
 					this.p.noFill();
 				}

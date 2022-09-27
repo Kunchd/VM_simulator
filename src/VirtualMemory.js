@@ -1,5 +1,5 @@
 import { scrollSize, hoverSize, scaleM, VMDisplayHeight } from "./Constants.js";
-import { VIR_MEM_HIGHLIGHT } from "./Constants.js";
+import { VIR_MEM_HIGHLIGHT, EMPHASIS_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorH, colorM } from "./App.js";
 import { xwidth, toBase, bounded, setScrollBarToDesiredPos } from "./HelperFunctions.js";
 
@@ -29,10 +29,27 @@ export class VirtualMemory {
 		this.x = scrollBar.xpos - this.Mwidth - 10; // x coordinate of this table
 		this.data = [];  // data stored in memory
 
+		/*
+		 * 0 stands for unused
+		 * 1 stands for emphasis highlight
+		 * 2 stands for identification highlight
+		 */
+		this.light = [];  // indicate highlighting for moved/changed data
+
 		this.vbarMemEnable = (this.Mtop + this.Mheight > this.p.height);
 
 		for (var i = 0; i < p.pow(2, this.m - this.PO); i++) {
 			this.data[i] = 0;	// initialize memory to empty for now
+			this.light[i] = 0;
+		}
+	}
+
+	/**
+	 * clear emphsis highlight
+	 */
+	clearHighlight() {
+		for(let i = 0; i < this.light.length; i++) {
+			if(this.light[i] === 1) this.light[i] = 2;
 		}
 	}
 
@@ -42,10 +59,10 @@ export class VirtualMemory {
 	 */
 	allocatePage(VPN) {
 		this.data[VPN] = 1;
-		setScrollBarToDesiredPos((this.Mtop + this.Mtop + VMDisplayHeight) / 2,
-			scaleM * (1 + 6 * VPN) / 4 + this.Mtop,
-			this.Mheight - (VMDisplayHeight - scaleM),
-			this.vbarMem);
+		
+		// emphasize change
+		this.clearHighlight();
+		this.light[VPN] = 1;
 	}
 
 	/**
@@ -54,7 +71,7 @@ export class VirtualMemory {
 	 * 							 a new virtual page. The given function should take the 
 	 * 							 VPN as an input
 	 */
-	updateAndDisplay(handleAllocate) {
+	updateAndDisplay(handleVPAllocation) {
 		var x = this.x;
 		var offset = 0;
 		if (this.vbarMemEnable) {
@@ -77,15 +94,18 @@ export class VirtualMemory {
 				if(this.p.mouseIsPressed) {
 					if(bounded(this.p.mouseX, x, x + this.Mwidth) && bounded(this.p.mouseY, y, y + scaleM)) {
 						this.data[i] = 1;
-						handleAllocate(i);
+						handleVPAllocation(i);
 					}
 				}
 
 				this.p.textSize(scaleM);
 				// memory boxes
 				this.p.stroke(0);
-				if (this.data[i]) {
+				if (this.light[i] === 2) {
 					this.p.fill(VIR_MEM_HIGHLIGHT);
+				}
+				else if(this.light[i] === 1) {
+					this.p.fill(EMPHASIS_HIGHLIGHT);
 				} else {
 					this.p.noFill();
 				}
