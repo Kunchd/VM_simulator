@@ -39,7 +39,24 @@ export class PT {
 			this.entries[i].flush();
 	}
 
+	/**
+	 * clear emphasis highlight for all entries
+	 */
 	clearHighlight() { for (var i = 0; i < this.S; i++) this.entries[i].clearHighlight(); }
+
+	/**
+	 * get dirty bit of PTE at the given VPN
+	 * @param {*} VPN number to check dirty bit for
+	 * @returns dirty bit
+	 */
+	getDirty(VPN) {
+		setScrollBarToDesiredPos((this.PTtop * 2 + PTDisplayHeight) / 2,
+			this.PTtop + 1.5 * scaleC * VPN + 1.8 * scaleC,
+			this.PTheight - (PTDisplayHeight - scaleC),
+			this.vbarPT);
+		
+		return this.entries[VPN].getDirty();
+	}
 
 	/**
 	 * get the management bits of the page assciated with this VPN
@@ -61,9 +78,8 @@ export class PT {
 	 * 				   true: write
 	 * 				   false: read
 	 * @param {*} VPN VPN used to get the PPN
-	 * @returns an array where the first value is the data and the second is a conditional
-	 *          determining whether the data is SSN or PPN. Return null if this page cannot
-	 *          be accessed.
+	 * @returns an array where the first value is the data and the second is the dirty bit. 
+	 *          Return null if this page cannot be accessed.
 	 */
 	getPPN(flag, VPN) {
 		setScrollBarToDesiredPos((this.PTtop * 2 + PTDisplayHeight) / 2,
@@ -71,21 +87,51 @@ export class PT {
 			this.PTheight - (PTDisplayHeight - scaleC),
 			this.vbarPT);
 
+		// emphasize current entry
+		this.clearHighlight();
+		this.entries[VPN].highlightAll();
+
 		return this.entries[VPN].getPPN(flag);
 	}
 
 	/**
-	 * set the PT entry for the VPN to the given PPN with given permissions
+	 * Get SSN for the corresponding VPN
+	 * @param {*} flag a boolean flag indicating read/write status. 
+	 * 				   true: write
+	 * 				   false: read
+	 * @param {*} VPN VPN used to get the SSN
+	 * @returns an array where the first value is the data and the second is the dirty bit. 
+	 *          Return null if this page cannot be accessed.
+	 */
+	getSSN(flag, VPN) {
+		setScrollBarToDesiredPos((this.PTtop * 2 + PTDisplayHeight) / 2,
+			this.PTtop + 1.5 * scaleC * VPN + 1.8 * scaleC,
+			this.PTheight - (PTDisplayHeight - scaleC),
+			this.vbarPT);
+		
+		// emphasize current entry
+		this.clearHighlight();
+		this.entries[VPN].highlightAll();
+
+		return this.entries[VPN].getSSN(flag);
+	}
+
+	/**
+	 * set the PT entry for the VPN to the given PPN/SSN with given permissions
 	 * @param {*} VPN VPN to set the PPN for
 	 * @param {*} data the PPN/SSN to write to the entry
 	 * @param {*} isSSN determine whether the given PPN is a PPN or SSN
 	 * @param {*} permissions permissions given this page
 	 */
-	setPPN(VPN, data, isSSN, permissions) {
+	setPTE(VPN, data, isSSN, permissions) {
 		setScrollBarToDesiredPos((this.PTtop * 2 + PTDisplayHeight) / 2,
 			this.PTtop + 1.5 * scaleC * VPN + 1.8 * scaleC,
 			this.PTheight - (PTDisplayHeight - scaleC),
 			this.vbarPT);
+
+		// emphasize current entry
+		this.clearHighlight();
+		this.entries[VPN].highlightAll();
 
 		this.entries[VPN].setData(data, isSSN, permissions);
 	}

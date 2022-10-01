@@ -47,7 +47,7 @@ export class TLBSet {
 
 	setActive() { this.active = 1; }
 	clearActive() { this.active = 0; }
-	clearHighlight() { for (var i = 0; i < E; i++) this.entries[i].clearHighlight(); }
+	clearHighlight() { for (var i = 0; i < this.E; i++) this.entries[i].clearHighlight(); }
 
 	/**
 	 * Checks the current set for tag match.
@@ -63,6 +63,10 @@ export class TLBSet {
 				// update used
 				this.used[i] = 0;
 				this.updateUsed(i);
+
+				// emphasize entry found
+				this.entries[i].highlightAll();
+
 				return this.entries[i].getPPN();
 			}
 		}
@@ -84,6 +88,10 @@ export class TLBSet {
 				// update used
 				this.used[i] = 0;
 				this.updateUsed(i);
+
+				// emphasize entry found
+				this.entries[i].highlightAll();
+
 				return;
 			}
 		}
@@ -97,10 +105,13 @@ export class TLBSet {
 			}
 		}
 
+		// emphasize entry found
+		this.entries[maxIndex].highlightAll();
+
 		// update used
-		this.used[i] = 0;
-		this.updateUsed(i);
-		this.entries[i].setPPN(permissions, tag, PPN);
+		this.used[maxIndex] = 0;
+		this.updateUsed(maxIndex);
+		this.entries[maxIndex].setPPN(permissions, tag, PPN);
 	}
 
 	display(x, y) {

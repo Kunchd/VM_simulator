@@ -30,8 +30,7 @@ export class PhysicalMemory {
 
 		/*
 		 * 0 stands for unused
-		 * 1 stands for used by current process
-		 * 2 stands for highlighted for change
+		 * 2 stands for identification highlight
 		 */
 		this.light = [];  // indicate highlighting for moved/changed data
 
@@ -68,6 +67,10 @@ export class PhysicalMemory {
 		this.used[PPN] = 0;					// reset usage for this page
 		this.updateUsed(PPN);
 
+		// emphasize byte written
+		this.pages[PPN].clearHighlight();
+		this.pages[PPN].highlight(PO);
+
 		setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
 			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
 			this.Mheight - (PMDisplayHeight - this.pages[0].height),
@@ -88,24 +91,77 @@ export class PhysicalMemory {
 	}
 
 	/**
+	 * get the associating VPN for the page located at the given PPN
+	 * @param {*} PPN page number of the page to retrieve the VPN for
+	 * @returns VPN of the page at given PPN or -1 if no association exists
+	 */
+	getAssociatingVPN(PPN) {
+		return this.pages[PPN].getAssociatingVPN();
+	}
+
+	/**
 	 * set the page at PPN in PhysMem to the given page
 	 * @param {*} PPN the page number for the page to set
+	 * @param {*} VPN virtual page number mapping to this page
 	 * @param {*} page the page to replace previous page
 	 */
-	setPage(PPN, page) {
+	setPage(PPN, VPN, page) {
 		setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
 			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
 			this.Mheight - (PMDisplayHeight - this.pages[0].height),
 			this.vbarMem);
+
 		this.pages[PPN] = page;
+		this.pages[PPN].setAssociatingVPN(VPN);
+		this.updateUsed(PPN);
 	}
 
 	/**
-	 * naively finds first available, unused page.
+	 * allocate the page at the given PPN for the current process
+	 * @param {*} PPN physical page number of the page to allocate
+	 * @param {*} VPN virtual page number mapping to this page
+	 */
+	allocatePage(PPN, VPN) {
+		setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
+			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
+			this.Mheight - (PMDisplayHeight - this.pages[0].height),
+			this.vbarMem);
+
+		this.light[PPN] = 2;
+		this.pages[PPN].setAssociatingVPN(VPN);
+		this.updateUsed(PPN);
+	}
+
+	/**
+	 * identify victim to evict from PM
 	 * If all pages are taken, the PPN of the Least Recently used page is returned
 	 * @returns PPN of the page to be replaced
 	 */
 	findVictim() {
+		let unusedPPN = this.findUnusedPage();
+
+		if (unusedPPN !== -1) {
+			return unusedPPN;
+		} else {
+			// if all page taken, find LRU page
+			let max = -Number.MAX_VALUE;
+			let maxIndex = -1;
+			for (let i = 0; i < this.used; i++) {
+				if (this.used[i] > max) {
+					max = this.used[i];
+					maxIndex = i;
+				}
+			}
+
+			return maxIndex;
+		}
+	}
+
+	/**
+	 * naively finds first available, unused page.
+	 * @returns PPN of unused page or -1 if all pages are used
+	 */
+	findUnusedPage() {
 		for (let i = 0; i < this.light.length; i++) {
 			if (this.light[i] === 0) {
 				// update status to used page
@@ -114,17 +170,7 @@ export class PhysicalMemory {
 			}
 		}
 
-		// if all page taken, find LRU page
-		let max = -Number.MAX_VALUE;
-		let maxIndex = -1;
-		for (let i = 0; i < this.used; i++) {
-			if (this.used[i] > max) {
-				min = this.used[i];
-				maxIndex = i;
-			}
-		}
-
-		return i;
+		return -1;
 	}
 
 	/**
@@ -144,7 +190,7 @@ export class PhysicalMemory {
 				// draw rectangle set around different entries
 				this.p.stroke(colorC);  // orange set outline
 				// this.p.strokeWeight(5);
-				if (this.light[i]) {
+				if (this.light[i] === 2) {
 					this.p.fill(PHYS_MEM_HIGHLIGHT);
 				} else {
 					this.p.noFill();
@@ -158,7 +204,7 @@ export class PhysicalMemory {
 				this.p.textAlign(this.p.RIGHT);
 				this.p.noStroke();
 				this.p.fill(colorC);
-				this.p.text("0x" + toBase(8 * i, 16, this.p.ceil(this.PPNbits / 4)), x - 2, ytext);
+				this.p.text("0x" + toBase(i, 16, this.p.ceil(this.PPNbits / 4)), x - 2, ytext);
 
 				this.pages[i].display(x + 2, y + 2.5);
 			}
@@ -175,6 +221,13 @@ export class PhysicalMemory {
 		this.p.textSize(scaleM);
 		this.p.textAlign(this.p.CENTER);
 		this.p.text("Physical Memory", x + this.Mwidth / 2, 0.85 * scaleM);  // mem label
+
+		// display PPN label
+		this.p.textSize(scaleM * 0.8);
+		this.p.textAlign(this.p.RIGHT);
+		this.p.noStroke();
+		this.p.fill(colorM);
+		this.p.text("PPN", x, scaleM * 0.8);
 	}
 
 	/**
