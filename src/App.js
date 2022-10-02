@@ -66,6 +66,12 @@ let dispTLBHit, dispTLBMiss, dispPTHit, dispPTMiss;
 let histArray = [];
 let histMove = false;
 
+/**
+ * @todo massive over haul. The getPPNs should only worry about valid bit. 
+ * 		 management bits with be verified once the PPN is retrieved. 
+ * 		 This means getPPN does not need a flag.
+ */
+
 const displayTables = (p) => {
 	p.setup = function () {
 		// initialize colors
@@ -283,6 +289,9 @@ const displayTables = (p) => {
 				VPN = addr >> POwidth;     // virtual page number
 				PO = addr % pgSize;        // page offset
 
+				dispVPN.html(VPN);
+				dispPO.html(PO);
+
 				if (writing) {
 					writeButton.attribute('value', 'next');
 				} else {
@@ -297,7 +306,7 @@ const displayTables = (p) => {
 				console.log("check tlb");
 				// check if address is in TLB
 				console.log("VPN: " + VPN);
-				PPN = tlb.getPPN(true, VPN);
+				PPN = tlb.getPPN(VPN);
 				console.log("PPN: " + PPN);
 
 
@@ -312,10 +321,18 @@ const displayTables = (p) => {
 				break;
 			case PROTECTION_CHECK:
 				console.log("pro check");
-				/**
-				 * @todo implement PTE bit check
-				 */
-				state = PHYSICAL_PAGE_ACCESS;
+
+				// if has access permission, proceed to execute instruction.
+				// else protection fault, revert to starting state.
+				if(pt.checkProtection(VPN, writing)) {
+					state = PHYSICAL_PAGE_ACCESS;
+				} else {
+					console.log("Protection fault");
+					state = READY;
+					// done so we don't call again
+					break;
+				}
+				
 				if (!explain) readWriteDFA(writing);
 				break;
 			case PHYSICAL_PAGE_ACCESS:
@@ -340,7 +357,7 @@ const displayTables = (p) => {
 				break;
 			case CHECK_PAGE_TABLE:
 				console.log("check PT");
-				PPNRes = pt.getPPN(true, VPN);  // PPN result from PT
+				PPNRes = pt.getPPN(VPN);  // PPN result from PT
 				if (PPNRes === null) {
 					// page table miss
 					state = PAGE_FAULT;
@@ -364,7 +381,7 @@ const displayTables = (p) => {
 			case PAGE_FAULT:
 				console.log("page fault");
 
-				let SSNRes = pt.getSSN(writing, VPN);
+				let SSNRes = pt.getSSN(VPN);
 
 				// page not found in disk
 				if (SSNRes === null) {
@@ -424,7 +441,7 @@ const displayTables = (p) => {
 		let perm = getPermForVPN(VPN);	// get management bit permission for this VA
 
 		// if current page not already allocated
-		if (pt.getPPN(perm.W, VPN) === null && pt.getSSN(perm.W, VPN) === null) {
+		if (pt.getPPN(VPN) === null && pt.getSSN(VPN) === null) {
 			virMem.allocatePage(VPN);
 			let PPN = physMem.findUnusedPage();
 
