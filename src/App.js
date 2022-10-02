@@ -290,7 +290,7 @@ const displayTables = (p) => {
 					// TLB hit
 					state = PROTECTION_CHECK;
 				}
-				readWriteDFA(writing);
+				if (!explain) readWriteDFA(writing);
 				break;
 			case PROTECTION_CHECK:
 				console.log("pro check");
@@ -298,7 +298,7 @@ const displayTables = (p) => {
 				 * @todo implement PTE bit check
 				 */
 				state = PHYSICAL_PAGE_ACCESS;
-				readWriteDFA(writing);
+				if (!explain) readWriteDFA(writing);
 				break;
 			case PHYSICAL_PAGE_ACCESS:
 				console.log("PP access");
@@ -311,7 +311,13 @@ const displayTables = (p) => {
 					// read
 				}
 
-				// done so we done call again 
+        if (writing) {
+          writeButton.attribute('value', 'Write');
+        } else {
+          readButton.attribute('value', 'Read');
+        }
+
+				// done so we dont call again 
 				state = READY;
 				break;
 			case CHECK_PAGE_TABLE:
@@ -324,7 +330,7 @@ const displayTables = (p) => {
 					// page table hit
 					state = UPDATE_TLB;
 				}
-				readWriteDFA(writing);
+				if (!explain) readWriteDFA(writing);
 				break;
 			case UPDATE_TLB:
 				console.log("update tlb");
@@ -335,7 +341,7 @@ const displayTables = (p) => {
 				// update tlb
 				tlb.setEntry(VPN, pt.getPagePermissions(VPN), PPN);
 				state = PROTECTION_CHECK;
-				readWriteDFA(writing);
+				if (!explain) readWriteDFA(writing);
 				break;
 			case PAGE_FAULT:
 				console.log("page fault");
@@ -370,7 +376,7 @@ const displayTables = (p) => {
 				}
 
 				state = READY;
-				readWriteDFA(writing);
+				if (!explain) readWriteDFA(writing);
 				break;
 			default:
 				alert("default case");
