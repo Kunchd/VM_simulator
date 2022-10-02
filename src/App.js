@@ -221,6 +221,7 @@ const displayTables = (p) => {
 	var PO;
 	var res;
 	var PPN;
+	var PPNRes;
 
 	/**
 	 * DFA that handles the address translation 
@@ -300,7 +301,7 @@ const displayTables = (p) => {
 				break;
 			case CHECK_PAGE_TABLE:
 				console.log("check PT");
-				let PPNRes = pt.getPPN(true, VPN);  // PPN result from PT
+				PPNRes = pt.getPPN(true, VPN);  // PPN result from PT
 				if (PPNRes === null) {
 					// page table miss
 					state = PAGE_FAULT;
