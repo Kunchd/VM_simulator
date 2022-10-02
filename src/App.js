@@ -39,7 +39,10 @@ let vbarPT, vbarPTEnable;
 let paramButton;
 let readButton;
 let writeButton;
-let explain = false;
+var paramBox;
+var explain;
+var mmaBox;
+var nextStepButton;
 
 let msg = ""; // canvas message
 
@@ -85,10 +88,12 @@ const displayTables = (p) => {
         // setup system control buttons
         paramButton = p.select("#paramButton");
         paramButton.mousePressed(changeParams);
+        paramBox = p.select("#paramBox");
         readButton = p.select("#readButton");
         readButton.mousePressed(readVM);
         writeButton = p.select("#writeButton");
         writeButton.mousePressed(writeVM);
+        mmaBox = p.select("#showSteps");
 
         // setup scroll bar
         vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
@@ -150,6 +155,8 @@ const displayTables = (p) => {
     // safety measure in case someone mess with it I guess
     function changeParams() {
         if (!checkParams()) {
+          explain = paramBox.checked();
+          console.log(explain + ", " + state);
             switch (state) {
                 case INIT:
                     physMem = new PhysicalMemory(p, physMemSize, pgSize, vbarPhysMem);
@@ -210,7 +217,10 @@ const displayTables = (p) => {
                   /**
                    * @TODO fix
                    */
+                  paramButton.attribute('value', 'Reset System');
                   state = READY;
+                default:
+
             }
         }
     }
@@ -228,7 +238,7 @@ const displayTables = (p) => {
      * 
      */
     function readWriteDFA(writing) {
-      /** @TODO explain = ...*/
+      explain = mmaBox.checked();
       
       switch (state) {
         case READY:
@@ -255,9 +265,15 @@ const displayTables = (p) => {
           VPN = addr >> POwidth;     // virtual page number
           PO = addr % pgSize;        // page offset
 
+          if (writing) {
+            writeButton.attribute('value', 'next');
+          } else {
+            readButton.attribute('value', 'next');
+          }
+
           // this is how the DFA works, set next state and call again to trigger state code.
           state = CHECK_TLB;
-          readWriteDFA(writing);
+          if (!explain) readWriteDFA(writing);
           break;
         case CHECK_TLB:
           console.log("check tlb");
@@ -274,7 +290,7 @@ const displayTables = (p) => {
             // TLB hit
             state = PROTECTION_CHECK;
           }
-          readWriteDFA(writing);
+          if (!explain) readWriteDFA(writing);
           break;
         case PROTECTION_CHECK:
           console.log("pro check");
@@ -282,7 +298,7 @@ const displayTables = (p) => {
            * @todo implement PTE bit check
            */
           state = PHYSICAL_PAGE_ACCESS;
-          readWriteDFA(writing);
+          if (!explain) readWriteDFA(writing);
           break;
         case PHYSICAL_PAGE_ACCESS:
           console.log("PP access");
@@ -293,6 +309,12 @@ const displayTables = (p) => {
           } else {
             console.log("reading");
             // read
+          }
+
+          if (writing) {
+            writeButton.attribute('value', 'Write');
+          } else {
+            readButton.attribute('value', 'Read');
           }
           
           // done so we done call again 
@@ -308,7 +330,7 @@ const displayTables = (p) => {
             // page table hit
             state = UPDATE_TLB;
           }
-          readWriteDFA(writing);
+          if (!explain) readWriteDFA(writing);
           break;
         case UPDATE_TLB:
           console.log("update tlb");
@@ -322,7 +344,7 @@ const displayTables = (p) => {
             // update tlb
             tlb.setEntry(VPN, pt.getPagePermissions(VPN), PPN);
             state = PROTECTION_CHECK;
-            readWriteDFA(writing);
+            if (!explain) readWriteDFA(writing);
             break;
         case PAGE_FAULT:
           console.log("page fault");
@@ -339,7 +361,7 @@ const displayTables = (p) => {
 
               pt.setPPN(VPN, SSN, true, perm);
               state = READY;
-              readWriteDFA(writing);
+              if (!explain) readWriteDFA(writing);
               break;
         default:
           alert("default case");

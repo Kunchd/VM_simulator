@@ -158,7 +158,7 @@ export class PhysicalMemory {
 				this.p.textAlign(this.p.RIGHT);
 				this.p.noStroke();
 				this.p.fill(colorC);
-				this.p.text("0x" + toBase(8 * i, 16, this.p.ceil(this.PPNbits / 4)), x - 2, ytext);
+				this.p.text("0x" + toBase(this.PgSize * i, 16, this.p.ceil(this.PPNbits / 4)), x - 2, ytext);
 
 				this.pages[i].display(x + 2, y + 2.5);
 			}
