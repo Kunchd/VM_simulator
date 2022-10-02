@@ -51,7 +51,13 @@ const READY = 6, CHECK_TLB = 7;
 const PROTECTION_CHECK = 8, PHYSICAL_PAGE_ACCESS = 9;
 const CHECK_PAGE_TABLE = 10, UPDATE_TLB = 11, PAGE_FAULT = 12;
 
+// system status vairables
+let TLBHit, TLBMiss;
+let PTHit, PTMiss;
 
+// System status & address breakdown html component
+let dispVPN, dispPO, dispTLBTag, dispTLBIndex, dispPPN;
+let dispTLBHit, dispTLBMiss, dispPTHit, dispPTMiss;
 
 // history related variables
 let histArray = [];
@@ -89,6 +95,17 @@ const displayTables = (p) => {
 		readButton.mousePressed(readVM);
 		writeButton = p.select("#writeButton");
 		writeButton.mousePressed(writeVM);
+
+		// setup system status display
+		dispVPN = p.select("#dispVPN");
+		dispPO = p.select("#dispPO");
+		dispTLBTag = p.select("#dispTLBTag");
+		dispTLBIndex = p.select("#dispTLBIndex");
+		dispPPN = p.select("#dispPPN");
+		dispTLBHit = p.select("#dispTLBHit");
+		dispTLBMiss = p.select("#dispTLBMiss");
+		dispPTHit = p.select("#dispPTHit");
+		dispPTMiss = p.select("#dispPTMiss");
 
 		// setup scroll bar
 		vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
@@ -255,6 +272,10 @@ const displayTables = (p) => {
 				}
 				VPN = addr >> POwidth;     // virtual page number
 				PO = addr % pgSize;        // page offset
+
+				// set address breakdown in display box
+				dispVPN.html(VPN);
+				dispPO.html(PO);
 
 				// this is how the DFA works, set next state and call again to trigger state code.
 				state = CHECK_TLB;
