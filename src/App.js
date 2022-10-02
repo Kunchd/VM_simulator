@@ -39,7 +39,10 @@ let vbarPT, vbarPTEnable;
 let paramButton;
 let readButton;
 let writeButton;
-let explain = false;
+var paramBox;
+var explain;
+var mmaBox;
+var nextStepButton;
 
 let msg = ""; // canvas message
 
@@ -82,13 +85,15 @@ const displayTables = (p) => {
 		inWriteAddr = p.select("#wAddr");
 		inWriteData = p.select("#wData");
 
-		// setup system control buttons
-		paramButton = p.select("#paramButton");
-		paramButton.mousePressed(changeParams);
-		readButton = p.select("#readButton");
-		readButton.mousePressed(readVM);
-		writeButton = p.select("#writeButton");
-		writeButton.mousePressed(writeVM);
+        // setup system control buttons
+        paramButton = p.select("#paramButton");
+        paramButton.mousePressed(changeParams);
+        paramBox = p.select("#paramBox");
+        readButton = p.select("#readButton");
+        readButton.mousePressed(readVM);
+        writeButton = p.select("#writeButton");
+        writeButton.mousePressed(writeVM);
+        mmaBox = p.select("#showSteps");
 
 		// setup scroll bar
 		vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
@@ -145,14 +150,16 @@ const displayTables = (p) => {
 		}
 	}
 
-	// Change systems parameter (what is displayed in main canvas) depending
-	// on the current system state
-	// safety measure in case someone mess with it I guess
-	function changeParams() {
-		if (!checkParams()) {
-			switch (state) {
-				case INIT:
-					physMem = new PhysicalMemory(p, physMemSize, pgSize, vbarPhysMem);
+    // Change systems parameter (what is displayed in main canvas) depending
+    // on the current system state
+    // safety measure in case someone mess with it I guess
+    function changeParams() {
+        if (!checkParams()) {
+          explain = paramBox.checked();
+          console.log(explain + ", " + state);
+            switch (state) {
+                case INIT:
+                    physMem = new PhysicalMemory(p, physMemSize, pgSize, vbarPhysMem);
 
 					// reset memory scroll bar
 					vbarPhysMemEnable = (physMem.Mtop + physMem.Mheight > p.height);
@@ -204,16 +211,19 @@ const displayTables = (p) => {
 					vbarDisk.spos = vbarDisk.ypos;
 					vbarDisk.newspos = vbarDisk.ypos;
 
-					state = PARAMS_DISK;
-					if (!histMove && explain) break;
-				case PARAMS_DISK:
-					/**
-					 * @TODO fix
-					 */
-					state = READY;
-			}
-		}
-	}
+                    state = PARAMS_DISK;
+                    if (!histMove && explain) break;
+                case PARAMS_DISK:
+                  /**
+                   * @TODO fix
+                   */
+                  paramButton.attribute('value', 'Reset System');
+                  state = READY;
+                default:
+
+            }
+        }
+    }
 
 	var addr;
 	var data;
@@ -222,49 +232,55 @@ const displayTables = (p) => {
 	var res;
 	var PPN;
 
-	/**
-	 * DFA that handles the address translation 
-	 * @param {*} writing set to true if writing, false if reading
-	 * 
-	 */
-	function readWriteDFA(writing) {
-		/** @TODO explain = ...*/
+    /**
+     * DFA that handles the address translation 
+     * @param {*} writing set to true if writing, false if reading
+     * 
+     */
+    function readWriteDFA(writing) {
+      explain = mmaBox.checked();
+      
+      switch (state) {
+        case READY:
+          console.log("ready");
+          if (writing) {
+            addr = parseInt(inWriteAddr.value(), 16);
+            data = parseInt(inWriteData.value(), 16);
+          } else {
+            addr = parseInt(inReadAddr.value(), 16);
+            data = 0;  // we are not writing so data is irrelevant 
+          }
+          
+          // check input is valid
+          if (isNaN(addr) || isNaN(data)) {
+            alert("Given write input is not a number");
+            return;
+          } else if (addr >= p.pow(2, m) || addr < 0) {
+            alert("write address out of bound");
+            return;
+          } else if (data < 0) {
+            alert("write data out of bound");
+            return;
+          }
+          VPN = addr >> POwidth;     // virtual page number
+          PO = addr % pgSize;        // page offset
 
-		switch (state) {
-			case READY:
-				console.log("ready");
-				if (writing) {
-					addr = parseInt(inWriteAddr.value(), 16);
-					data = parseInt(inWriteData.value(), 16);
-				} else {
-					addr = parseInt(inReadAddr.value(), 16);
-					data = 0;  // we are not writing so data is irrelevant 
-				}
+          if (writing) {
+            writeButton.attribute('value', 'next');
+          } else {
+            readButton.attribute('value', 'next');
+          }
 
-				// check input is valid
-				if (isNaN(addr) || isNaN(data)) {
-					alert("Given write input is not a number");
-					return;
-				} else if (addr >= p.pow(2, m) || addr < 0) {
-					alert("write address out of bound");
-					return;
-				} else if (data < 0) {
-					alert("write data out of bound");
-					return;
-				}
-				VPN = addr >> POwidth;     // virtual page number
-				PO = addr % pgSize;        // page offset
-
-				// this is how the DFA works, set next state and call again to trigger state code.
-				state = CHECK_TLB;
-				readWriteDFA(writing);
-				break;
-			case CHECK_TLB:
-				console.log("check tlb");
-				// check if address is in TLB
-				console.log("VPN: " + VPN);
-				PPN = tlb.getPPN(true, VPN);
-				console.log("PPN: " + PPN);
+          // this is how the DFA works, set next state and call again to trigger state code.
+          state = CHECK_TLB;
+          if (!explain) readWriteDFA(writing);
+          break;
+        case CHECK_TLB:
+          console.log("check tlb");
+          // check if address is in TLB
+          console.log("VPN: " + VPN);
+          PPN = tlb.getPPN(true, VPN);
+          console.log("PPN: " + PPN);
 
 
 				if (PPN === -1) {
