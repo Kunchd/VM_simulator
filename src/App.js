@@ -67,9 +67,7 @@ let histArray = [];
 let histMove = false;
 
 /**
- * @todo massive over haul. The getPPNs should only worry about valid bit. 
- * 		 management bits with be verified once the PPN is retrieved. 
- * 		 This means getPPN does not need a flag.
+ * @todo fix TLB tag space being too narrow
  */
 
 const displayTables = (p) => {
