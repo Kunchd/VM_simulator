@@ -188,11 +188,9 @@ export class TLBSetEntry {
             tagText = toBase(this.tag, 16, this.p.ceil(this.t / 4));
         else
             for (var i = 0; i < this.p.ceil(this.t / 4); i++) tagText += "-";
-        this.p.fill(this.lightT ? colorH : 0);
         this.p.text(tagText, xt + (scaleC * xwidth(this.p.ceil(this.t / 4)) + scaleC * 0.5) * 0.5, ytext);  // tag
 
         // render PPN bits
-        this.p.fill(this.lightPPN > 1 ? colorH : 0);
         this.p.text(this.V && !isNaN(this.PPN) ? toBase(this.PPN, 16, 2) : "--"
             , xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * (0.5), ytext);  // data
 

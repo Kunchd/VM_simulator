@@ -67,7 +67,7 @@ let histArray = [];
 let histMove = false;
 
 /**
- * @todo fix TLB tag space being too narrow
+ * @todo fix TLB tag text highlighting
  */
 
 const displayTables = (p) => {
