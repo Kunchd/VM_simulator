@@ -66,10 +66,6 @@ let dispTLBHit, dispTLBMiss, dispPTHit, dispPTMiss;
 let histArray = [];
 let histMove = false;
 
-/**
- * @todo fix TLB tag text highlighting
- */
-
 const displayTables = (p) => {
 	p.setup = function () {
 		// initialize colors
