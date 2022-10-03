@@ -30,8 +30,7 @@ export class TLBSet {
 
 
 		// width for drawing
-		this.width = scaleC * (xwidth(1) * (MGNT_BIT_WIDTH)
-			+ xwidth(t < 1 ? 0 : this.p.ceil(t / 4)) + xwidth(this.p.ceil(this.PPNWidth / 4)) + 1);
+		this.width = this.entries[0].width + scaleC;
 		// height of this set
 		this.height = 1.5 * scaleC * this.E;
 		// is this the set of interest for this access? (affects display)
