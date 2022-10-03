@@ -6,7 +6,7 @@ import { scrollSize, dampening, scaleM, scaleC } from "./Constants.js";
 import { TLBDisplayHeight, PTDisplayHeight, DiskDisplayHeight } from "./Constants.js";
 // import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT, PARAMS_DISK } from "./Constants.js";
 import { PT } from "./PageTable.js";
-import { bounded } from "./HelperFunctions.js";
+import { bounded, toBase } from "./HelperFunctions.js";
 import { Disk } from "./Disk.js";
 
 
@@ -126,6 +126,9 @@ const displayTables = (p) => {
 		vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + scaleC * 3,
 			scrollSize, PTDisplayHeight + scaleC, dampening);
 
+		// initialize TLB, PT Hit/Miss state
+		TLBHit = 0; TLBMiss = 0; PTHit = 0; PTMiss = 0;
+
 		reset(true);
 	}
 
@@ -147,6 +150,13 @@ const displayTables = (p) => {
 		if (vbarPTEnable) { vbarPT.update(); vbarPT.display(); }
 
 		displaVDHeader();
+
+		// display TLB, PT Hit/Miss information
+		dispTLBHit.html(TLBHit);
+		dispTLBMiss.html(TLBMiss);
+		dispPTHit.html(PTHit);
+		dispPTMiss.html(PTMiss);
+
 		if (p.mouseIsPressed) {
 			updateVMDiskState();
 		}
@@ -289,8 +299,8 @@ const displayTables = (p) => {
 				VPN = addr >> POwidth;     // virtual page number
 				PO = addr % pgSize;        // page offset
 
-				dispVPN.html(VPN);
-				dispPO.html(PO);
+				dispVPN.html(toBase(VPN, 16, null));
+				dispPO.html(toBase(PO, 16, null));
 
 				if (writing) {
 					writeButton.attribute('value', 'next');
@@ -304,6 +314,17 @@ const displayTables = (p) => {
 				break;
 			case CHECK_TLB:
 				console.log("check tlb");
+
+				// TLB bit breakdown for display
+				let S = TLBSize / E;	// number of sets
+				let Swidth = p.ceil(p.log(S) / p.log(2));	// bits required to represent S
+				let TLBI = VPN % S;
+				let TLBT = VPN >> Swidth;
+
+				// display tlb breakdown
+				dispTLBTag.html(toBase(TLBT, 16, null));
+				dispTLBIndex.html(toBase(TLBI, 16, null));
+
 				// check if address is in TLB
 				console.log("VPN: " + VPN);
 				PPN = tlb.getPPN(VPN);
@@ -312,9 +333,14 @@ const displayTables = (p) => {
 
 				if (PPN === -1) {
 					// TLB miss
+					TLBMiss++;
 					state = CHECK_PAGE_TABLE;
 				} else {
 					// TLB hit
+					TLBHit++;
+					// display PPN in box
+					dispPPN.html(toBase(PPN, 16, null));
+
 					state = PROTECTION_CHECK;
 				}
 				if (!explain) readWriteDFA(writing);
@@ -360,9 +386,14 @@ const displayTables = (p) => {
 				PPNRes = pt.getPPN(VPN);  // PPN result from PT
 				if (PPNRes === null) {
 					// page table miss
+					PTMiss++;
 					state = PAGE_FAULT;
 				} else {
 					// page table hit
+					PTHit++;
+					// display PPN in box
+					dispPPN.html(toBase(PPNRes[0], 16, null));
+
 					state = UPDATE_TLB;
 				}
 				if (!explain) readWriteDFA(writing);
@@ -386,7 +417,10 @@ const displayTables = (p) => {
 				// page not found in disk
 				if (SSNRes === null) {
 					console.log("segfault");
-					return;
+
+					// cannot be processed, so we do not proceed
+					state = READY;
+					break;
 				}
 				// page found in disk
 				else {
