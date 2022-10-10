@@ -100,34 +100,34 @@ export class PTEntry {
 
     /**
      * check if this entry is valid and can be written and get the PPN of this entry
-	 * @param {*} flag a boolean flag indicating read/write status. 
-	 * 				   true: write
-	 * 				   false: read
      * @returns an array where the first value is the PPN and the second is the dirty bit. 
      *          Return null if this page cannot be accessed.
      */
-    getPPN(flag) {
-        if((flag && this.V && this.W) || (!flag && this.V && this.R)) 
-            return [this.pageNumber, this.D];
-
+    getPPN() {
+        if(this.V) return [this.pageNumber, this.D];
         return null;
     }
 
     /**
      * check if this entry contains SSN and can be accessed based on permission and get
      * the SSN of this entry
-     * @param {*} flag a boolean flag indicating read/write status. 
-	 * 				   true: write
-	 * 				   false: read
      * @returns an array where the first value is the SSN and the second is the dirty bit.
      *          Return null if this page cannot be accessed.
      */
-    getSSN(flag) {
-        if(this.isSSN && ((flag && !this.V && this.W) || (!flag && !this.V && this.R))) {
-            return [this.pageNumber, this.D];
-        }
-
+    getSSN() {
+        if(this.isSSN && !this.V) return [this.pageNumber, this.D];
         return null;
+    }
+
+    /**
+     * Verify flag instruction has correct permission to access this page
+	 * @param {*} flag a boolean flag indicating read/write status. 
+	 * 				   true: write
+	 * 				   false: read
+     * @returns true if the instruction has permission, false otherwise
+     */
+    checkProtection(flag) {
+        return this.V && ((flag && this.W) || (!flag && this.R));
     }
 
     /**

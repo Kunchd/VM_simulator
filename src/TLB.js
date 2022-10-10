@@ -45,13 +45,10 @@ export class TLB {
 
 	/**
 	 * checks and gets the PPN from the TLB given the VPN
-	 * @param {*} flag a boolean flag indicating read/write status. 
-	 * 				   true: write
-	 * 				   false: read
 	 * @param {*} VPN VPN
 	 * @return -1 if TLB miss, and the PPN if TLB hit
 	 */
-	getPPN(flag, VPN) {
+	getPPN(VPN) {
 		let Sbit = this.p.ceil(this.p.log(this.S) / this.p.log(2));	// bits to represent number of set
 		let index = VPN % this.S;	// index of given VPN
 		let tag = VPN >> Sbit;		// tag of give VPN
@@ -65,7 +62,7 @@ export class TLB {
 		this.clearHighlight();
 
 		// asks TLB set to check if tag exists
-		return this.sets[index].checkTag(flag, tag);
+		return this.sets[index].checkTag(tag);
 	}
 
 	/**

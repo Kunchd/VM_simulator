@@ -6,7 +6,7 @@ import { scrollSize, dampening, scaleM, scaleC } from "./Constants.js";
 import { TLBDisplayHeight, PTDisplayHeight, DiskDisplayHeight } from "./Constants.js";
 // import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT, PARAMS_DISK } from "./Constants.js";
 import { PT } from "./PageTable.js";
-import { bounded } from "./HelperFunctions.js";
+import { bounded, toBase } from "./HelperFunctions.js";
 import { Disk } from "./Disk.js";
 
 
@@ -43,7 +43,6 @@ var paramBox;
 var explain;
 var mmaBox;
 
-
 let msg = ""; // canvas message
 
 // state variables and constants
@@ -54,7 +53,13 @@ const READY = 6, CHECK_TLB = 7;
 const PROTECTION_CHECK = 8, PHYSICAL_PAGE_ACCESS = 9;
 const CHECK_PAGE_TABLE = 10, UPDATE_TLB = 11, PAGE_FAULT = 12;
 
+// system status vairables
+let TLBHit, TLBMiss;
+let PTHit, PTMiss;
 
+// System status & address breakdown html component
+let dispVPN, dispPO, dispTLBTag, dispTLBIndex, dispPPN;
+let dispTLBHit, dispTLBMiss, dispPTHit, dispPTMiss;
 
 // history related variables
 let histArray = [];
@@ -88,12 +93,23 @@ const displayTables = (p) => {
 		// setup system control buttons
 		paramButton = p.select("#paramButton");
 		paramButton.mousePressed(changeParams);
-    paramBox = p.select("#paramBox");
+		paramBox = p.select("#paramBox");
 		readButton = p.select("#readButton");
 		readButton.mousePressed(readVM);
 		writeButton = p.select("#writeButton");
 		writeButton.mousePressed(writeVM);
-    mmaBox = p.select("#mmaBox");
+		mmaBox = p.select("#mmaBox");
+
+		// setup system status display
+		dispVPN = p.select("#dispVPN");
+		dispPO = p.select("#dispPO");
+		dispTLBTag = p.select("#dispTLBTag");
+		dispTLBIndex = p.select("#dispTLBIndex");
+		dispPPN = p.select("#dispPPN");
+		dispTLBHit = p.select("#dispTLBHit");
+		dispTLBMiss = p.select("#dispTLBMiss");
+		dispPTHit = p.select("#dispPTHit");
+		dispPTMiss = p.select("#dispPTMiss");
 
 		// setup scroll bar
 		vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
@@ -102,6 +118,9 @@ const displayTables = (p) => {
 		vbarTlb = new VScrollbar(p, 250 - scrollSize, 0, scrollSize, TLBDisplayHeight + scaleC, dampening);
 		vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + scaleC * 3,
 			scrollSize, PTDisplayHeight + scaleC, dampening);
+
+		// initialize TLB, PT Hit/Miss state
+		TLBHit = 0; TLBMiss = 0; PTHit = 0; PTMiss = 0;
 
 		reset(true);
 	}
@@ -124,6 +143,13 @@ const displayTables = (p) => {
 		if (vbarPTEnable) { vbarPT.update(); vbarPT.display(); }
 
 		displaVDHeader();
+
+		// display TLB, PT Hit/Miss information
+		dispTLBHit.html(TLBHit);
+		dispTLBMiss.html(TLBMiss);
+		dispPTHit.html(PTHit);
+		dispPTMiss.html(PTMiss);
+
 		if (p.mouseIsPressed) {
 			updateVMDiskState();
 		}
@@ -155,7 +181,8 @@ const displayTables = (p) => {
 	// safety measure in case someone mess with it I guess
 	function changeParams() {
 		if (!checkParams()) {
-      explain = paramBox.checked();
+			explain = paramBox.checked();
+			console.log(explain + ", " + state);
 			switch (state) {
 				case INIT:
 					physMem = new PhysicalMemory(p, physMemSize, pgSize, vbarPhysMem);
@@ -216,8 +243,10 @@ const displayTables = (p) => {
 					/**
 					 * @TODO fix
 					 */
-           paramButton.attribute('value', 'Reset System');
+					paramButton.attribute('value', 'Reset System');
 					state = READY;
+				default:
+
 			}
 		}
 	}
@@ -228,6 +257,7 @@ const displayTables = (p) => {
 	var PO;
 	var PPNRes;
 	var PPN;
+	var PPNRes;
 
 	/**
 	 * DFA that handles the address translation 
@@ -262,12 +292,14 @@ const displayTables = (p) => {
 				VPN = addr >> POwidth;     // virtual page number
 				PO = addr % pgSize;        // page offset
 
-        if (writing) {
-          writeButton.attribute('value', 'next');
-        } else {
-          readButton.attribute('value', 'next');
-        }
+				dispVPN.html(toBase(VPN, 16, null));
+				dispPO.html(toBase(PO, 16, null));
 
+				if (writing) {
+					writeButton.attribute('value', 'next');
+				} else {
+					readButton.attribute('value', 'next');
+				}
 
 				// this is how the DFA works, set next state and call again to trigger state code.
 				state = CHECK_TLB;
@@ -275,27 +307,51 @@ const displayTables = (p) => {
 				break;
 			case CHECK_TLB:
 				console.log("check tlb");
+
+				// TLB bit breakdown for display
+				let S = TLBSize / E;	// number of sets
+				let Swidth = p.ceil(p.log(S) / p.log(2));	// bits required to represent S
+				let TLBI = VPN % S;
+				let TLBT = VPN >> Swidth;
+
+				// display tlb breakdown
+				dispTLBTag.html(toBase(TLBT, 16, null));
+				dispTLBIndex.html(toBase(TLBI, 16, null));
+
 				// check if address is in TLB
 				console.log("VPN: " + VPN);
-				PPN = tlb.getPPN(true, VPN);
+				PPN = tlb.getPPN(VPN);
 				console.log("PPN: " + PPN);
 
 
 				if (PPN === -1) {
 					// TLB miss
+					TLBMiss++;
 					state = CHECK_PAGE_TABLE;
 				} else {
 					// TLB hit
+					TLBHit++;
+					// display PPN in box
+					dispPPN.html(toBase(PPN, 16, null));
+
 					state = PROTECTION_CHECK;
 				}
 				if (!explain) readWriteDFA(writing);
 				break;
 			case PROTECTION_CHECK:
 				console.log("pro check");
-				/**
-				 * @todo implement PTE bit check
-				 */
-				state = PHYSICAL_PAGE_ACCESS;
+
+				// if has access permission, proceed to execute instruction.
+				// else protection fault, revert to starting state.
+				if(pt.checkProtection(VPN, writing)) {
+					state = PHYSICAL_PAGE_ACCESS;
+				} else {
+					console.log("Protection fault");
+					state = READY;
+					// done so we don't call again
+					break;
+				}
+				
 				if (!explain) readWriteDFA(writing);
 				break;
 			case PHYSICAL_PAGE_ACCESS:
@@ -309,24 +365,28 @@ const displayTables = (p) => {
 					// read
 				}
 
-        if (writing) {
-          writeButton.attribute('value', 'Write');
-        } else {
-          readButton.attribute('value', 'Read');
-        }
+				if (writing) {
+					writeButton.attribute('value', 'Write');
+				} else {
+					readButton.attribute('value', 'Read');
+				}
 
-
-				// done so we don't call again 
+				// done so we dont call again 
 				state = READY;
 				break;
 			case CHECK_PAGE_TABLE:
 				console.log("check PT");
-				PPNRes = pt.getPPN(true, VPN);  // PPN result from PT
+				PPNRes = pt.getPPN(VPN);  // PPN result from PT
 				if (PPNRes === null) {
 					// page table miss
+					PTMiss++;
 					state = PAGE_FAULT;
 				} else {
 					// page table hit
+					PTHit++;
+					// display PPN in box
+					dispPPN.html(toBase(PPNRes[0], 16, null));
+
 					state = UPDATE_TLB;
 				}
 				if (!explain) readWriteDFA(writing);
@@ -345,25 +405,28 @@ const displayTables = (p) => {
 			case PAGE_FAULT:
 				console.log("page fault");
 
-				let SSNRes = pt.getSSN(writing, VPN);
+				let SSNRes = pt.getSSN(VPN);
 
 				// page not found in disk
 				if (SSNRes === null) {
 					console.log("segfault");
-					return;
+
+					// cannot be processed, so we do not proceed
+					state = READY;
+					break;
 				}
 				// page found in disk
 				else {
 					let [SSN, dirty] = SSNRes;
 					// bring this page into mem
 					let [PPN, victimVPN] = swapPageFromDiskToMem(SSN, VPN);
-					
+
 					// get correct management bit permissions for newly brought in page
 					let evictingPerm = pt.getPagePermissions(VPN);
 					evictingPerm.V = 1;
 
 					// if victim is in the current process and is dirty, update its PTE
-					if(victimVPN !== -1 && pt.getDirty(victimVPN)) {
+					if (victimVPN !== -1 && pt.getDirty(victimVPN)) {
 						let evictedPerm = pt.getPagePermissions(victimVPN);
 						evictedPerm.V = 0;
 						evictedPerm.D = 0;
@@ -405,7 +468,7 @@ const displayTables = (p) => {
 		let perm = getPermForVPN(VPN);	// get management bit permission for this VA
 
 		// if current page not already allocated
-		if (pt.getPPN(perm.W, VPN) === null && pt.getSSN(perm.W, VPN) === null) {
+		if (pt.getPPN(VPN) === null && pt.getSSN(VPN) === null) {
 			virMem.allocatePage(VPN);
 			let PPN = physMem.findUnusedPage();
 
@@ -429,12 +492,12 @@ const displayTables = (p) => {
 	function getPermForVPN(VPN) {
 		let totalVP = p.pow(2, m - POwidth);	// total number of virtual pages
 		let percentage = VPN / totalVP;		// the percentage of the current page with
-											// respect to total number of pages
+		// respect to total number of pages
 
 		let perm;	// permission attached to the current VPN
 
 		// read only segment
-		if(0 <= percentage &&percentage <= 0.2) {
+		if (0 <= percentage && percentage <= 0.2) {
 			perm = {
 				V: 0,
 				D: 0,
@@ -444,7 +507,7 @@ const displayTables = (p) => {
 			}
 		}
 		// read write segment
-		else if(0.2 < percentage && percentage <= 0.4) {
+		else if (0.2 < percentage && percentage <= 0.4) {
 			perm = {
 				V: 0,
 				D: 0,
@@ -454,7 +517,7 @@ const displayTables = (p) => {
 			}
 		}
 		// shared heap/stack space
-		else if(0.4 < percentage && percentage <= 1) {
+		else if (0.4 < percentage && percentage <= 1) {
 			perm = {
 				V: 0,
 				D: 0,

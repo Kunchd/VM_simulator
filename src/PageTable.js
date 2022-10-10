@@ -74,14 +74,11 @@ export class PT {
 
 	/**
 	 * Get PPN for the corresponding VPN
-	 * @param {*} flag a boolean flag indicating read/write status. 
-	 * 				   true: write
-	 * 				   false: read
 	 * @param {*} VPN VPN used to get the PPN
 	 * @returns an array where the first value is the data and the second is the dirty bit. 
 	 *          Return null if this page cannot be accessed.
 	 */
-	getPPN(flag, VPN) {
+	getPPN(VPN) {
 		setScrollBarToDesiredPos((this.PTtop * 2 + PTDisplayHeight) / 2,
 			this.PTtop + 1.5 * scaleC * VPN + 1.8 * scaleC,
 			this.PTheight - (PTDisplayHeight - scaleC),
@@ -91,19 +88,16 @@ export class PT {
 		this.clearHighlight();
 		this.entries[VPN].highlightAll();
 
-		return this.entries[VPN].getPPN(flag);
+		return this.entries[VPN].getPPN();
 	}
 
 	/**
 	 * Get SSN for the corresponding VPN
-	 * @param {*} flag a boolean flag indicating read/write status. 
-	 * 				   true: write
-	 * 				   false: read
 	 * @param {*} VPN VPN used to get the SSN
 	 * @returns an array where the first value is the data and the second is the dirty bit. 
 	 *          Return null if this page cannot be accessed.
 	 */
-	getSSN(flag, VPN) {
+	getSSN(VPN) {
 		setScrollBarToDesiredPos((this.PTtop * 2 + PTDisplayHeight) / 2,
 			this.PTtop + 1.5 * scaleC * VPN + 1.8 * scaleC,
 			this.PTheight - (PTDisplayHeight - scaleC),
@@ -113,7 +107,19 @@ export class PT {
 		this.clearHighlight();
 		this.entries[VPN].highlightAll();
 
-		return this.entries[VPN].getSSN(flag);
+		return this.entries[VPN].getSSN();
+	}
+
+	/**
+	 * Verify the flag instruction has correct permission to access the page at VPN
+	 * @param {*} VPN Page location to verify access
+	 * @param {*} flag a boolean flag indicating read/write status. 
+	 * 				   true: write
+	 * 				   false: read
+	 * @returns true if instruction has permission to access page at VPN, false otherwise
+	 */
+	checkProtection(VPN, flag) {
+		return this.entries[VPN].checkProtection(flag);
 	}
 
 	/**

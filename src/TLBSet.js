@@ -30,8 +30,7 @@ export class TLBSet {
 
 
 		// width for drawing
-		this.width = scaleC * (xwidth(1) * (MGNT_BIT_WIDTH)
-			+ xwidth(t < 1 ? 0 : this.p.ceil(t / 4)) + xwidth(this.p.ceil(this.PPNWidth / 4)) + 1);
+		this.width = this.entries[0].width + scaleC;
 		// height of this set
 		this.height = 1.5 * scaleC * this.E;
 		// is this the set of interest for this access? (affects display)
@@ -51,15 +50,12 @@ export class TLBSet {
 
 	/**
 	 * Checks the current set for tag match.
-	 * @param {*} flag a boolean flag indicating read/write status. 
-	 * 				   true: write
-	 * 				   false: read
 	 * @param {*} tag 
 	 * @return PPN if there's a valid matching tag or -1 otherwise
 	 */
-	checkTag(flag, tag) {
+	checkTag(tag) {
 		for (let i = 0; i < this.entries.length; i++) {
-			if (this.entries[i].containTag(flag, tag)) {
+			if (this.entries[i].containTag(tag)) {
 				// update used
 				this.used[i] = 0;
 				this.updateUsed(i);

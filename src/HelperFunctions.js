@@ -6,7 +6,7 @@ export function xwidth(w) { return 0.2 + 0.7 * w; }
  * Helper function that prints d in base b, padded out to padding digits.
  * @param {*} d value to convert
  * @param {*} b base
- * @param {*} padding padding out to set amount of digits
+ * @param {*} padding padding out to set amount of digits. null for no padding
  * @returns 
  */
 export function toBase(d, b, padding) {
