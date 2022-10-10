@@ -403,6 +403,13 @@ const displayTables = (p) => {
 				} else {
 					console.log("Protection fault");
 					state = READY;
+
+          if (writing) {
+            enableAccessButtons(2);
+          } else {
+            enableAccessButtons(1);
+          }
+          
 					// done so we don't call again
 					break;
 				}
