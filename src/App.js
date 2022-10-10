@@ -39,11 +39,12 @@ let vbarPT, vbarPTEnable;
 let paramButton;
 let readButton;
 let writeButton;
-var paramBox;
-var explain;
-var mmaBox;
+let paramBox;
+let explain;
+let mmaBox;
 
 let msg = ""; // canvas message
+let msgbox;  // simulation messages
 
 // state variables and constants
 let state;
@@ -64,6 +65,7 @@ let dispTLBHit, dispTLBMiss, dispPTHit, dispPTMiss;
 // history related variables
 let histArray = [];
 let histMove = false;
+var hist, loadHist, uButton, dButton;
 
 const displayTables = (p) => {
 	p.setup = function () {
@@ -99,6 +101,19 @@ const displayTables = (p) => {
 		writeButton = p.select("#writeButton");
 		writeButton.mousePressed(writeVM);
 		mmaBox = p.select("#mmaBox");
+
+    // simulation messages
+    msgbox = p.select("#msgbox");
+    msgbox.value('');
+
+    // history
+    hist = p.select('#hist');
+    loadHist = p.select('#loadHist');
+    loadHist.mousePressed();
+    uButton = p.select('#upButton');
+    uButton.mousePressed();
+    dButton = p.select('#dnButton');
+    dButton.mousePressed();
 
 		// setup system status display
 		dispVPN = p.select("#dispVPN");
@@ -170,17 +185,47 @@ const displayTables = (p) => {
 		msg += "The access history can be modified by editing or pasting and then\n";
 		msg += "pressing \"Load\", or can be traversed using the ↑ and ↓ buttons.";
 
+    disableAccessButtons(0);
+
 		// restart history
 		if (hist) {
 			histArray = [];
 		}
 	}
 
+  function disableAccessButtons(accessType) {
+    (accessType == 1 ? readButton.attribute('value','Next') : readButton.attribute('disabled',''));
+    (accessType == 2 ? writeButton.attribute('value','Next') : writeButton.attribute('disabled',''));
+    mmaBox.attribute('disabled','');
+    inReadAddr.attribute('disabled','');
+    inWriteAddr.attribute('disabled','');
+    inWriteData.attribute('disabled','');
+    hist.attribute('disabled','');
+    loadHist.attribute('disabled','');
+    uButton.attribute('disabled','');
+    dButton.attribute('disabled','');
+  }
+
+  function enableAccessButtons() {
+    readButton.attribute('value', 'Read');
+    readButton.removeAttribute('disabled');
+    writeButton.attribute('value', 'Write');
+    writeButton.removeAttribute('disabled');
+    mmaBox.removeAttribute('disabled');
+    inReadAddr.removeAttribute('disabled');
+    inWriteAddr.removeAttribute('disabled');
+    inWriteData.removeAttribute('disabled');
+    hist.removeAttribute('disabled');
+    loadHist.removeAttribute('disabled');
+    uButton.removeAttribute('disabled');
+    dButton.removeAttribute('disabled');
+  }
+
 	// Change systems parameter (what is displayed in main canvas) depending
 	// on the current system state
 	// safety measure in case someone mess with it I guess
 	function changeParams() {
-		if (!checkParams()) {
+		if (state == PARAMS_PHYS_MEM || state == PARAMS_VIR_MEM || state == PARAMS_TLB || state == PARAMS_PT || state == PARAMS_DISK ||!checkParams()) {
 			explain = paramBox.checked();
 			console.log(explain + ", " + state);
 			switch (state) {
@@ -197,8 +242,9 @@ const displayTables = (p) => {
 					dispPTSize.html((p.pow(2, m) / pgSize) + " Entries");
 					dispVMSize.html(p.pow(2, m) + " Bytes");
 
-					// msgbox.value("Press Next (left) to advance explanation.\n");
+					msgbox.value("Press Next (left) to advance explanation.\n");
 					state = PARAMS_PHYS_MEM;
+          console.log(state);
 					if (!histMove && explain) break;
 				case PARAMS_PHYS_MEM:
 					virMem = new VirtualMemory(p, m, POwidth, vbarVirMem);
@@ -208,8 +254,9 @@ const displayTables = (p) => {
 					vbarVirMem.spos = vbarVirMem.ypos;
 					vbarVirMem.newspos = vbarVirMem.ypos;
 
-					// msgbox.value("Press Next (left) to advance explanation.\n");
+					msgbox.value("Press Next (left) to advance explanation.\n");
 					state = PARAMS_VIR_MEM;
+          console.log(state);
 					if (!histMove && explain) break;
 				case PARAMS_VIR_MEM:
 					// initialize TLB
@@ -218,7 +265,9 @@ const displayTables = (p) => {
 					vbarTlbEnable = (tlb.TLBtop + tlb.TLBheight > TLBDisplayHeight);
 					vbarTlb.spos = vbarTlb.ypos;
 					vbarTlb.newspos = vbarTlb.ypos;
+          msgbox.value("Press Next (left) to advance explanation.\n");
 					state = PARAMS_TLB;
+          console.log(state);
 					if (!histMove && explain) break;
 				case PARAMS_TLB:
 					// initialize PT
@@ -227,7 +276,9 @@ const displayTables = (p) => {
 					vbarPTEnable = (pt.PTtop + pt.PTheight > PTDisplayHeight);
 					vbarPT.spos = vbarPT.ypos;
 					vbarPT.newspos = vbarPT.ypos;
+          msgbox.value("Press Next (left) to advance explanation.\n");
 					state = PARAMS_PT;
+          console.log(state);
 					if (!histMove && explain) break;
 				case PARAMS_PT:
 					disk = new Disk(p, m, pgSize, vbarDisk);
@@ -236,15 +287,19 @@ const displayTables = (p) => {
 					vbarDiskEnable = (disk.Dtop + disk.Dheight > p.height);
 					vbarDisk.spos = vbarDisk.ypos;
 					vbarDisk.newspos = vbarDisk.ypos;
-
+          msgbox.value("Press Next (left) to advance explanation.\n");
 					state = PARAMS_DISK;
+          console.log(state);
 					if (!histMove && explain) break;
 				case PARAMS_DISK:
 					/**
 					 * @TODO fix
 					 */
 					paramButton.attribute('value', 'Reset System');
+          msgbox.value("System Generated and Reset\n");
+          enableAccessButtons();
 					state = READY;
+          console.log(state);
 				default:
 
 			}
@@ -296,9 +351,9 @@ const displayTables = (p) => {
 				dispPO.html(toBase(PO, 16, null));
 
 				if (writing) {
-					writeButton.attribute('value', 'next');
+					disableAccessButtons(2);
 				} else {
-					readButton.attribute('value', 'next');
+					disableAccessButtons(1);
 				}
 
 				// this is how the DFA works, set next state and call again to trigger state code.
@@ -366,9 +421,9 @@ const displayTables = (p) => {
 				}
 
 				if (writing) {
-					writeButton.attribute('value', 'Write');
+					enableAccessButtons(2);
 				} else {
-					readButton.attribute('value', 'Read');
+					enableAccessButtons(1);
 				}
 
 				// done so we dont call again 
@@ -410,6 +465,11 @@ const displayTables = (p) => {
 				// page not found in disk
 				if (SSNRes === null) {
 					console.log("segfault");
+          if (writing) {
+            enableAccessButtons(2);
+          } else {
+            enableAccessButtons(1);
+          }
 
 					// cannot be processed, so we do not proceed
 					state = READY;
