@@ -23,7 +23,8 @@ export let colorG, colorB, colorW;
 
 // System parameters
 let m, PPNWidth, E, TLBSize, pgSize, physMemSize, POwidth;
-let VM = true;
+let VM = true;			// check if VM is being displayed
+let userInteracting;	// check if user is currently using a button
 
 // Main canvas table components
 let physMem, virMem, tlb, pt, disk;
@@ -102,18 +103,18 @@ const displayTables = (p) => {
 		writeButton.mousePressed(writeVM);
 		mmaBox = p.select("#mmaBox");
 
-    // simulation messages
-    msgbox = p.select("#msgbox");
-    msgbox.value('');
+		// simulation messages
+		msgbox = p.select("#msgbox");
+		msgbox.value('');
 
-    // history
-    hist = p.select('#hist');
-    loadHist = p.select('#loadHist');
-    loadHist.mousePressed();
-    uButton = p.select('#upButton');
-    uButton.mousePressed();
-    dButton = p.select('#dnButton');
-    dButton.mousePressed();
+		// history
+		hist = p.select('#hist');
+		loadHist = p.select('#loadHist');
+		loadHist.mousePressed();
+		uButton = p.select('#upButton');
+		uButton.mousePressed();
+		dButton = p.select('#dnButton');
+		dButton.mousePressed();
 
 		// setup system status display
 		dispVPN = p.select("#dispVPN");
@@ -136,6 +137,9 @@ const displayTables = (p) => {
 
 		// initialize TLB, PT Hit/Miss state
 		TLBHit = 0; TLBMiss = 0; PTHit = 0; PTMiss = 0;
+
+		// initialize system parameters
+		userInteracting = false;
 
 		reset(true);
 	}
