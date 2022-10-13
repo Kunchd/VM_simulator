@@ -1,3 +1,5 @@
+import { getControlAccess, releaseControlAccess } from "./App.js";
+
 /* Vertical Scroll Bar class.
  * based on:  https://processing.org/examples/scrollbar.html */
 export class VScrollbar {
@@ -9,8 +11,9 @@ export class VScrollbar {
      * @param {*} sw width of bar
      * @param {*} sh height of bar
      * @param {*} l loose/heavyness of bar
+     * @param {*} compId component ID for requesting UI control
      */
-    constructor(p, xp, yp, sw, sh, l) {
+    constructor(p, xp, yp, sw, sh, l, compId) {
         // width and height of bar
         this.swidth = sw;
         this.sheight = sh;
@@ -25,6 +28,11 @@ export class VScrollbar {
         this.sposMax = yp + sh - sw;
         // how loose/heavy
         this.loose = l;
+        // component id
+        this.componentId = compId;
+
+        // has control access to handle user input
+        this.controlAccess = false;
         // status of mouse and slider
         this.over = false;
         this.locked = false;
@@ -39,14 +47,24 @@ export class VScrollbar {
     update() {
         this.over = this.overEvent();
         if (this.p.mouseIsPressed && this.over) {
+            // check to see if process has control access
+            if(!this.controlAccess && getControlAccess(this.componentId)) {
+                this.controlAccess = true;
+            }
+            // lock scroll bar
             this.locked = true;
         }
         if (!this.p.mouseIsPressed) {
+            // release control access
+            releaseControlAccess(this.componentId);
+            this.controlAccess = false;
+            // release scroll bar lock
             this.locked = false;
         }
-        if (this.locked) {
+        if (this.locked && this.controlAccess) {
             this.newspos = this.constrain(this.p.mouseY, this.sposMin, this.sposMax);
         }
+        // handles update of scroll bar
         if (this.p.abs(this.newspos - this.spos) > 1) {
             this.spos = this.spos + (this.newspos - this.spos) / this.loose;
         } else {
