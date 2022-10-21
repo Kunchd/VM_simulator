@@ -124,10 +124,21 @@ export class PTEntry {
 	 * @param {*} flag a boolean flag indicating read/write status. 
 	 * 				   true: write
 	 * 				   false: read
-     * @returns true if the instruction has permission, false otherwise
+     * @returns empty string if the instruction has permission, 
+     *          or message stating which permission were invalidated
      */
     checkProtection(flag) {
-        return this.V && ((flag && this.W) || (!flag && this.R));
+        let msg = "";
+        if(!this.V) {
+            msg += "entry invalid\n";
+        }
+        if(flag && !this.W) {
+            msg += "does not have write permission\n";
+        }
+        if(!flag && !this.R) {
+            msg += "does not have read permission\n";
+        }
+        return msg;
     }
 
     /**

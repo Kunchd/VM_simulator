@@ -116,7 +116,8 @@ export class PT {
 	 * @param {*} flag a boolean flag indicating read/write status. 
 	 * 				   true: write
 	 * 				   false: read
-	 * @returns true if instruction has permission to access page at VPN, false otherwise
+	 * @returns empty string if the instruction has permission, 
+     *          or message stating which permission were invalidated
 	 */
 	checkProtection(VPN, flag) {
 		return this.entries[VPN].checkProtection(flag);

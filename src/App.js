@@ -128,13 +128,13 @@ const displayTables = (p) => {
 		dispPTMiss = p.select("#dispPTMiss");
 
 		// setup scroll bar
-		vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, 
+		vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0,
 			scrollSize, p.height, dampening, "vabarPhysMem");
-		vbarVirMem = new VScrollbar(p, p.width - scrollSize, 0, 
+		vbarVirMem = new VScrollbar(p, p.width - scrollSize, 0,
 			scrollSize, p.height, dampening, "vbarVirMem");
-		vbarDisk = new VScrollbar(p, p.width - scrollSize, 0, 
+		vbarDisk = new VScrollbar(p, p.width - scrollSize, 0,
 			scrollSize, p.height, dampening, "vbarDisk");
-		vbarTlb = new VScrollbar(p, 250 - scrollSize, 0, 
+		vbarTlb = new VScrollbar(p, 250 - scrollSize, 0,
 			scrollSize, TLBDisplayHeight + scaleC, dampening, "vbarTlb");
 		vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + scaleC * 3,
 			scrollSize, PTDisplayHeight + scaleC, dampening, "vbarPT");
@@ -193,7 +193,7 @@ const displayTables = (p) => {
 		msg += "The access history can be modified by editing or pasting and then\n";
 		msg += "pressing \"Load\", or can be traversed using the ↑ and ↓ buttons.";
 
-    disableAccessButtons(0);
+		disableAccessButtons(0);
 
 		// restart history
 		if (hist) {
@@ -201,39 +201,39 @@ const displayTables = (p) => {
 		}
 	}
 
-  function disableAccessButtons(accessType) {
-    (accessType == 1 ? readButton.attribute('value','Next') : readButton.attribute('disabled',''));
-    (accessType == 2 ? writeButton.attribute('value','Next') : writeButton.attribute('disabled',''));
-    mmaBox.attribute('disabled','');
-    inReadAddr.attribute('disabled','');
-    inWriteAddr.attribute('disabled','');
-    inWriteData.attribute('disabled','');
-    hist.attribute('disabled','');
-    loadHist.attribute('disabled','');
-    uButton.attribute('disabled','');
-    dButton.attribute('disabled','');
-  }
+	function disableAccessButtons(accessType) {
+		(accessType == 1 ? readButton.attribute('value', 'Next') : readButton.attribute('disabled', ''));
+		(accessType == 2 ? writeButton.attribute('value', 'Next') : writeButton.attribute('disabled', ''));
+		mmaBox.attribute('disabled', '');
+		inReadAddr.attribute('disabled', '');
+		inWriteAddr.attribute('disabled', '');
+		inWriteData.attribute('disabled', '');
+		hist.attribute('disabled', '');
+		loadHist.attribute('disabled', '');
+		uButton.attribute('disabled', '');
+		dButton.attribute('disabled', '');
+	}
 
-  function enableAccessButtons() {
-    readButton.attribute('value', 'Read');
-    readButton.removeAttribute('disabled');
-    writeButton.attribute('value', 'Write');
-    writeButton.removeAttribute('disabled');
-    mmaBox.removeAttribute('disabled');
-    inReadAddr.removeAttribute('disabled');
-    inWriteAddr.removeAttribute('disabled');
-    inWriteData.removeAttribute('disabled');
-    hist.removeAttribute('disabled');
-    loadHist.removeAttribute('disabled');
-    uButton.removeAttribute('disabled');
-    dButton.removeAttribute('disabled');
-  }
+	function enableAccessButtons() {
+		readButton.attribute('value', 'Read');
+		readButton.removeAttribute('disabled');
+		writeButton.attribute('value', 'Write');
+		writeButton.removeAttribute('disabled');
+		mmaBox.removeAttribute('disabled');
+		inReadAddr.removeAttribute('disabled');
+		inWriteAddr.removeAttribute('disabled');
+		inWriteData.removeAttribute('disabled');
+		hist.removeAttribute('disabled');
+		loadHist.removeAttribute('disabled');
+		uButton.removeAttribute('disabled');
+		dButton.removeAttribute('disabled');
+	}
 
 	// Change systems parameter (what is displayed in main canvas) depending
 	// on the current system state
 	// safety measure in case someone mess with it I guess
 	function changeParams() {
-		if (state == PARAMS_PHYS_MEM || state == PARAMS_VIR_MEM || state == PARAMS_TLB || state == PARAMS_PT || state == PARAMS_DISK ||!checkParams()) {
+		if (state == PARAMS_PHYS_MEM || state == PARAMS_VIR_MEM || state == PARAMS_TLB || state == PARAMS_PT || state == PARAMS_DISK || !checkParams()) {
 			explain = paramBox.checked();
 			console.log(explain + ", " + state);
 			switch (state) {
@@ -252,7 +252,7 @@ const displayTables = (p) => {
 
 					msgbox.value("Press Next (left) to advance explanation.\n");
 					state = PARAMS_PHYS_MEM;
-          console.log(state);
+					console.log(state);
 					if (!histMove && explain) break;
 				case PARAMS_PHYS_MEM:
 					virMem = new VirtualMemory(p, m, POwidth, vbarVirMem);
@@ -264,7 +264,7 @@ const displayTables = (p) => {
 
 					msgbox.value("Press Next (left) to advance explanation.\n");
 					state = PARAMS_VIR_MEM;
-          console.log(state);
+					console.log(state);
 					if (!histMove && explain) break;
 				case PARAMS_VIR_MEM:
 					// initialize TLB
@@ -273,9 +273,9 @@ const displayTables = (p) => {
 					vbarTlbEnable = (tlb.TLBtop + tlb.TLBheight > TLBDisplayHeight);
 					vbarTlb.spos = vbarTlb.ypos;
 					vbarTlb.newspos = vbarTlb.ypos;
-          msgbox.value("Press Next (left) to advance explanation.\n");
+					msgbox.value("Press Next (left) to advance explanation.\n");
 					state = PARAMS_TLB;
-          console.log(state);
+					console.log(state);
 					if (!histMove && explain) break;
 				case PARAMS_TLB:
 					// initialize PT
@@ -284,9 +284,9 @@ const displayTables = (p) => {
 					vbarPTEnable = (pt.PTtop + pt.PTheight > PTDisplayHeight);
 					vbarPT.spos = vbarPT.ypos;
 					vbarPT.newspos = vbarPT.ypos;
-          msgbox.value("Press Next (left) to advance explanation.\n");
+					msgbox.value("Press Next (left) to advance explanation.\n");
 					state = PARAMS_PT;
-          console.log(state);
+					console.log(state);
 					if (!histMove && explain) break;
 				case PARAMS_PT:
 					disk = new Disk(p, m, pgSize, vbarDisk);
@@ -295,19 +295,19 @@ const displayTables = (p) => {
 					vbarDiskEnable = (disk.Dtop + disk.Dheight > p.height);
 					vbarDisk.spos = vbarDisk.ypos;
 					vbarDisk.newspos = vbarDisk.ypos;
-          msgbox.value("Press Next (left) to advance explanation.\n");
+					msgbox.value("Press Next (left) to advance explanation.\n");
 					state = PARAMS_DISK;
-          console.log(state);
+					console.log(state);
 					if (!histMove && explain) break;
 				case PARAMS_DISK:
 					/**
 					 * @TODO fix
 					 */
 					paramButton.attribute('value', 'Reset System');
-          msgbox.value("System Generated and Reset\n");
-          enableAccessButtons();
+					msgbox.value("System Generated and Reset\n");
+					enableAccessButtons();
 					state = READY;
-          console.log(state);
+					console.log(state);
 				default:
 
 			}
@@ -321,6 +321,7 @@ const displayTables = (p) => {
 	var PPNRes;
 	var PPN;
 	var PPNRes;
+	var message;
 
 	/**
 	 * DFA that handles the address translation 
@@ -364,6 +365,11 @@ const displayTables = (p) => {
 					disableAccessButtons(1);
 				}
 
+				// reset message for msg box
+				message = "break down virtual address into VPN, PO\n"
+				// print to msg box
+				msgbox.value(message);
+
 				// this is how the DFA works, set next state and call again to trigger state code.
 				state = CHECK_TLB;
 				if (!explain) readWriteDFA(writing);
@@ -376,6 +382,10 @@ const displayTables = (p) => {
 				let Swidth = p.ceil(p.log(S) / p.log(2));	// bits required to represent S
 				let TLBI = VPN % S;
 				let TLBT = VPN >> Swidth;
+
+				// update message for TLB
+				message += "Breaking VPN into TLB Index and tag\n";
+				message += "Checking TLB with TLBI and TLBT\n";
 
 				// display tlb breakdown
 				dispTLBTag.html(toBase(TLBT, 16, null));
@@ -391,6 +401,9 @@ const displayTables = (p) => {
 					// TLB miss
 					TLBMiss++;
 					state = CHECK_PAGE_TABLE;
+
+					// update message status
+					message += "TLB miss\n"
 				} else {
 					// TLB hit
 					TLBHit++;
@@ -398,34 +411,62 @@ const displayTables = (p) => {
 					dispPPN.html(toBase(PPN, 16, null));
 
 					state = PROTECTION_CHECK;
+					// update message status
+					message += "TLB hit\n"
 				}
+
+				// print message to msg box
+				msgbox.value(message);
+
 				if (!explain) readWriteDFA(writing);
 				break;
 			case PROTECTION_CHECK:
 				console.log("pro check");
 
+				// update message for protection check
+				message += "checking access permissions\n"
+
 				// if has access permission, proceed to execute instruction.
 				// else protection fault, revert to starting state.
-				if(pt.checkProtection(VPN, writing)) {
+				let permRes = pt.checkProtection(VPN, writing);
+				if (permRes === "") {
 					state = PHYSICAL_PAGE_ACCESS;
+
+					// update msg state
+					message += "have access permissions\n"
 				} else {
 					console.log("Protection fault");
 					state = READY;
 
-          if (writing) {
-            enableAccessButtons(2);
-          } else {
-            enableAccessButtons(1);
-          }
-          
+					if (writing) {
+						enableAccessButtons(2);
+					} else {
+						enableAccessButtons(1);
+					}
+
+					// update msg state
+					message += "Protection fault:\n";
+					message += permRes;
+
+					// flush to msg box
+					msgbox.value(message);
+
 					// done so we don't call again
 					break;
 				}
-				
+
+				// flush to msg box
+				msgbox.value(message);
+
 				if (!explain) readWriteDFA(writing);
 				break;
 			case PHYSICAL_PAGE_ACCESS:
 				console.log("PP access");
+
+				// update msg for accessing page
+				message += writing === true ? "writing " : "reading ";
+				message += "to physical page\n";
+
 				if (writing) {
 					console.log("writing");
 					// access and write to physical memory with PPN
@@ -441,16 +482,27 @@ const displayTables = (p) => {
 					enableAccessButtons(1);
 				}
 
+				// update msg and flush to msg box
+				message += "done!\n";
+				msgbox.value(message);
+
 				// done so we dont call again 
 				state = READY;
 				break;
 			case CHECK_PAGE_TABLE:
 				console.log("check PT");
+
+				// update msg for PT
+				message += "checking page table for VPN\n";
+
 				PPNRes = pt.getPPN(VPN);  // PPN result from PT
 				if (PPNRes === null) {
 					// page table miss
 					PTMiss++;
 					state = PAGE_FAULT;
+
+					// update msg state
+					message += "page table miss\n";
 				} else {
 					// page table hit
 					PTHit++;
@@ -458,11 +510,22 @@ const displayTables = (p) => {
 					dispPPN.html(toBase(PPNRes[0], 16, null));
 
 					state = UPDATE_TLB;
+
+					// update msg state
+					message += "page table hit\n";
 				}
+
+				// flush to msg box
+				msgbox.value(message);
+
 				if (!explain) readWriteDFA(writing);
 				break;
 			case UPDATE_TLB:
 				console.log("update tlb");
+
+				// update msg for updating tlb
+				message += "update TLB with new PTE found\n";
+
 				// get the PPN from page table result
 				PPN = PPNRes[0];
 				let dirty = PPNRes[1];
@@ -470,21 +533,38 @@ const displayTables = (p) => {
 				// update tlb
 				tlb.setEntry(VPN, pt.getPagePermissions(VPN), PPN);
 				state = PROTECTION_CHECK;
+
+				// flush to msg box
+				msgbox.value(message);
+
 				if (!explain) readWriteDFA(writing);
 				break;
 			case PAGE_FAULT:
 				console.log("page fault");
+
+				// update msg for Page Fault
+				message += "page fault\n";
+				message += "control transfered to OS\n";
+				message += "attempting to get page from disk\n";
 
 				let SSNRes = pt.getSSN(VPN);
 
 				// page not found in disk
 				if (SSNRes === null) {
 					console.log("segfault");
-          if (writing) {
-            enableAccessButtons(2);
-          } else {
-            enableAccessButtons(1);
-          }
+
+					// update msg state
+					message += "page not found in disk\n";
+					message += "segfault\n";
+
+					if (writing) {
+						enableAccessButtons(2);
+					} else {
+						enableAccessButtons(1);
+					}
+
+					// flush to msg box
+					msgbox.value(message);
 
 					// cannot be processed, so we do not proceed
 					state = READY;
@@ -492,6 +572,10 @@ const displayTables = (p) => {
 				}
 				// page found in disk
 				else {
+					// updating msg state
+					message += "page found in disk\n";
+					message == "swapping page into memory using LRU replacement policy\n";
+
 					let [SSN, dirty] = SSNRes;
 					// bring this page into mem
 					let [PPN, victimVPN] = swapPageFromDiskToMem(SSN, VPN);
@@ -500,17 +584,29 @@ const displayTables = (p) => {
 					let evictingPerm = pt.getPagePermissions(VPN);
 					evictingPerm.V = 1;
 
+					// updating msg state
+					message += "check if replaced page is dirty\n";
+
 					// if victim is in the current process and is dirty, update its PTE
 					if (victimVPN !== -1 && pt.getDirty(victimVPN)) {
+						// updating msg state
+						message += "replaced page is dirty, updating its PTE\n";
+
 						let evictedPerm = pt.getPagePermissions(victimVPN);
 						evictedPerm.V = 0;
 						evictedPerm.D = 0;
 						pt.setPTE(victimVPN, SSN, true, evictedPerm);
 					}
 
+					// update msg state
+					message += "update Page Table with new page location in physical memory\n";
+
 					// update PT for newly brought in page
 					pt.setPTE(VPN, PPN, false, evictingPerm);
 				}
+
+				// flush to msg box
+				msgbox.value(message);
 
 				state = READY;
 				if (!explain) readWriteDFA(writing);
@@ -753,11 +849,11 @@ const displayDiagram = (p) => {
  * 			false - another component is current handling user input
  */
 export function getControlAccess(componentId) {
-	if(!userInteracting) {
+	if (!userInteracting) {
 		userInteracting = componentId;
 		return true;
 	}
-	return false;		
+	return false;
 }
 
 /**
@@ -769,7 +865,7 @@ export function getControlAccess(componentId) {
  * 						  Note: component id should simply be the class name
  */
 export function releaseControlAccess(componentId) {
-	if(userInteracting === componentId) {
+	if (userInteracting === componentId) {
 		userInteracting = "";
 	}
 }
