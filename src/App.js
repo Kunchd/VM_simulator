@@ -95,6 +95,7 @@ const displayTables = (p) => {
 
 		// setup system control buttons
 		paramButton = p.select("#paramButton");
+		// change params setup all classes for different tables
 		paramButton.mousePressed(changeParams);
 		paramBox = p.select("#paramBox");
 		readButton = p.select("#readButton");
@@ -233,7 +234,8 @@ const displayTables = (p) => {
 	// on the current system state
 	// safety measure in case someone mess with it I guess
 	function changeParams() {
-		if (state == PARAMS_PHYS_MEM || state == PARAMS_VIR_MEM || state == PARAMS_TLB || state == PARAMS_PT || state == PARAMS_DISK || !checkParams()) {
+		if (state == PARAMS_PHYS_MEM || state == PARAMS_VIR_MEM || state == PARAMS_TLB 
+			|| state == PARAMS_PT || state == PARAMS_DISK || !checkParams()) {
 			explain = paramBox.checked();
 			console.log(explain + ", " + state);
 			switch (state) {
@@ -300,16 +302,21 @@ const displayTables = (p) => {
 					console.log(state);
 					if (!histMove && explain) break;
 				case PARAMS_DISK:
-					/**
-					 * @TODO fix
-					 */
 					paramButton.attribute('value', 'Reset System');
 					msgbox.value("System Generated and Reset\n");
 					enableAccessButtons();
 					state = READY;
 					console.log(state);
 				default:
-
+					// pre-allocte 3 VPN
+					let list = [];
+					while(list.length < 3) {
+						let curVPN = p.floor(Math.random() * p.pow(2, m - POwidth));
+						if(!list.includes(curVPN)) {
+							list.push(curVPN);
+							handleVPAllocation(curVPN);
+						}
+					}
 			}
 		}
 	}
