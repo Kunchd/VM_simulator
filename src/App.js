@@ -23,7 +23,8 @@ export let colorG, colorB, colorW;
 
 // System parameters
 let m, PPNWidth, E, TLBSize, pgSize, physMemSize, POwidth;
-let VM = true;
+let VM = true;			// check if VM is being displayed
+let userInteracting;	// check if user is currently using a button
 
 // Main canvas table components
 let physMem, virMem, tlb, pt, disk;
@@ -102,18 +103,18 @@ const displayTables = (p) => {
 		writeButton.mousePressed(writeVM);
 		mmaBox = p.select("#mmaBox");
 
-    // simulation messages
-    msgbox = p.select("#msgbox");
-    msgbox.value('');
+		// simulation messages
+		msgbox = p.select("#msgbox");
+		msgbox.value('');
 
-    // history
-    hist = p.select('#hist');
-    loadHist = p.select('#loadHist');
-    loadHist.mousePressed();
-    uButton = p.select('#upButton');
-    uButton.mousePressed();
-    dButton = p.select('#dnButton');
-    dButton.mousePressed();
+		// history
+		hist = p.select('#hist');
+		loadHist = p.select('#loadHist');
+		loadHist.mousePressed();
+		uButton = p.select('#upButton');
+		uButton.mousePressed();
+		dButton = p.select('#dnButton');
+		dButton.mousePressed();
 
 		// setup system status display
 		dispVPN = p.select("#dispVPN");
@@ -127,15 +128,22 @@ const displayTables = (p) => {
 		dispPTMiss = p.select("#dispPTMiss");
 
 		// setup scroll bar
-		vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, scrollSize, p.height, dampening);
-		vbarVirMem = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, dampening);
-		vbarDisk = new VScrollbar(p, p.width - scrollSize, 0, scrollSize, p.height, dampening);
-		vbarTlb = new VScrollbar(p, 250 - scrollSize, 0, scrollSize, TLBDisplayHeight + scaleC, dampening);
+		vbarPhysMem = new VScrollbar(p, p.width - scrollSize - 350, 0, 
+			scrollSize, p.height, dampening, "vabarPhysMem");
+		vbarVirMem = new VScrollbar(p, p.width - scrollSize, 0, 
+			scrollSize, p.height, dampening, "vbarVirMem");
+		vbarDisk = new VScrollbar(p, p.width - scrollSize, 0, 
+			scrollSize, p.height, dampening, "vbarDisk");
+		vbarTlb = new VScrollbar(p, 250 - scrollSize, 0, 
+			scrollSize, TLBDisplayHeight + scaleC, dampening, "vbarTlb");
 		vbarPT = new VScrollbar(p, 250 - scrollSize, vbarTlb.ypos + TLBDisplayHeight + scaleC * 3,
-			scrollSize, PTDisplayHeight + scaleC, dampening);
+			scrollSize, PTDisplayHeight + scaleC, dampening, "vbarPT");
 
 		// initialize TLB, PT Hit/Miss state
 		TLBHit = 0; TLBMiss = 0; PTHit = 0; PTMiss = 0;
+
+		// initialize system parameters
+		userInteracting = "";
 
 		reset(true);
 	}
@@ -619,6 +627,9 @@ const displayTables = (p) => {
 		return 0;
 	}
 
+	/**
+	 * Display either VM or disk depending on user toggle and render VM/disk toggle
+	 */
 	function displaVDHeader() {
 		if (virMem !== undefined) {
 			// display background
@@ -679,6 +690,9 @@ const displayTables = (p) => {
 		p.text(msg, x, y);
 	}
 
+	/**
+	 * check if user wants to update the VM state to disk or reverse
+	 */
 	function updateVMDiskState() {
 		if (bounded(p.mouseY, 0, 0.85 * scaleM + 5)) {
 			if (bounded(p.mouseX, virMem.x, virMem.x + virMem.Mwidth * 0.6)) {
@@ -710,6 +724,10 @@ const displayTables = (p) => {
 	}
 }
 
+/**
+ * p5 function to display diagram
+ * @param {*} p p5 object for the diagram
+ */
 const displayDiagram = (p) => {
 	let img;
 
@@ -720,6 +738,39 @@ const displayDiagram = (p) => {
 	p.setup = function () {
 		diagramCanvas = p.createCanvas(500, 180).parent("p5addrTranslationCanvas");
 		p.image(img, 0, 0);
+	}
+}
+
+/**
+ * gives caller control over handling user input. 
+ * All other user input components should be unable to handle 
+ * user input while one component has control.
+ * Caller is responsible for releasing control access
+ * after input handling is done
+ * @param {*} componentId arbitrary string id of the component requesting control	
+ * 						  Note: component id should simply be the class name
+ * @returns true - if the component can have access to handle user input
+ * 			false - another component is current handling user input
+ */
+export function getControlAccess(componentId) {
+	if(!userInteracting) {
+		userInteracting = componentId;
+		return true;
+	}
+	return false;		
+}
+
+/**
+ * release caller control over handling user input to allow other 
+ * component to handle user input. Only components currently holding
+ * control access can free the control access. 
+ * Components are responsible for releasing control access after input is processed
+ * @param {*} componentId arbitrary string id of the component requesting control
+ * 						  Note: component id should simply be the class name
+ */
+export function releaseControlAccess(componentId) {
+	if(userInteracting === componentId) {
+		userInteracting = "";
 	}
 }
 

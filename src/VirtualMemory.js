@@ -1,6 +1,7 @@
 import { scrollSize, hoverSize, scaleM, VMDisplayHeight } from "./Constants.js";
 import { VIR_MEM_HIGHLIGHT, EMPHASIS_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorH, colorM } from "./App.js";
+import { getControlAccess, releaseControlAccess } from "./App.js";
 import { xwidth, toBase, bounded, setScrollBarToDesiredPos } from "./HelperFunctions.js";
 
 /**
@@ -29,6 +30,12 @@ export class VirtualMemory {
 		this.x = scrollBar.xpos - this.Mwidth - 10; // x coordinate of this table
 		this.data = [];  // data stored in memory
 
+		// component id for accessing user input
+		this.componentId = "VM";
+		// controlAccess of current component
+		// number indicate which page has control
+		this.controlAccess = -1;
+
 		/*
 		 * 0 stands for unused
 		 * 1 stands for emphasis highlight
@@ -48,8 +55,8 @@ export class VirtualMemory {
 	 * clear emphsis highlight
 	 */
 	clearHighlight() {
-		for(let i = 0; i < this.light.length; i++) {
-			if(this.light[i] === 1) this.light[i] = 2;
+		for (let i = 0; i < this.light.length; i++) {
+			if (this.light[i] === 1) this.light[i] = 2;
 		}
 	}
 
@@ -59,7 +66,7 @@ export class VirtualMemory {
 	 */
 	allocatePage(VPN) {
 		this.data[VPN] = 1;
-		
+
 		// emphasize change
 		this.clearHighlight();
 		this.light[VPN] = 1;
@@ -90,12 +97,26 @@ export class VirtualMemory {
 				this.p.fill(colorM);
 				this.p.text("0x" + toBase(i, 16, this.p.ceil((this.m - this.PO) / 4)), x - 2, ytext);
 
-				// checks if user is allocating current page
-				if(this.p.mouseIsPressed) {
-					if(bounded(this.p.mouseX, x, x + this.Mwidth) && bounded(this.p.mouseY, y, y + scaleM)) {
+				// check on hover for current page
+				if (bounded(this.p.mouseX, x, x + this.Mwidth)
+					&& bounded(this.p.mouseY, y, y + scaleM)) {
+					if (this.p.mouseIsPressed
+						&& this.controlAccess === -1
+						&& getControlAccess(this.componentId)) {
+						this.controlAccess = i;
+					}
+
+					// if has control and is pressed, allocate page
+					if (this.p.mouseIsPressed && this.controlAccess === i) {
 						this.data[i] = 1;
 						handleVPAllocation(i);
 					}
+				}
+
+				// release control access when isn't used
+				if (!this.p.mouseIsPressed) {
+					releaseControlAccess(this.componentId);
+					this.controlAccess = -1;
 				}
 
 				this.p.textSize(scaleM);
@@ -104,7 +125,7 @@ export class VirtualMemory {
 				if (this.light[i] === 2) {
 					this.p.fill(VIR_MEM_HIGHLIGHT);
 				}
-				else if(this.light[i] === 1) {
+				else if (this.light[i] === 1) {
 					this.p.fill(EMPHASIS_HIGHLIGHT);
 				} else {
 					this.p.noFill();
