@@ -36,6 +36,29 @@ export class PTEntry {
         this.width = scaleC * (xwidth(1) * (MGNT_BIT_WIDTH)) + scaleC * xwidth(PT_PPN_WIDTH);
     }
 
+    /**
+     * reset this entry to initial empty state
+     */
+    flush() {
+        this.pageNumber = -1;     // PPN/SSN value
+
+        this.V = 0;       // valid bit value
+        this.D = 0;       // Dirty bit value
+        this.R = 0;       // read bit value
+        this.W = 0;       // write bit value
+        this.E = 0;       // execute bit value
+        this.addr = -1;   // address of beginning of block (-1 is dummy addr)
+        this.isSSN = false;     // check if this entry contain
+
+        // lighting values
+        this.lightPPN = 0;  // indicate highlighting for moved/changed data
+        this.lightV = 0;
+        this.lightD = 0;
+        this.lightR = 0;
+        this.lightW = 0;
+        this.lightE = 0;
+    }
+
     // highlights the currently focused lines
     highlightData() { this.lightPPN = 1; }
 

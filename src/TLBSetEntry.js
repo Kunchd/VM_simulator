@@ -22,7 +22,6 @@ export class TLBSetEntry {
 
         this.t = t;       // tag width
         this.PPNWidth = PPNWidth;   // PPN width
-        this.PPN = -1;     // PPN value
 
         this.V = 0;       // valid bit value
         this.D = 0;       // Dirty bit value
@@ -47,6 +46,29 @@ export class TLBSetEntry {
             + xwidth(this.p.ceil(this.t / 4)) 
             + xwidth(this.p.ceil(this.PPNWidth / 4))) 
             + scaleC * 0.5
+    }
+
+    /**
+     * reset all values to starting position
+     */
+    flush() {
+        this.V = 0;       // valid bit value
+        this.D = 0;       // Dirty bit value
+        this.R = 0;       // read bit value
+        this.W = 0;       // write bit value
+        this.E = 0;       // execute bit value
+        this.tag = 0;       // tag value
+        this.addr = -1;   // address of beginning of block (-1 is dummy addr)
+        this.PPN = undefined;     // PPN value
+
+        // lighting values
+        this.lightPPN = 0;
+        this.lightV = 0;
+        this.lightD = 0;
+        this.lightR = 0;
+        this.lightW = 0;
+        this.lightE = 0;
+        this.lightT = 0;
     }
 
     // highlights the currently focused lines

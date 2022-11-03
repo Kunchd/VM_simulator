@@ -51,6 +51,28 @@ export class PhysicalMemory {
 		this.vbarMemEnable = (this.Mtop + this.Mheight > this.p.height);
 	}
 
+    /**
+     * flush all recorded data from PM
+     */
+    flush() {
+        // revert to initial state
+        this.pages = [];	// contained pages
+		this.used = [];		// time since usage for each page (for LRU)
+
+		/*
+		 * 0 stands for unused
+		 * 2 stands for identification highlight
+		 */
+		this.light = [];  // indicate highlighting for moved/changed data
+
+		// initialize data
+		for (var i = 0; i < PMSize / PgSize; i++) {
+			this.light[i] = 0;                 	// nothing starts highlighted
+			this.pages[i] = new Page(this.p, this.PgSize);
+			this.used[i] = PMSize / PgSize;		// initialize all page to not recently used
+		}
+    }
+
 	// helper methods for hightlighting
 	// highlighting:  0 - no highlight, 1 - background, 2 - background + text
 	highlight(addr, light) { this.light[addr] = light; }

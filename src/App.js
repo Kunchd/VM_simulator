@@ -330,6 +330,10 @@ const displayTables = (p) => {
 	var PPNRes;
 	var message;
 
+    /**
+     * @todo make sure when swapping current page from-to disk that values are preserved
+     */
+
 	/**
 	 * DFA that handles the address translation 
 	 * @param {*} writing set to true if writing, false if reading

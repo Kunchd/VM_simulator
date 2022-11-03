@@ -36,6 +36,9 @@ export class TLB {
 		this.x = scrollBar.xpos - 10 - this.Cwidth;
 	}
 
+    /**
+     * flush all reccorded data from TLB
+     */
 	flush() {
 		for (var i = 0; i < this.S; i++)
 			this.sets[i].flush();

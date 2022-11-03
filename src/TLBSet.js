@@ -37,10 +37,12 @@ export class TLBSet {
 		this.active = 0;
 	}
 
+    /**
+     * reset each entry within this set to starting position
+     */
 	flush() {
 		for (var i = 0; i < E; i++) {
-			this.entries[i].invalidate();
-			// if (replace > 0) this.used[i] = (replace == 1 ? E-i : 0);  // reset replacement policy
+			this.entries[i].flush();
 		}
 	}
 

@@ -51,6 +51,19 @@ export class VirtualMemory {
 		}
 	}
 
+    /**
+     * flush all recorded data from VM
+     */
+    flush() {
+        this.data = [];  // data stored in memory
+        this.light = [];  // indicate highlighting for moved/changed data
+
+        for (var i = 0; i < p.pow(2, this.m - this.PO); i++) {
+			this.data[i] = 0;	// initialize memory to empty for now
+			this.light[i] = 0;
+		}
+    }
+
 	/**
 	 * clear emphsis highlight
 	 */

@@ -34,6 +34,9 @@ export class PT {
 		this.x = scrollBar.xpos - 10 - this.PTwidth;
 	}
 
+    /**
+     * flush all recorded values within PT
+     */
 	flush() {
 		for (var i = 0; i < this.S; i++)
 			this.entries[i].flush();
