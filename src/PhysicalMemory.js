@@ -66,10 +66,10 @@ export class PhysicalMemory {
 		this.light = [];  // indicate highlighting for moved/changed data
 
 		// initialize data
-		for (var i = 0; i < PMSize / PgSize; i++) {
+		for (var i = 0; i < this.PMSize / this.PgSize; i++) {
 			this.light[i] = 0;                 	// nothing starts highlighted
 			this.pages[i] = new Page(this.p, this.PgSize);
-			this.used[i] = PMSize / PgSize;		// initialize all page to not recently used
+			this.used[i] = this.PMSize / this.PgSize;		// initialize all page to not recently used
 		}
     }
 

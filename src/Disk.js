@@ -53,7 +53,7 @@ export class Disk {
         this.data = [];  // array of pages representing data in disk
         this.light = [];  // indicate highlighting for moved/changed data
 
-        for (var i = 0; i < p.pow(2, this.m - this.PO); i++) {
+        for (var i = 0; i < this.p.pow(2, this.m - this.PO); i++) {
 			this.data[i] = null;	// initialize memory to empty for now
 			this.light[i] = 0;
 		}

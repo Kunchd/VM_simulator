@@ -23,7 +23,7 @@ export class TLBSet {
 
 		this.entries = [];		// instantiate entries in set
 		this.used = []; 		// accesses since page last used (for LRU)
-		for (var i = 0; i < E; i++) {
+		for (var i = 0; i < this.E; i++) {
 			this.entries[i] = new TLBSetEntry(p, t, PPNWidth);
 			this.used[i] = E;	// prepopulated all used entry with big number, to show lack of use
 		}
@@ -41,7 +41,7 @@ export class TLBSet {
      * reset each entry within this set to starting position
      */
 	flush() {
-		for (var i = 0; i < E; i++) {
+		for (var i = 0; i < this.E; i++) {
 			this.entries[i].flush();
 		}
 	}

@@ -66,7 +66,7 @@ let dispTLBHit, dispTLBMiss, dispPTHit, dispPTMiss;
 // history related variables
 let histArray;
 let histMove;
-var histText, loadHist, uButton, dButton;
+var histText, loadHistButton, uButton, dButton;
 // history management variable
 let histIndex;  // index of last entry
 
@@ -79,8 +79,9 @@ class MemAccess {
      */
     constructor() {
         // width and height of bar
-        this.type = null;     // access type: 'R', 'W'
+        this.type = null;     // access type: 'R', 'W', 'A'
         this.addr = -1;       // access addr: decimal form
+        // in case of 'A', addr is VPN
         this.data = -1;       // access data: decimal form
         this.tlbRes = '?';    // tlb access result: 'H', 'M', or '?'
         this.ptRes = '?';     // pt access result: 'H', 'M', or '?'
@@ -130,12 +131,12 @@ const displayTables = (p) => {
 
         // history
         histText = p.select('#hist');
-        loadHist = p.select('#loadHist');
-        loadHist.mousePressed();
+        loadHistButton = p.select('#loadHist');
+        loadHistButton.mousePressed(loadHist);
         uButton = p.select('#upButton');
-        uButton.mousePressed();
+        uButton.mousePressed(histUp);
         dButton = p.select('#dnButton');
-        dButton.mousePressed();
+        dButton.mousePressed(histDown);
         histArray = [];
         histMove = false;
         histIndex = -1;     // start by pointing at no entry
@@ -233,7 +234,7 @@ const displayTables = (p) => {
         inWriteAddr.attribute('disabled', '');
         inWriteData.attribute('disabled', '');
         histText.attribute('disabled', '');
-        loadHist.attribute('disabled', '');
+        loadHistButton.attribute('disabled', '');
         uButton.attribute('disabled', '');
         dButton.attribute('disabled', '');
     }
@@ -248,7 +249,7 @@ const displayTables = (p) => {
         inWriteAddr.removeAttribute('disabled');
         inWriteData.removeAttribute('disabled');
         histText.removeAttribute('disabled');
-        loadHist.removeAttribute('disabled');
+        loadHistButton.removeAttribute('disabled');
         uButton.removeAttribute('disabled');
         dButton.removeAttribute('disabled');
     }
@@ -345,8 +346,6 @@ const displayTables = (p) => {
     }
 
     // persistent variable conatiners for readWriteDFA
-    var addr;
-    var data;
     var VPN;
     var PO;
     var PPNRes;
@@ -362,21 +361,16 @@ const displayTables = (p) => {
     /**
      * DFA that handles the address translation 
      * @param {*} writing set to true if writing, false if reading
-     * 
+     * @param {*} addr address to access
+     * @param {*} data data to write if applicable. If read, value of this
+     *                 parameter does not matter
      */
-    function readWriteDFA(writing) {
+    function readWriteDFA(writing, addr, data) {
         explain = mmaBox.checked();
 
         switch (state) {
             case READY:
                 console.log("ready");
-                if (writing) {
-                    addr = parseInt(inWriteAddr.value(), 16);
-                    data = parseInt(inWriteData.value(), 16);
-                } else {
-                    addr = parseInt(inReadAddr.value(), 16);
-                    data = 0;  // we are not writing so data is irrelevant 
-                }
 
                 // check input is valid
                 if (isNaN(addr) || isNaN(data)) {
@@ -415,7 +409,7 @@ const displayTables = (p) => {
 
                 // this is how the DFA works, set next state and call again to trigger state code.
                 state = CHECK_TLB;
-                if (!explain) readWriteDFA(writing);
+                if (!explain) readWriteDFA(writing, addr, data);
                 break;
             case CHECK_TLB:
                 console.log("check tlb");
@@ -466,7 +460,7 @@ const displayTables = (p) => {
                 // print message to msg box
                 msgbox.value(message);
 
-                if (!explain) readWriteDFA(writing);
+                if (!explain) readWriteDFA(writing, addr, data);
                 break;
             case PROTECTION_CHECK:
                 console.log("pro check");
@@ -504,18 +498,15 @@ const displayTables = (p) => {
                     msgbox.value(message);
 
                     // push access to hist
-                    histArray.push(newAccess);
+                    pushToHist(newAccess);
                     // done so we don't call again
-                    updateHist();
                     break;
                 }
 
-                // push access to hist
-                histArray.push(newAccess);
                 // flush to msg box
                 msgbox.value(message);
 
-                if (!explain) readWriteDFA(writing);
+                if (!explain) readWriteDFA(writing, addr, data);
                 break;
             case PHYSICAL_PAGE_ACCESS:
                 console.log("PP access");
@@ -546,8 +537,10 @@ const displayTables = (p) => {
                 message += "done!\n";
                 msgbox.value(message);
 
+                // push access to hist
+                pushToHist(newAccess);
+
                 // done so we dont call again 
-                updateHist();
                 state = READY;
                 break;
             case CHECK_PAGE_TABLE:
@@ -583,7 +576,7 @@ const displayTables = (p) => {
                 // flush to msg box
                 msgbox.value(message);
 
-                if (!explain) readWriteDFA(writing);
+                if (!explain) readWriteDFA(writing, addr, data);
                 break;
             case UPDATE_TLB:
                 console.log("update tlb");
@@ -602,7 +595,7 @@ const displayTables = (p) => {
                 // flush to msg box
                 msgbox.value(message);
 
-                if (!explain) readWriteDFA(writing);
+                if (!explain) readWriteDFA(writing, addr, data);
                 break;
             case PAGE_FAULT:
                 console.log("page fault");
@@ -631,13 +624,12 @@ const displayTables = (p) => {
                     }
 
                     // push access to hist
-                    histArray.push(newAccess);
+                    pushToHist(newAccess);
                     // flush to msg box
                     msgbox.value(message);
 
                     // cannot be processed, so we do not proceed
                     state = READY;
-                    updateHist();
                     break;
                 }
                 // page found in disk
@@ -679,7 +671,7 @@ const displayTables = (p) => {
                 msgbox.value(message);
 
                 state = READY;
-                if (!explain) readWriteDFA(writing);
+                if (!explain) readWriteDFA(writing, addr, data);
                 break;
             default:
                 alert("default case");
@@ -690,14 +682,18 @@ const displayTables = (p) => {
      * handles reading from VM upon user request to read at a given address
      */
     function readVM() {
-        readWriteDFA(false);
+        let addr = parseInt(inReadAddr.value(), 16);
+        let data = 0;  // we are not writing so data is irrelevant 
+        readWriteDFA(false, addr, data);
     }
 
     /**
      * handles writing to VM upon user request to write at a given address
      */
     function writeVM() {
-        readWriteDFA(true);
+        let addr = parseInt(inWriteAddr.value(), 16);
+        let data = parseInt(inWriteData.value(), 16);
+        readWriteDFA(true, addr, data);
     }
 
     /**
@@ -722,6 +718,11 @@ const displayTables = (p) => {
                 let SSN = disk.allocatePage();
                 pt.setPTE(VPN, SSN, true, perm);
             }
+
+            let newAccess = new MemAccess();
+            newAccess.type = 'A';
+            newAccess.addr = VPN;
+            pushToHist(newAccess);
         }
     }
 
@@ -845,18 +846,18 @@ const displayTables = (p) => {
             }
             p.text(label, virMem.x - 6, scaleM * 0.8);
         }
+    }
 
-        /**
+    /**
          * flush all recorded data for every table,
          * reverting them to initial value
          */
-        function flush() {
-            tlb.flush();
-            pt.flush();
-            physMem.flush();
-            virMem.flush();
-            disk.flush();
-        }
+    function flush() {
+        tlb.flush();
+        pt.flush();
+        physMem.flush();
+        virMem.flush();
+        disk.flush();
     }
 
     // display the current message to canvas
@@ -889,7 +890,12 @@ const displayTables = (p) => {
         // build string list of hist entries
         let histMsg = '';
         for (let i = 0; i < histArray.length; i++) {
+            // arrow indicating which hist we're on
+            histMsg += i == histIndex ? '> ' : '  ';
             switch (histArray[i].type) {
+                case 'A':
+                    histMsg += 'Allocate VPN: ' + toBase(histArray[i].addr, 16, 2) +'\n';
+                    break;
                 case 'W':
                     histMsg += 'W(0x' + toBase(histArray[i].addr, 16, 2) + ', 0x' +
                         toBase(histArray[i].data, 16, 2) + ') = ' +
@@ -907,9 +913,60 @@ const displayTables = (p) => {
                     hist.value(hist.value() + 'Unknown access type\n');
             }
         }
-        histMsg += '>';
         // post hist to hist box
         histText.value(histMsg);
+    }
+
+    /**
+     * move hist cursor up
+     */
+    function histUp() {
+        histIndex = p.max(0, histIndex - 1);
+        updateHist();
+    }
+
+    /**
+     * move hist cursor down
+     */
+    function histDown() {
+        histIndex = p.min(histArray.length - 1, histIndex + 1);
+        updateHist();
+    }
+
+    function loadHist() {
+        // flush current tables
+        flush();
+        // update current hist upto histIndex
+        let tempHist = histArray.slice(0, histIndex + 1);
+        // reset histIndex since the calls will increment it
+        histIndex = -1;
+
+        // reset system tracking variables
+        TLBHit = 0; TLBMiss = 0;
+        PTHit = 0; PTMiss = 0;
+
+        // re-call read/write for each entry
+        for (let i = 0; i < tempHist.length; i++) {
+            if (tempHist[i].type === 'A') {
+                handleVPAllocation(tempHist[i].addr);
+            } else {
+                readWriteDFA(tempHist[i].type === 'W' ? true : false
+                    , tempHist[i].addr, tempHist[i].data);
+            }
+        }
+        histArray = tempHist;
+        console.log(histIndex);
+        updateHist();
+    }
+
+    /**
+     * push given mem access to hist
+     * @param {*} access mem access to push
+     */
+    function pushToHist(access) {
+        histArray.push(access);
+        histIndex++;
+        updateHist();
     }
 
     /**
