@@ -168,7 +168,7 @@ export class PhysicalMemory {
 			// if all page taken, find LRU page
 			let max = -Number.MAX_VALUE;
 			let maxIndex = -1;
-			for (let i = 0; i < this.used; i++) {
+			for (let i = 0; i < this.used.length; i++) {
 				if (this.used[i] > max) {
 					max = this.used[i];
 					maxIndex = i;

@@ -89,6 +89,10 @@ class MemAccess {
     }
 }
 
+/**
+ * @todo update different highlighting for PM vs Disk
+ */
+
 const displayTables = (p) => {
     p.setup = function () {
         // initialize colors
@@ -650,6 +654,11 @@ const displayTables = (p) => {
                     message += "check if replaced page is dirty\n";
 
                     // if victim is in the current process and is dirty, update its PTE
+
+                    /**
+                     * @todo handle updating PT for non-dirty case
+                     */
+
                     if (victimVPN !== -1 && pt.getDirty(victimVPN)) {
                         // updating msg state
                         message += "replaced page is dirty, updating its PTE\n";
@@ -993,18 +1002,18 @@ const displayTables = (p) => {
  * p5 function to display diagram
  * @param {*} p p5 object for the diagram
  */
-const displayDiagram = (p) => {
-    let img;
+// const displayDiagram = (p) => {
+//     let img;
 
-    p.preload = function () {
-        img = p.loadImage("../assets/diagram.png");
-    }
+//     p.preload = function () {
+//         img = p.loadImage("../assets/diagram.png");
+//     }
 
-    p.setup = function () {
-        diagramCanvas = p.createCanvas(500, 180).parent("p5addrTranslationCanvas");
-        p.image(img, 0, 0);
-    }
-}
+//     p.setup = function () {
+//         diagramCanvas = p.createCanvas(500, 180).parent("p5addrTranslationCanvas");
+//         p.image(img, 0, 0);
+//     }
+// }
 
 /**
  * gives caller control over handling user input. 
@@ -1040,4 +1049,4 @@ export function releaseControlAccess(componentId) {
 }
 
 let tableP5 = new p5(displayTables);
-let diagramP5 = new p5(displayDiagram);
+// let diagramP5 = new p5(displayDiagram);
