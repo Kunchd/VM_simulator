@@ -4,7 +4,7 @@ import { xwidth, toBase } from "./HelperFunctions.js";
 
 // Management bit width
 import { MGNT_BIT_WIDTH } from "./Constants.js";
-import { EMPHASIS_HIGHLIGHT } from "./Constants.js";
+import { EMPHASIS_HIGHLIGHT, PHYS_MEM_HIGHLIGHT, DISK_HIGHLIGHT } from "./Constants.js";
 
 // Note: WH and WM policies settings are removed 
 
@@ -26,7 +26,11 @@ export class PTEntry {
         this.isSSN = false;     // check if this entry contain
 
         // lighting values
-        this.lightPPN = 0;  // indicate highlighting for moved/changed data
+        this.lightPPN = 0;  // indicate no entry or PPN/SSN status
+                            // 0 for no data
+                            // 1 for PPN
+                            // 2 for SSN
+        // indicate highlighting for moved/changed data
         this.lightV = 0;
         this.lightD = 0;
         this.lightR = 0;
@@ -59,11 +63,8 @@ export class PTEntry {
         this.lightE = 0;
     }
 
-    // highlights the currently focused lines
-    highlightData() { this.lightPPN = 1; }
-
     /**
-     * highlight this entry
+     * emphasis highlight this entry
      */
     highlightAll() {
         this.lightV = 1;
@@ -71,10 +72,9 @@ export class PTEntry {
         this.lightR = 1;
         this.lightW = 1;
         this.lightE = 1;
-        this.highlightData();
     }
 
-    // clears the currently highlighted data
+    // clears the emphasis highlighted data
     clearHighlight() {
         this.lightPPN = 0;
         this.lightV = 0;
@@ -119,6 +119,9 @@ export class PTEntry {
         this.R = permissions.R;
         this.W = permissions.W;
         this.E = permissions.E;
+
+        // handle descriptive highlight
+        this.lightPPN = this.isSSN ? 2 : 1;
     }
 
     /**
@@ -196,7 +199,9 @@ export class PTEntry {
         this.p.rect(x + scaleC * xwidth(1) * 4, y, scaleC * xwidth(1), scaleC);     // write
 
         // for PPN
-        (this.lightPPN > 0 ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
+        if(this.lightPPN) this.lightPPN = 1 ? this.p.fill(PHYS_MEM_HIGHLIGHT) : this.p.fill(DISK_HIGHLIGHT);
+        else this.p.noFill();
+        // (this.lightPPN > 0 ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
         this.p.rect(xPPN, y, scaleC * xwidth(PT_PPN_WIDTH), scaleC);  // data
 
         // cache block text
