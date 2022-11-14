@@ -76,7 +76,6 @@ export class PTEntry {
 
     // clears the emphasis highlighted data
     clearHighlight() {
-        this.lightPPN = 0;
         this.lightV = 0;
         this.lightD = 0;
         this.lightR = 0;
@@ -199,7 +198,7 @@ export class PTEntry {
         this.p.rect(x + scaleC * xwidth(1) * 4, y, scaleC * xwidth(1), scaleC);     // write
 
         // for PPN
-        if(this.lightPPN) this.lightPPN = 1 ? this.p.fill(PHYS_MEM_HIGHLIGHT) : this.p.fill(DISK_HIGHLIGHT);
+        if(this.lightPPN) this.lightPPN == 1 ? this.p.fill(PHYS_MEM_HIGHLIGHT) : this.p.fill(DISK_HIGHLIGHT);
         else this.p.noFill();
         // (this.lightPPN > 0 ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
         this.p.rect(xPPN, y, scaleC * xwidth(PT_PPN_WIDTH), scaleC);  // data
@@ -225,7 +224,7 @@ export class PTEntry {
         this.p.text(this.E, x + scaleC * xwidth(1) * 4.5, ytext);   // exec
 
         // render PPN bits
-        this.p.text(this.V ? toBase(this.pageNumber, 16, this.p.ceil(this.PPNWidth / 4)) : "--"
+        this.p.text(this.V || this.isSSN ? toBase(this.pageNumber, 16, this.p.ceil(this.PPNWidth / 4)) : "--"
             , xPPN + scaleC * xwidth(PT_PPN_WIDTH) * (0.5), ytext);  // data
 
         // // hover text
