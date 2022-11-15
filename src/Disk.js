@@ -3,6 +3,7 @@ import { DISK_HIGHLIGHT, EMPHASIS_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorH, colorM } from "./App.js";
 import { xwidth, toBase, bounded, setScrollBarToDesiredPos } from "./HelperFunctions.js";
 import { Page } from "./Page.js";
+import { findUnused, findLRU } from "./HelperFunctions.js";
 
 /**
  * class to represent physical memory
@@ -70,14 +71,21 @@ export class Disk {
 
 	/**
 	 * allocate an unallocated page within disk to contain data for current process
-	 * @returns the SSN associated with the newly allocated page
+     * @param {*} VPN vpn associated with the page allocated
+	 * @returns the SSN associated with the newly allocated page, 
+     *          or -1 if no space is available (disk full).
 	 */
-	allocatePage() {
+	allocatePage(VPN) {
 		/**
 		 * @todo this random allocation might step on something allocated
 		 */
-		let SSN = this.p.floor(Math.random() * this.p.pow(2, this.m - this.PO));
+		let SSN = findUnused(this.light);
+        // check if disk fully filled
+        if(SSN === -1) return SSN;
+        
+        // else unused space found
 		this.data[SSN] = new Page(this.p, this.pgSize);
+        this.data[SSN].setAssociatingVPN(VPN);
 
 		// emphasize change
 		this.clearHighlight();
@@ -90,6 +98,23 @@ export class Disk {
 
 		return SSN;
 	}
+
+    /**
+     * attempts to find page asscoiated with given VPN within disk
+     * @param {*} VPN vpn of page to find
+     * @returns SSN of page found or -1 if no matches are found
+     */
+    findPage(VPN) {
+        // attempts to find page
+        for(let i = 0; i < this.data.length; i++) {
+            if(this.data[i] !== null && this.data[i].getAssociatingVPN() === VPN) {
+                return i;
+            }
+        }
+
+        // else no match
+        return -1;
+    }
 
 	/**
 	 * return the page at the given SSN

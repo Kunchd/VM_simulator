@@ -644,31 +644,65 @@ const displayTables = (p) => {
 
                     let [SSN, dirty] = SSNRes;
                     // bring this page into mem
-                    let [PPN, victimVPN] = swapPageFromDiskToMem(SSN, VPN);
+                    // let [PPN, victimVPN] = swapPageFromDiskToMem(SSN, VPN);
 
-                    // get correct management bit permissions for newly brought in page
-                    let evictingPerm = pt.getPagePermissions(VPN);
-                    evictingPerm.V = 1;
+                    // find LRU page in physMem
+                    let PPN = physMem.findVictim();
+                    let victimVPN = physMem.getAssociatingVPN(PPN);
 
                     // updating msg state
                     message += "check if replaced page is dirty\n";
 
-                    // if victim is in the current process and is dirty, update its PTE
+                    // check if victim is dirty
+                    if (pt.getDirty(victimVPN)) {
+                        // evicted page is dirty writing to disk
+                        message += "evicted page is dirty, writing to disk\n";
+                    }
 
-                    /**
-                     * @todo handle updating PT for non-dirty case
-                     * @todo handle dirty bit checking for whether it exists in Disk
-                     */
+                    // try to find if current page is already within disk
+                    let victimSSN = disk.findPage(victimVPN);
+                    // if already in disk, simply update
+                    if (victimSSN !== -1) {
+                        disk.setPage(victimSSN, physMem.getPage(PPN));
 
-                    if (victimVPN !== -1 && pt.getDirty(victimVPN)) {
                         // updating msg state
-                        message += "replaced page is dirty, updating its PTE\n";
+                        message += "updating evicted page's PTE\n";
 
                         let evictedPerm = pt.getPagePermissions(victimVPN);
                         evictedPerm.V = 0;
                         evictedPerm.D = 0;
                         pt.setPTE(victimVPN, SSN, true, evictedPerm);
                     }
+                    // if not in disk, allocate new page
+                    else {
+                        // FOR READING in case page is not on disk
+                        if(!pt.getDirty(victimVPN)) {
+                            message += "page not currently in disk. writing to disk\n";
+                        }
+                        victimSSN = disk.allocatePage(victimVPN);
+                        // if disk full, notify user
+                        if (victimSSN === -1) {
+                            message += "Disk space full, unable to write\n";
+                        }
+                        // else write to new page
+                        else {
+                            disk.setPage(victimSSN, physMem.getPage(PPN));
+                            // updating msg state
+                            message += "updating evicted page's PTE\n";
+
+                            let evictedPerm = pt.getPagePermissions(victimVPN);
+                            evictedPerm.V = 0;
+                            evictedPerm.D = 0;
+                            pt.setPTE(victimVPN, victimSSN, true, evictedPerm);
+                        }
+                    }
+
+                    // bring target page into physMem
+                    physMem.setPage(PPN, VPN, disk.getPage(SSN));
+
+                    // get correct management bit permissions for newly brought in page
+                    let evictingPerm = pt.getPagePermissions(VPN);
+                    evictingPerm.V = 1;
 
                     // update msg state
                     message += "update Page Table with new page location in physical memory\n";
@@ -709,6 +743,7 @@ const displayTables = (p) => {
     /**
      * handles user allocating a new virtual page at the given VPN. 
      * Prioritize unused PM pages first before populating swap space.
+     * If disk is full, no page will be allocated.
      * @param {*} VPN virtual page number of the page user is allocating
      */
     function handleVPAllocation(VPN) {
@@ -726,6 +761,10 @@ const displayTables = (p) => {
                 pt.setPTE(VPN, PPN, false, perm);
             } else {
                 let SSN = disk.allocatePage();
+                if (SSN === -1) {
+                    console.log("out of disk space");
+                    return;
+                }
                 pt.setPTE(VPN, SSN, true, perm);
             }
 
@@ -904,7 +943,7 @@ const displayTables = (p) => {
             histMsg += i == histIndex ? '> ' : '  ';
             switch (histArray[i].type) {
                 case 'A':
-                    histMsg += 'Allocate VPN: ' + toBase(histArray[i].addr, 16, 2) +'\n';
+                    histMsg += 'Allocate VPN: ' + toBase(histArray[i].addr, 16, 2) + '\n';
                     break;
                 case 'W':
                     histMsg += 'W(0x' + toBase(histArray[i].addr, 16, 2) + ', 0x' +

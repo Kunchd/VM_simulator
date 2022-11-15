@@ -65,7 +65,7 @@ export function setScrollBarToDesiredPos(desiredY, sheerY, percentageScaler, scr
 export function findLRU(curUsedArr, LRUArr) {
     // verify if there's any unused element
     let LRU = findUnused(curUsedArr);
-    if(LRU != -1) return LRU;
+    if(LRU !== -1) return LRU;
 
     // find least recently used
     let max = -Number.MAX_VALUE;
@@ -87,7 +87,7 @@ export function findLRU(curUsedArr, LRUArr) {
 export function findUnused(curUsedArr) {
     // naively search for first unused entry
     for(let i = 0; i < curUsedArr.length; i++) {
-        if(curUsedArr[i] == 0) {
+        if(curUsedArr[i] === 0) {
             return i;
         }
     }
