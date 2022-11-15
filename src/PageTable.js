@@ -1,4 +1,4 @@
-import { scaleC, MGNT_BIT_WIDTH, PTDisplayHeight } from "./Constants.js";
+import { scaleC, MGNT_BIT_WIDTH, PTDisplayHeight, DISK_HIGHLIGHT, PHYS_MEM_HIGHLIGHT } from "./Constants.js";
 import { xwidth, bounded, toBase, setScrollBarToDesiredPos } from "./HelperFunctions.js";
 import { bg, colorC, colorB } from "./App.js";
 import { PTEntry } from "./PTEntry.js";
@@ -155,7 +155,7 @@ export class PT {
 		// enable scroll bar to change the TLB position
 		if (this.vbarPTEnable) {
 			// subtract 100 to decrease how far we scroll down
-			offset = -(this.PTheight - (PTDisplayHeight - scaleC)) * this.vbarPT.getPos();
+			offset = -(this.PTheight - (PTDisplayHeight - scaleC * 2)) * this.vbarPT.getPos();
 		}
 
 		// display name of each set
@@ -197,10 +197,31 @@ export class PT {
 		this.p.text("R", x + scaleC * (xwidth(1) * 2.5), ytext);  // read
 		this.p.text("W", x + scaleC * (xwidth(1) * 3.5), ytext);  // write
 		this.p.text("E", x + scaleC * (xwidth(1) * 4.5), ytext);  // exec
+        this.p.text("VPN", x - scaleC * (xwidth(1) * 1.2), ytext);  // VPN
 
 		// label PPN & SSN
 		var xPPN = x + scaleC * (xwidth(1) * 4.2);
 		this.p.textAlign(this.p.LEFT);
 		this.p.text("PPN/SSN", xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * 0.5, ytext);
+
+        // label bottom of PT with key
+        let ykey = this.PTtop + PTDisplayHeight;
+        // background
+        this.p.noStroke();
+		this.p.fill(bg);
+        this.p.rect(x - 60, ykey - scaleC * 0.23, this.PTwidth + 60, scaleC * 2);
+
+        // label key
+        this.p.fill(colorB);
+        this.p.stroke(colorB);
+        this.p.text("KEY", x - 45, ykey + scaleC * 0.75);
+        this.p.text("Disk:", x, ykey + scaleC * 0.75);
+        this.p.text("Phys Mem:", x + 70, ykey + scaleC * 0.75);
+
+        this.p.stroke(colorB);
+        this.p.fill(DISK_HIGHLIGHT);
+        this.p.rect(x + 40, ykey + 2.5, scaleC * 0.75, scaleC * 0.75);
+        this.p.fill(PHYS_MEM_HIGHLIGHT);
+        this.p.rect(x + 155, ykey + 2.5, scaleC * 0.75, scaleC * 0.75);
 	}
 }
