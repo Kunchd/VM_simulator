@@ -657,6 +657,7 @@ const displayTables = (p) => {
 
                     /**
                      * @todo handle updating PT for non-dirty case
+                     * @todo handle dirty bit checking for whether it exists in Disk
                      */
 
                     if (victimVPN !== -1 && pt.getDirty(victimVPN)) {

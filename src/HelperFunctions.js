@@ -51,3 +51,47 @@ export function setScrollBarToDesiredPos(desiredY, sheerY, percentageScaler, scr
 	
 	scrollBar.setPos(percentage);
 }
+
+/**
+ * Find the least recently used index from given arrays. 
+ * Unused elements will first be returned.
+ * Given arrays are expected to have same dimension
+ * @param {*} curUsedArr array indicating whether an entry is being used.
+ *                       0 indicates unused, non 0 indicates used.
+ * @param {*} LRUArr array indicating how many access 
+ *                   its been since the element was last used.
+ * @returns index of the LRU or unused element.
+ */
+export function findLRU(curUsedArr, LRUArr) {
+    // verify if there's any unused element
+    let LRU = findUnused(curUsedArr);
+    if(LRU != -1) return LRU;
+
+    // find least recently used
+    let max = -Number.MAX_VALUE;
+    for(let i = 0; i < LRUArr.length; i++) {
+        if(LRUArr[i] > max) {
+            LRU = i;
+            max = LRUArr[i];
+        }
+    }
+    return LRU;
+}
+
+/**
+ * find first unused entry within given array
+ * @param {*} curUsedArr array indicating whether an entry is used.
+ *                       0 indicates unused, non 0 indicates used.
+ * @returns index of first unused entry, or -1 if all entries used
+ */
+export function findUnused(curUsedArr) {
+    // naively search for first unused entry
+    for(let i = 0; i < curUsedArr.length; i++) {
+        if(curUsedArr[i] == 0) {
+            return i;
+        }
+    }
+    
+    // page unused not found case
+    return -1;
+}

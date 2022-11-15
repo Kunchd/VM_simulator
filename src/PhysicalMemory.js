@@ -1,7 +1,7 @@
 import { scrollSize, hoverSize, scaleM, PMDisplayHeight, scaleC } from "./Constants.js";
 import { PHYS_MEM_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorB, colorM } from "./App.js";
-import { bounded } from "./HelperFunctions.js";
+import { bounded, findLRU, findUnused } from "./HelperFunctions.js";
 import { xwidth, toBase, setScrollBarToDesiredPos } from "./HelperFunctions.js";
 import { Page } from "./Page.js";
 
@@ -160,40 +160,15 @@ export class PhysicalMemory {
 	 * @returns PPN of the page to be replaced
 	 */
 	findVictim() {
-		let unusedPPN = this.findUnusedPage();
-
-		if (unusedPPN !== -1) {
-			return unusedPPN;
-		} else {
-			// if all page taken, find LRU page
-			let max = -Number.MAX_VALUE;
-			let maxIndex = -1;
-			for (let i = 0; i < this.used.length; i++) {
-				if (this.used[i] > max) {
-					max = this.used[i];
-					maxIndex = i;
-				}
-			}
-
-			return maxIndex;
-		}
+		return findLRU(this.light, this.used);
 	}
 
-	/**
-	 * naively finds first available, unused page.
-	 * @returns PPN of unused page or -1 if all pages are used
-	 */
-	findUnusedPage() {
-		for (let i = 0; i < this.light.length; i++) {
-			if (this.light[i] === 0) {
-				// update status to used page
-				this.light[i] = 1;
-				return i;
-			}
-		}
-
-		return -1;
-	}
+    /**
+     * @returns index of first unused page or -1 if all entries used
+     */
+    findUnusedPage() {
+        return findUnused(this.light);
+    }
 
 	/**
 	 * Displays the memory table
