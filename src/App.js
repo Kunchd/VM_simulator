@@ -18,7 +18,7 @@ let dispPTSize, dispVMSize; // system param display
 let ptSize, vmSize; // sys param calculated values
 
 // colors
-export let bg, colorC, colorH, colorM;
+export let bg, colorC, colorH, colorM, colorP;
 export let colorG, colorB, colorW;
 
 // System parameters
@@ -100,8 +100,9 @@ const displayTables = (p) => {
         colorC = p.color(226, 102, 26);  // orange
         colorM = p.color(51, 153, 126);  // turquoise
         colorH = p.color(255, 0, 0);     // red
+        colorP = p.color(242, 0, 255);   // bright purple
         colorG = p.color(70, 70, 70);    // grey
-        colorB = p.color(20, 20, 20);       // black
+        colorB = p.color(20, 20, 20);    // black
         colorW = p.color(230, 230, 230); // white
 
         canvas = p.createCanvas(960, 750).parent("p5Canvas");
@@ -258,6 +259,8 @@ const displayTables = (p) => {
         dButton.removeAttribute('disabled');
     }
 
+    var generateSysMessage
+
     // Change systems parameter (what is displayed in main canvas) depending
     // on the current system state
     // safety measure in case someone mess with it I guess
@@ -280,7 +283,11 @@ const displayTables = (p) => {
                     dispPTSize.html((p.pow(2, m) / pgSize) + " Entries");
                     dispVMSize.html(p.pow(2, m) + " Bytes");
 
-                    msgbox.value("Press Next (left) to advance explanation.\n");
+                    // update message for physical memory
+                    generateSysMessage = "generating physical memory with size: " 
+                        + physMemSize + ", and page size: " + pgSize + "\n";
+                    msgbox.value(generateSysMessage);
+
                     state = PARAMS_PHYS_MEM;
                     console.log(state);
                     if (!histMove && explain) break;
@@ -292,7 +299,10 @@ const displayTables = (p) => {
                     vbarVirMem.spos = vbarVirMem.ypos;
                     vbarVirMem.newspos = vbarVirMem.ypos;
 
-                    msgbox.value("Press Next (left) to advance explanation.\n");
+                    // update msg for VM
+                    generateSysMessage += "generating virtual memory with " + p.pow(2, m - POwidth) + " pages\n";
+                    msgbox.value(generateSysMessage);
+
                     state = PARAMS_VIR_MEM;
                     console.log(state);
                     if (!histMove && explain) break;
@@ -303,7 +313,11 @@ const displayTables = (p) => {
                     vbarTlbEnable = (tlb.TLBtop + tlb.TLBheight > TLBDisplayHeight);
                     vbarTlb.spos = vbarTlb.ypos;
                     vbarTlb.newspos = vbarTlb.ypos;
-                    msgbox.value("Press Next (left) to advance explanation.\n");
+
+                    // update msg for TLB
+                    generateSysMessage += "generating TLB with " + TLBSize + " slots and associativity of " + E + "\n";
+                    msgbox.value(generateSysMessage);
+
                     state = PARAMS_TLB;
                     console.log(state);
                     if (!histMove && explain) break;
@@ -314,7 +328,11 @@ const displayTables = (p) => {
                     vbarPTEnable = (pt.PTtop + pt.PTheight > PTDisplayHeight);
                     vbarPT.spos = vbarPT.ypos;
                     vbarPT.newspos = vbarPT.ypos;
-                    msgbox.value("Press Next (left) to advance explanation.\n");
+
+                    // udpate msg for pt
+                    generateSysMessage += "generating page table with " + p.pow(2, m - POwidth) + " total entries.\n";
+                    msgbox.value(generateSysMessage);
+
                     state = PARAMS_PT;
                     console.log(state);
                     if (!histMove && explain) break;
@@ -325,7 +343,11 @@ const displayTables = (p) => {
                     vbarDiskEnable = (disk.Dtop + disk.Dheight > p.height);
                     vbarDisk.spos = vbarDisk.ypos;
                     vbarDisk.newspos = vbarDisk.ypos;
-                    msgbox.value("Press Next (left) to advance explanation.\n");
+
+                    // update msg for disk
+                    generateSysMessage += "generating disk with same size as VM (unrealisitc)\n";
+                    msgbox.value(generateSysMessage);
+
                     state = PARAMS_DISK;
                     console.log(state);
                     if (!histMove && explain) break;
@@ -336,6 +358,10 @@ const displayTables = (p) => {
                     state = READY;
                     console.log(state);
                 default:
+                    // update msg for prepopulate
+                    generateSysMessage += "prepopulate physical memory with 3 random virtual pages\n";
+                    msgbox.value(generateSysMessage);
+
                     // pre-allocte 3 VPN
                     let list = [];
                     while (list.length < 3) {
@@ -355,7 +381,7 @@ const displayTables = (p) => {
     var PPNRes;
     var PPN;
     var PPNRes;
-    var message;
+    var DFAmessage;
     var newAccess;
 
     /**
@@ -400,9 +426,9 @@ const displayTables = (p) => {
                 }
 
                 // reset message for msg box
-                message = "break down virtual address into VPN, PO\n"
+                DFAmessage = "break down virtual address into VPN, PO\n"
                 // print to msg box
-                msgbox.value(message);
+                msgbox.value(DFAmessage);
 
                 // build new access
                 newAccess = new MemAccess();
@@ -425,8 +451,8 @@ const displayTables = (p) => {
                 let TLBT = VPN >> Swidth;
 
                 // update message for TLB
-                message += "Breaking VPN into TLB Index and tag\n";
-                message += "Checking TLB with TLBI and TLBT\n";
+                DFAmessage += "Breaking VPN into TLB Index and tag\n";
+                DFAmessage += "Checking TLB with TLBI and TLBT\n";
 
                 // display tlb breakdown
                 dispTLBTag.html(toBase(TLBT, 16, null));
@@ -446,7 +472,7 @@ const displayTables = (p) => {
                     // update cur access
                     newAccess.tlbRes = 'M';
                     // update message status
-                    message += "TLB miss\n"
+                    DFAmessage += "TLB miss\n"
                 } else {
                     // TLB hit
                     TLBHit++;
@@ -458,11 +484,11 @@ const displayTables = (p) => {
                     // update cur access
                     newAccess.tlbRes = 'H';
                     // update message status
-                    message += "TLB hit\n"
+                    DFAmessage += "TLB hit\n"
                 }
 
                 // print message to msg box
-                msgbox.value(message);
+                msgbox.value(DFAmessage);
 
                 if (!explain) readWriteDFA(writing, addr, data);
                 break;
@@ -470,7 +496,7 @@ const displayTables = (p) => {
                 console.log("pro check");
 
                 // update message for protection check
-                message += "checking access permissions\n"
+                DFAmessage += "checking access permissions\n"
 
                 // if has access permission, proceed to execute instruction.
                 // else protection fault, revert to starting state.
@@ -481,7 +507,7 @@ const displayTables = (p) => {
                     // update access state
                     newAccess.fRes = 'H';
                     // update msg state
-                    message += "have access permissions\n"
+                    DFAmessage += "have access permissions\n"
                 } else {
                     console.log("Protection fault");
                     state = READY;
@@ -495,11 +521,11 @@ const displayTables = (p) => {
                     // update access state
                     newAccess.fRes = 'M';
                     // update msg state
-                    message += "Protection fault:\n";
-                    message += permRes;
+                    DFAmessage += "Protection fault:\n";
+                    DFAmessage += permRes;
 
                     // flush to msg box
-                    msgbox.value(message);
+                    msgbox.value(DFAmessage);
 
                     // push access to hist
                     pushToHist(newAccess);
@@ -508,7 +534,7 @@ const displayTables = (p) => {
                 }
 
                 // flush to msg box
-                msgbox.value(message);
+                msgbox.value(DFAmessage);
 
                 if (!explain) readWriteDFA(writing, addr, data);
                 break;
@@ -516,8 +542,8 @@ const displayTables = (p) => {
                 console.log("PP access");
 
                 // update msg for accessing page
-                message += writing === true ? "writing " : "reading ";
-                message += "to physical page\n";
+                DFAmessage += writing === true ? "writing to " : "reading from ";
+                DFAmessage += "physical page " + PPN + " at offset " + PO + "\n";
 
                 if (writing) {
                     console.log("writing");
@@ -525,10 +551,8 @@ const displayTables = (p) => {
                     physMem.writeToPage(PPN, PO, data);
                 } else {
                     console.log("reading");
-                    // read
-                    /**
-                     * @todo highlight read Byte
-                     */
+                    // access and read from page
+                    physMem.readFromPage(PPN, PO);
                 }
 
                 if (writing) {
@@ -538,8 +562,8 @@ const displayTables = (p) => {
                 }
 
                 // update msg and flush to msg box
-                message += "done!\n";
-                msgbox.value(message);
+                DFAmessage += "done!\n";
+                msgbox.value(DFAmessage);
 
                 // push access to hist
                 pushToHist(newAccess);
@@ -551,7 +575,7 @@ const displayTables = (p) => {
                 console.log("check PT");
 
                 // update msg for PT
-                message += "checking page table for VPN\n";
+                DFAmessage += "checking page table for VPN\n";
 
                 PPNRes = pt.getPPN(VPN);  // PPN result from PT
                 if (PPNRes === null) {
@@ -562,7 +586,7 @@ const displayTables = (p) => {
                     // update access state
                     newAccess.ptRes = 'M';
                     // update msg state
-                    message += "page table miss\n";
+                    DFAmessage += "page table miss\n";
                 } else {
                     // page table hit
                     PTHit++;
@@ -574,11 +598,11 @@ const displayTables = (p) => {
                     // update access state
                     newAccess.ptRes = 'H';
                     // update msg state
-                    message += "page table hit\n";
+                    DFAmessage += "page table hit\n";
                 }
 
                 // flush to msg box
-                msgbox.value(message);
+                msgbox.value(DFAmessage);
 
                 if (!explain) readWriteDFA(writing, addr, data);
                 break;
@@ -586,7 +610,7 @@ const displayTables = (p) => {
                 console.log("update tlb");
 
                 // update msg for updating tlb
-                message += "update TLB with new PTE found\n";
+                DFAmessage += "update TLB with new PTE found\n";
 
                 // get the PPN from page table result
                 PPN = PPNRes[0];
@@ -597,7 +621,7 @@ const displayTables = (p) => {
                 state = PROTECTION_CHECK;
 
                 // flush to msg box
-                msgbox.value(message);
+                msgbox.value(DFAmessage);
 
                 if (!explain) readWriteDFA(writing, addr, data);
                 break;
@@ -605,9 +629,9 @@ const displayTables = (p) => {
                 console.log("page fault");
 
                 // update msg for Page Fault
-                message += "page fault\n";
-                message += "control transfered to OS\n";
-                message += "attempting to get page from disk\n";
+                DFAmessage += "page fault\n";
+                DFAmessage += "control transfered to OS\n";
+                DFAmessage += "attempting to get page from disk\n";
 
                 let SSNRes = pt.getSSN(VPN);
 
@@ -618,8 +642,8 @@ const displayTables = (p) => {
                     // update access state
                     newAccess.fRes = 'M';
                     // update msg state
-                    message += "page not found in disk\n";
-                    message += "segfault\n";
+                    DFAmessage += "page not found in disk\n";
+                    DFAmessage += "segfault\n";
 
                     if (writing) {
                         enableAccessButtons(2);
@@ -630,7 +654,7 @@ const displayTables = (p) => {
                     // push access to hist
                     pushToHist(newAccess);
                     // flush to msg box
-                    msgbox.value(message);
+                    msgbox.value(DFAmessage);
 
                     // cannot be processed, so we do not proceed
                     state = READY;
@@ -639,8 +663,8 @@ const displayTables = (p) => {
                 // page found in disk
                 else {
                     // updating msg state
-                    message += "page found in disk\n";
-                    message == "swapping page into memory using LRU replacement policy\n";
+                    DFAmessage += "page found in disk\n";
+                    DFAmessage == "swapping page into memory using LRU replacement policy\n";
 
                     let [SSN, dirty] = SSNRes;
                     // bring this page into mem
@@ -651,12 +675,12 @@ const displayTables = (p) => {
                     let victimVPN = physMem.getAssociatingVPN(PPN);
 
                     // updating msg state
-                    message += "check if replaced page is dirty\n";
+                    DFAmessage += "check if replaced page is dirty\n";
 
                     // check if victim is dirty
                     if (pt.getDirty(victimVPN)) {
                         // evicted page is dirty writing to disk
-                        message += "evicted page is dirty, writing to disk\n";
+                        DFAmessage += "evicted page is dirty, writing to disk\n";
                     }
 
                     // try to find if current page is already within disk
@@ -666,7 +690,7 @@ const displayTables = (p) => {
                         disk.setPage(victimSSN, physMem.getPage(PPN));
 
                         // updating msg state
-                        message += "updating evicted page's PTE\n";
+                        DFAmessage += "updating evicted page's PTE\n";
 
                         let evictedPerm = pt.getPagePermissions(victimVPN);
                         evictedPerm.V = 0;
@@ -677,18 +701,18 @@ const displayTables = (p) => {
                     else {
                         // FOR READING in case page is not on disk
                         if(!pt.getDirty(victimVPN)) {
-                            message += "page not currently in disk. writing to disk\n";
+                            DFAmessage += "page not currently in disk. writing to disk\n";
                         }
                         victimSSN = disk.allocatePage(victimVPN);
                         // if disk full, notify user
                         if (victimSSN === -1) {
-                            message += "Disk space full, unable to write\n";
+                            DFAmessage += "Disk space full, unable to write\n";
                         }
                         // else write to new page
                         else {
                             disk.setPage(victimSSN, physMem.getPage(PPN));
                             // updating msg state
-                            message += "updating evicted page's PTE\n";
+                            DFAmessage += "updating evicted page's PTE\n";
 
                             let evictedPerm = pt.getPagePermissions(victimVPN);
                             evictedPerm.V = 0;
@@ -705,14 +729,14 @@ const displayTables = (p) => {
                     evictingPerm.V = 1;
 
                     // update msg state
-                    message += "update Page Table with new page location in physical memory\n";
+                    DFAmessage += "update Page Table with new page location in physical memory\n";
 
                     // update PT for newly brought in page
                     pt.setPTE(VPN, PPN, false, evictingPerm);
                 }
 
                 // flush to msg box
-                msgbox.value(message);
+                msgbox.value(DFAmessage);
 
                 state = READY;
                 if (!explain) readWriteDFA(writing, addr, data);

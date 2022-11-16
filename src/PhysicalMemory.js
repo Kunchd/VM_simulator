@@ -74,12 +74,39 @@ export class PhysicalMemory {
     }
 
 	// helper methods for hightlighting
-	// highlighting:  0 - no highlight, 1 - background, 2 - background + text
-	highlight(addr, light) { this.light[addr] = light; }
-	clearHighlight() { for (var i = 0; i < this.light.length; i++) this.light[i] = 0; }
+	/**
+     * clear all emphasis highlight
+     */
+	clearHighlight() {
+         for (var i = 0; i < this.light.length; i++) this.pages[i].clearHighlight();
+    }
+
+    /**
+     * Read byte PO from page at PPN
+     * (handles highlighting)
+     * @param {*} PPN number of physical page to read from
+     * @param {*} PO byte offset to read
+     */
+    readFromPage(PPN, PO) {
+        // update date used for LRU
+        this.used[PPN] = 0;
+        this.updateUsed(PPN);
+
+        // clear pervious emphasis
+        this.clearHighlight();
+        // highlight byte being read
+        this.pages[PPN].highlight(PO);
+
+        // center scroll bar on byte read
+        setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
+			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
+			this.Mheight - (PMDisplayHeight - this.pages[0].height),
+			this.vbarMem);
+    }
 
 	/**
 	 * Write the given data to the page corresponding to the PPN at the PO
+     * (handles highlighting)
 	 * @param {*} PPN physical page number
 	 * @param {*} PO page offset
 	 * @param {*} data data to be written
@@ -90,9 +117,10 @@ export class PhysicalMemory {
 		this.updateUsed(PPN);
 
 		// emphasize byte written
-		this.pages[PPN].clearHighlight();
+		this.clearHighlight();
 		this.pages[PPN].highlight(PO);
 
+        // center scroll bar on byte read
 		setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
 			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
 			this.Mheight - (PMDisplayHeight - this.pages[0].height),

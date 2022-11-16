@@ -1,5 +1,5 @@
 import { scaleM, hoverSize } from "./Constants.js";
-import { colorC, colorH, colorM } from "./App.js";
+import { colorH, colorP } from "./App.js";
 import { xwidth, toBase } from "./HelperFunctions.js";
 import { EMPHASIS_HIGHLIGHT } from "./Constants.js";
 
@@ -105,7 +105,7 @@ export class Page {
             if (this.p.mouseY > iterY && this.p.mouseY < iterY + scaleM && this.p.mouseX > x && this.p.mouseX < x + scaleM * xwidth(2) * 8) {
                 var idx = this.p.int((this.p.mouseX - x) / xwidth(2) / scaleM);
                 this.p.textSize(hoverSize);
-                this.p.fill(colorH);
+                this.p.fill(colorP);
                 this.p.noStroke();
                 this.p.text("0x" + (8 * i + idx).toString(16), this.p.mouseX, this.p.mouseY);
             }
