@@ -427,7 +427,8 @@ const displayTables = (p) => {
 
                 // reset message for msg box
                 DFAmessage = "break down virtual address into VPN, PO\n";
-                DFAmessage += "VPN: " + VPN + ", PO: " + PO + "\n";
+                DFAmessage += "VPN: 0x" + toBase(VPN, 16, null) 
+                                + ", PO: 0x" + toBase(PO, 16, null) + "\n";
 
                 // add separating borders
                 DFAmessage += "------------------------------------------------\n";
@@ -456,7 +457,7 @@ const displayTables = (p) => {
 
                 // update message for TLB
                 DFAmessage += "Breaking VPN into TLB Index and tag\n";
-                DFAmessage += "TLB Index: " + TLBI + ", tag: " + TLBT + "\n";
+                DFAmessage += "TLB Index: " + TLBI + ", tag: 0x" + toBase(TLBT, 16, null) + "\n";
                 DFAmessage += "Checking TLB with TLBI and TLBT\n";
 
                 // display tlb breakdown
@@ -555,7 +556,8 @@ const displayTables = (p) => {
 
                 // update msg for accessing page
                 DFAmessage += writing === true ? "writing to " : "reading from ";
-                DFAmessage += "physical page " + PPN + " at offset " + PO + "\n";
+                DFAmessage += "physical page 0x" + toBase(PPN, 16, null) 
+                                + " at offset 0x" + toBase(PO, 16, null) + "\n";
 
                 if (writing) {
                     console.log("writing");
@@ -705,7 +707,8 @@ const displayTables = (p) => {
                     let PPN = physMem.findVictim();
                     let victimVPN = physMem.getAssociatingVPN(PPN);
 
-                    DFAmessage += "Least recently used page is PPN: " + PPN + ", with VPN: " + victimVPN + "\n";
+                    DFAmessage += "Least recently used page is PPN: 0x" + toBase(PPN, 16, null) 
+                        + ", with VPN: 0x" + toBase(victimVPN, 16, null) + "\n";
 
                     // updating msg state
                     DFAmessage += "check if page to evict is dirty\n";
@@ -726,7 +729,7 @@ const displayTables = (p) => {
 
                         // updating msg state
                         DFAmessage += "updating evicted page's page table entry with its new location in disk\n";
-                        DFAmessage += "swap space number: " + victimSSN + "\n";
+                        DFAmessage += "swap space number: 0x" + toBase(victimSSN, 16, null) + "\n";
 
                         DFAmessage += "invalidate evicted page's entry within TLB if applicable\n";
                         let evictedPerm = pt.getPagePermissions(victimVPN);
@@ -757,7 +760,7 @@ const displayTables = (p) => {
                             // updating msg state
                             // updating msg state
                             DFAmessage += "updating evicted page's page table entry with its new location in disk\n";
-                            DFAmessage += "swap space number: " + victimSSN + "\n";
+                            DFAmessage += "swap space number: 0x" + toBase(victimSSN, 16, null) + "\n";
 
                             DFAmessage += "invalidate evicted page's entry within TLB if applicable\n";
                             let evictedPerm = pt.getPagePermissions(victimVPN);
@@ -783,7 +786,7 @@ const displayTables = (p) => {
 
                     // update msg state
                     DFAmessage += "updating brought in page's page table entry with its new location in physical memory\n";
-                    DFAmessage += "PPN: " + PPN + "\n";
+                    DFAmessage += "PPN: 0x" + toBase(PPN, 16, null) + "\n";
 
                     // update PT for newly brought in page
                     pt.setPTE(VPN, PPN, false, evictingPerm);
