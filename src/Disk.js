@@ -32,7 +32,7 @@ export class Disk {
 		this.vbarDisk = scrollBar;   // the scroll bar created for the memory
 
 		/*
-		 * 0 stands for unused
+		 * -1 stands for unused
 		 * 1 stands for emphasis highlight
 		 * 2 stands for identification highlight
 		 */
@@ -42,7 +42,7 @@ export class Disk {
 
 		for (var i = 0; i < p.pow(2, this.m - this.PO); i++) {
 			this.data[i] = null;	// initialize memory to empty for now
-			this.light[i] = 0;
+			this.light[i] = -1;
 		}
 	}
 
@@ -56,7 +56,7 @@ export class Disk {
 
         for (var i = 0; i < this.p.pow(2, this.m - this.PO); i++) {
 			this.data[i] = null;	// initialize memory to empty for now
-			this.light[i] = 0;
+			this.light[i] = -1;
 		}
     }
 

@@ -56,21 +56,22 @@ export function setScrollBarToDesiredPos(desiredY, sheerY, percentageScaler, scr
  * Find the least recently used index from given arrays. 
  * Unused elements will first be returned.
  * Given arrays are expected to have same dimension
- * @param {*} curUsedArr array indicating whether an entry is being used.
- *                       0 indicates unused, non 0 indicates used.
  * @param {*} LRUArr array indicating how many access 
  *                   its been since the element was last used.
+ *                   Entry assumed to be -1 if unused.
  * @returns index of the LRU or unused element.
  */
-export function findLRU(curUsedArr, LRUArr) {
+export function findLRU(LRUArr) {
     // verify if there's any unused element
-    let LRU = findUnused(curUsedArr);
+    let LRU = findUnused(LRUArr);
     if(LRU !== -1) return LRU;
 
     // find least recently used
     let max = -Number.MAX_VALUE;
     for(let i = 0; i < LRUArr.length; i++) {
-        if(LRUArr[i] > max) {
+        // although -1 case should never be reached. 
+        // this is for safety check
+        if(LRUArr[i] !== -1 && LRUArr[i] > max) {
             LRU = i;
             max = LRUArr[i];
         }
@@ -80,18 +81,38 @@ export function findLRU(curUsedArr, LRUArr) {
 
 /**
  * find first unused entry within given array
- * @param {*} curUsedArr array indicating whether an entry is used.
- *                       0 indicates unused, non 0 indicates used.
+ * @param {*} LRUArr array indicating how many access 
+ *                   its been since the element was last used.
+ *                   Entry assumed to be -1 if unused.
  * @returns index of first unused entry, or -1 if all entries used
  */
-export function findUnused(curUsedArr) {
+export function findUnused(LRUArr) {
     // naively search for first unused entry
-    for(let i = 0; i < curUsedArr.length; i++) {
-        if(curUsedArr[i] === 0) {
+    for(let i = 0; i < LRUArr.length; i++) {
+        if(LRUArr[i] === -1) {
             return i;
         }
     }
     
     // page unused not found case
     return -1;
+}
+
+/**
+ * update LRUArr considering that given updated Index is the 
+ * index currently accessed. The number of access since used for
+ * the current updated Index will be set to 0, while all other 
+ * currently used indecies will be incremented.
+ * @param {*} LRUArr array tracking number of access since last used for 
+ *                   each individual index.
+ */
+export function updateUsed(LRUArr, updatedIndex) {
+    for(let i = 0; i < LRUArr.length; i++) {
+        if(i === updatedIndex) {
+            LRUArr[i] = 0;
+        }
+        else if(LRUArr[i] >= 0) {
+            LRUArr[i]++;
+        }
+    }
 }
