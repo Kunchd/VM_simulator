@@ -561,6 +561,13 @@ const displayTables = (p) => {
                     console.log("writing");
                     // access and write to physical memory with PPN
                     physMem.writeToPage(PPN, PO, data);
+
+                    // update dirty bit
+                    let perms = pt.getPagePermissions(VPN);
+                    perms.D = 1;
+                    // note since we are accessing the physical page,
+                    // this page must be in PM
+                    pt.setPTE(VPN, PPN, false, perms);
                 } else {
                     console.log("reading");
                     // access and read from page
@@ -649,6 +656,9 @@ const displayTables = (p) => {
                 // update msg for Page Fault
                 DFAmessage += "page fault\n";
                 DFAmessage += "control transfered to OS\n";
+
+                // add separating borders (start of OS actions)
+                DFAmessage += "------------------------------------------------\n";
                 DFAmessage += "attempting to get page from disk\n";
 
                 let SSNRes = pt.getSSN(VPN);
@@ -704,11 +714,13 @@ const displayTables = (p) => {
                     if (pt.getDirty(victimVPN)) {
                         // evicted page is dirty writing to disk
                         DFAmessage += "evicted page is dirty, writing to disk\n";
+                    } else {
+                        DFAmessage += "evicted page is not dirty, no need to update disk\n";
                     }
 
                     // try to find if current page is already within disk
                     let victimSSN = disk.findPage(victimVPN);
-                    // if already in disk, simply update
+                    // if already in disk, simply move page into spot in disk
                     if (victimSSN !== -1) {
                         disk.setPage(victimSSN, physMem.getPage(PPN));
 
@@ -716,21 +728,28 @@ const displayTables = (p) => {
                         DFAmessage += "updating evicted page's page table entry with its new location in disk\n";
                         DFAmessage += "swap space number: " + victimSSN + "\n";
 
+                        DFAmessage += "invalidate evicted page's entry within TLB if applicable\n";
                         let evictedPerm = pt.getPagePermissions(victimVPN);
                         evictedPerm.V = 0;
                         evictedPerm.D = 0;
-                        pt.setPTE(victimVPN, SSN, true, evictedPerm);
+                        // update PT perm
+                        pt.setPTE(victimVPN, victimSSN, true, evictedPerm);
+                        // update TLB perm
+                        tlb.invalidateEntry(victimVPN);
                     }
                     // if not in disk, allocate new page
                     else {
                         // FOR READING in case page is not on disk
                         if (!pt.getDirty(victimVPN)) {
-                            DFAmessage += "page not currently in disk. writing to disk\n";
+                            DFAmessage += "copy of page not found in disk. Allocating new page in disk for evicted page\n";
                         }
+
+                        // For both reading and writing case
+                        // allocate page in disk if not already there
                         victimSSN = disk.allocatePage(victimVPN);
                         // if disk full, notify user
                         if (victimSSN === -1) {
-                            DFAmessage += "Disk space full, unable to write evicted page in disk\n";
+                            DFAmessage += "disk space full, unable to write evicted page in disk\n";
                         }
                         // else write to new page
                         else {
@@ -740,10 +759,14 @@ const displayTables = (p) => {
                             DFAmessage += "updating evicted page's page table entry with its new location in disk\n";
                             DFAmessage += "swap space number: " + victimSSN + "\n";
 
+                            DFAmessage += "invalidate evicted page's entry within TLB if applicable\n";
                             let evictedPerm = pt.getPagePermissions(victimVPN);
                             evictedPerm.V = 0;
                             evictedPerm.D = 0;
+                            // update PT perm
                             pt.setPTE(victimVPN, victimSSN, true, evictedPerm);
+                            // update TLB perm DOESNT WORK since it adds a new one
+                            tlb.invalidateEntry(victimVPN);
                         }
                     }
 
@@ -754,6 +777,10 @@ const displayTables = (p) => {
                     let evictingPerm = pt.getPagePermissions(VPN);
                     evictingPerm.V = 1;
 
+                    /**
+                     * @todo convert embeded messages to use hex
+                     */
+
                     // update msg state
                     DFAmessage += "updating brought in page's page table entry with its new location in physical memory\n";
                     DFAmessage += "PPN: " + PPN + "\n";
@@ -762,6 +789,7 @@ const displayTables = (p) => {
                     pt.setPTE(VPN, PPN, false, evictingPerm);
                 }
 
+                DFAmessage += "restarting page-faulting instruction\n"
                 // add separating borders
                 DFAmessage += "------------------------------------------------\n";
                 // flush to msg box

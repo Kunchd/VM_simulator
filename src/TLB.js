@@ -90,6 +90,19 @@ export class TLB {
 		this.sets[index].setEntry(permissions, tag, PPN);
 	} 
 
+    /**
+     * invalidate tlb entry for the given VPN.
+     * If given VPN is not within tlb, nothing is changed
+     * @param {*} VPN 
+     */
+    invalidateEntry(VPN) {
+        let Sbit = this.p.ceil(this.p.log(this.S) / this.p.log(2));	// bits to represent number of set
+		let index = VPN % this.S;
+		let tag = VPN >> Sbit;
+
+        this.sets[index].invalidateEntry(tag);
+    }
+
 	display() {
 		var x = this.x;
 		var offset = 0;

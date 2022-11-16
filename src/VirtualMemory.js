@@ -148,7 +148,7 @@ export class VirtualMemory {
 				// memory text
 				this.p.fill(0);
 				this.p.textAlign(this.p.CENTER);
-				this.p.text(this.data[i] ? "Allocated" : "Unallocated", x + this.Mwidth / 2, ytext);
+				this.p.text(this.data[i] ? "Allocated" : "Click to Allocate", x + this.Mwidth / 2, ytext);
 
 				// // hover text
 				// if (this.p.mouseY > y && this.p.mouseY < y + scaleM && this.p.mouseX > x && this.p.mouseX < x + scaleM * xwidth(2) * 8) {

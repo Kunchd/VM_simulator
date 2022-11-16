@@ -112,6 +112,21 @@ export class TLBSet {
 		this.entries[maxIndex].setPPN(permissions, tag, PPN);
 	}
 
+    /**
+     * invalidate entry assciated with given tag.
+     * nothing is changed if no match exists between given 
+     * tag and all entry tags
+     * @param {*} tag 
+     */
+    invalidateEntry(tag) {
+        for(let i = 0; i < this.entries.length; i++) {
+            if(this.entries[i].containTag(tag)) {
+                this.entries[i].flush();
+                break;
+            }
+        }
+    }
+
 	display(x, y) {
 		// draw rectangle set around different entries
 		this.p.stroke(colorC);  // orange set outline
