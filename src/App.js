@@ -284,7 +284,8 @@ const displayTables = (p) => {
                     dispVMSize.html(p.pow(2, m) + " Bytes");
 
                     // update message for physical memory
-                    generateSysMessage = "generating physical memory with size: "
+                    generateSysMessage = "Press [Next] to advance explanation.\n";
+                    generateSysMessage += "generating physical memory with size: "
                         + physMemSize + ", and page size: " + pgSize + "\n";
                     msgbox.value(generateSysMessage);
 
@@ -383,6 +384,7 @@ const displayTables = (p) => {
     var PPNRes;
     var DFAmessage;
     var newAccess;
+    var retryfaultingInstr;
 
     /**
      * @todo make sure when swapping current page from-to disk that values are preserved
@@ -425,8 +427,14 @@ const displayTables = (p) => {
                     disableAccessButtons(1);
                 }
 
+                // check if retrying instruction
+                if(retryfaultingInstr) {
+                    DFAmessage += "break down virtual address into VPN, PO\n";
+                }
                 // reset message for msg box
-                DFAmessage = "break down virtual address into VPN, PO\n";
+                else {
+                    DFAmessage = "break down virtual address into VPN, PO\n";
+                }
                 DFAmessage += "VPN: 0x" + toBase(VPN, 16, null) 
                                 + ", PO: 0x" + toBase(PO, 16, null) + "\n";
 
@@ -538,6 +546,9 @@ const displayTables = (p) => {
                     // flush to msg box
                     msgbox.value(DFAmessage);
 
+                    // clear retry flag if necessary
+                    retryfaultingInstr = false;
+
                     // push access to hist
                     pushToHist(newAccess);
                     // done so we don't call again
@@ -590,6 +601,9 @@ const displayTables = (p) => {
 
                 // push access to hist
                 pushToHist(newAccess);
+
+                // clear retry flag if necessary
+                retryfaultingInstr = false;
 
                 // done so we dont call again 
                 state = READY;
@@ -688,6 +702,9 @@ const displayTables = (p) => {
                     DFAmessage += "------------------------------------------------\n";
                     // flush to msg box
                     msgbox.value(DFAmessage);
+
+                    // clear retry flag if necessary
+                    retryfaultingInstr = false;
 
                     // cannot be processed, so we do not proceed
                     state = READY;
@@ -798,6 +815,9 @@ const displayTables = (p) => {
                 // flush to msg box
                 msgbox.value(DFAmessage);
 
+                // set retry faulting instruction flag so we keep disk swapping messages
+                retryfaultingInstr = true;
+
                 state = READY;
                 if (!explain) readWriteDFA(writing, addr, data);
                 break;
@@ -813,6 +833,8 @@ const displayTables = (p) => {
         let addr = parseInt(inReadAddr.value(), 16);
         let data = 0;  // we are not writing so data is irrelevant 
         readWriteDFA(false, addr, data);
+        // move message box to top
+        msgbox.elt.scrollTop = 0;
     }
 
     /**
@@ -822,6 +844,8 @@ const displayTables = (p) => {
         let addr = parseInt(inWriteAddr.value(), 16);
         let data = parseInt(inWriteData.value(), 16);
         readWriteDFA(true, addr, data);
+        // move message box to top
+        msgbox.elt.scrollTop = 0;
     }
 
     /**
