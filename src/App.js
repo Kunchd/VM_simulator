@@ -285,8 +285,10 @@ const displayTables = (p) => {
 
                     // update message for physical memory
                     generateSysMessage = "Press [Next] to advance explanation.\n";
-                    generateSysMessage += "generating physical memory with size: "
+                    generateSysMessage += "Generating physical memory with size: "
                         + physMemSize + ", and page size: " + pgSize + "\n";
+                    generateSysMessage += "So (phys mem size) / (pg size) = " 
+                        + (physMemSize / pgSize) + " total physical pages\n"; 
                     msgbox.value(generateSysMessage);
 
                     state = PARAMS_PHYS_MEM;
@@ -301,7 +303,12 @@ const displayTables = (p) => {
                     vbarVirMem.newspos = vbarVirMem.ypos;
 
                     // update msg for VM
-                    generateSysMessage += "generating virtual memory with " + p.pow(2, m - POwidth) + " pages\n";
+                    generateSysMessage = "Press [Next] to advance explanation.\n";
+                    generateSysMessage += "Generating virtual memory with address width: " + m 
+                        + " and page offset width: " + POwidth + "\n";
+                    generateSysMessage += "where page offset width = log_2(page size) = " + POwidth + " bits\n";
+                    generateSysMessage += "So a total of 2^(m - POwidth) = " + p.pow(2, m - POwidth)
+                        + " virtual pages\n"
                     msgbox.value(generateSysMessage);
 
                     state = PARAMS_VIR_MEM;
@@ -316,7 +323,14 @@ const displayTables = (p) => {
                     vbarTlb.newspos = vbarTlb.ypos;
 
                     // update msg for TLB
-                    generateSysMessage += "generating TLB with " + TLBSize + " slots and associativity of " + E + "\n";
+                    generateSysMessage = "Press [Next] to advance explanation.\n";
+                    generateSysMessage += "Generating Translation Lookaside Buffer with " 
+                        + TLBSize + " slots and associativity of " + E + "\n";
+                    generateSysMessage += "So each Translation Lookaside Buffer set contains " + E + " blocks\n";
+                    generateSysMessage += "and there are (total number of TLB slots) / (Associativity) = " 
+                        + (TLBSize / E) + " TLB sets\n";
+                    generateSysMessage += "Each block contains a page table entry\n";
+                    
                     msgbox.value(generateSysMessage);
 
                     state = PARAMS_TLB;
@@ -331,7 +345,11 @@ const displayTables = (p) => {
                     vbarPT.newspos = vbarPT.ypos;
 
                     // udpate msg for pt
-                    generateSysMessage += "generating page table with " + p.pow(2, m - POwidth) + " total entries.\n";
+                    generateSysMessage = "Press [Next] to advance explanation.\n";
+                    generateSysMessage += "generating page table with " + p.pow(2, m - POwidth) 
+                        + " (same as number of virtual pages) total entries.\n";
+                    generateSysMessage += "Each page table entry contains Valid, Read, Write, Execute bits\n";
+                    generateSysMessage += "Each page table entry also contains the Physical Page Number\n";
                     msgbox.value(generateSysMessage);
 
                     state = PARAMS_PT;
@@ -346,6 +364,7 @@ const displayTables = (p) => {
                     vbarDisk.newspos = vbarDisk.ypos;
 
                     // update msg for disk
+                    generateSysMessage = "Press [Next] to advance explanation.\n";
                     generateSysMessage += "generating disk with same size as VM (unrealisitc)\n";
                     msgbox.value(generateSysMessage);
 
@@ -360,8 +379,9 @@ const displayTables = (p) => {
                     console.log(state);
                 default:
                     // update msg for prepopulate
+                    generateSysMessage = "Press [Next] to advance explanation.\n";
                     generateSysMessage += "prepopulate physical memory with 3 random virtual pages\n";
-                    msgbox.value(generateSysMessage);
+                    
 
                     // pre-allocte 3 VPN
                     let list = [];
@@ -370,8 +390,10 @@ const displayTables = (p) => {
                         if (!list.includes(curVPN)) {
                             list.push(curVPN);
                             handleVPAllocation(curVPN);
+                            generateSysMessage += "virtual page: 0x" + toBase(curVPN, 16, null) + "\n";
                         }
                     }
+                    msgbox.value(generateSysMessage);
             }
         }
     }
