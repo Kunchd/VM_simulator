@@ -4,7 +4,7 @@ import { xwidth, toBase } from "./HelperFunctions.js";
 
 // Management bit width
 import { MGNT_BIT_WIDTH } from "./Constants.js";
-import { EMPHASIS_HIGHLIGHT } from "./Constants.js";
+import { EMPHASIS_HIGHLIGHT, PHYS_MEM_HIGHLIGHT, DISK_HIGHLIGHT } from "./Constants.js";
 
 // Note: WH and WM policies settings are removed 
 
@@ -26,7 +26,11 @@ export class PTEntry {
         this.isSSN = false;     // check if this entry contain
 
         // lighting values
-        this.lightPPN = 0;  // indicate highlighting for moved/changed data
+        this.lightPPN = 0;  // indicate no entry or PPN/SSN status
+                            // 0 for no data
+                            // 1 for PPN
+                            // 2 for SSN
+        // indicate highlighting for moved/changed data
         this.lightV = 0;
         this.lightD = 0;
         this.lightR = 0;
@@ -36,11 +40,31 @@ export class PTEntry {
         this.width = scaleC * (xwidth(1) * (MGNT_BIT_WIDTH)) + scaleC * xwidth(PT_PPN_WIDTH);
     }
 
-    // highlights the currently focused lines
-    highlightData() { this.lightPPN = 1; }
+    /**
+     * reset this entry to initial empty state
+     */
+    flush() {
+        this.pageNumber = -1;     // PPN/SSN value
+
+        this.V = 0;       // valid bit value
+        this.D = 0;       // Dirty bit value
+        this.R = 0;       // read bit value
+        this.W = 0;       // write bit value
+        this.E = 0;       // execute bit value
+        this.addr = -1;   // address of beginning of block (-1 is dummy addr)
+        this.isSSN = false;     // check if this entry contain
+
+        // lighting values
+        this.lightPPN = 0;  // indicate highlighting for moved/changed data
+        this.lightV = 0;
+        this.lightD = 0;
+        this.lightR = 0;
+        this.lightW = 0;
+        this.lightE = 0;
+    }
 
     /**
-     * highlight this entry
+     * emphasis highlight this entry
      */
     highlightAll() {
         this.lightV = 1;
@@ -48,12 +72,10 @@ export class PTEntry {
         this.lightR = 1;
         this.lightW = 1;
         this.lightE = 1;
-        this.highlightData();
     }
 
-    // clears the currently highlighted data
+    // clears the emphasis highlighted data
     clearHighlight() {
-        this.lightPPN = 0;
         this.lightV = 0;
         this.lightD = 0;
         this.lightR = 0;
@@ -96,38 +118,52 @@ export class PTEntry {
         this.R = permissions.R;
         this.W = permissions.W;
         this.E = permissions.E;
+
+        // handle descriptive highlight
+        this.lightPPN = this.isSSN ? 2 : 1;
     }
 
     /**
      * check if this entry is valid and can be written and get the PPN of this entry
-	 * @param {*} flag a boolean flag indicating read/write status. 
-	 * 				   true: write
-	 * 				   false: read
      * @returns an array where the first value is the PPN and the second is the dirty bit. 
      *          Return null if this page cannot be accessed.
      */
-    getPPN(flag) {
-        if((flag && this.V && this.W) || (!flag && this.V && this.R)) 
-            return [this.pageNumber, this.D];
-
+    getPPN() {
+        if(this.V) return [this.pageNumber, this.D];
         return null;
     }
 
     /**
      * check if this entry contains SSN and can be accessed based on permission and get
      * the SSN of this entry
-     * @param {*} flag a boolean flag indicating read/write status. 
-	 * 				   true: write
-	 * 				   false: read
      * @returns an array where the first value is the SSN and the second is the dirty bit.
      *          Return null if this page cannot be accessed.
      */
-    getSSN(flag) {
-        if(this.isSSN && ((flag && !this.V && this.W) || (!flag && !this.V && this.R))) {
-            return [this.pageNumber, this.D];
-        }
-
+    getSSN() {
+        if(this.isSSN && !this.V) return [this.pageNumber, this.D];
         return null;
+    }
+
+    /**
+     * Verify flag instruction has correct permission to access this page
+	 * @param {*} flag a boolean flag indicating read/write status. 
+	 * 				   true: write
+	 * 				   false: read
+     * @returns empty string if the instruction has permission, 
+     *          or message stating which permission were invalidated
+     */
+    checkProtection(flag) {
+        let msg = "";
+        if(!this.V) {
+            msg += "entry invalid\n";
+        }
+        if(flag && !this.W) {
+            msg += "does not have write permission\n";
+        }
+        if(!flag && !this.R) {
+            msg += "does not have read permission\n";
+        }
+        return msg;
     }
 
     /**
@@ -162,7 +198,9 @@ export class PTEntry {
         this.p.rect(x + scaleC * xwidth(1) * 4, y, scaleC * xwidth(1), scaleC);     // write
 
         // for PPN
-        (this.lightPPN > 0 ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
+        if(this.lightPPN) this.lightPPN == 1 ? this.p.fill(PHYS_MEM_HIGHLIGHT) : this.p.fill(DISK_HIGHLIGHT);
+        else this.p.noFill();
+        // (this.lightPPN > 0 ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
         this.p.rect(xPPN, y, scaleC * xwidth(PT_PPN_WIDTH), scaleC);  // data
 
         // cache block text
@@ -186,7 +224,7 @@ export class PTEntry {
         this.p.text(this.E, x + scaleC * xwidth(1) * 4.5, ytext);   // exec
 
         // render PPN bits
-        this.p.text(this.V ? toBase(this.pageNumber, 16, this.p.ceil(this.PPNWidth / 4)) : "--"
+        this.p.text(this.V || this.isSSN ? toBase(this.pageNumber, 16, this.p.ceil(this.PPNWidth / 4)) : "--"
             , xPPN + scaleC * xwidth(PT_PPN_WIDTH) * (0.5), ytext);  // data
 
         // // hover text

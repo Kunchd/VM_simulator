@@ -36,6 +36,9 @@ export class TLB {
 		this.x = scrollBar.xpos - 10 - this.Cwidth;
 	}
 
+    /**
+     * flush all reccorded data from TLB
+     */
 	flush() {
 		for (var i = 0; i < this.S; i++)
 			this.sets[i].flush();
@@ -45,13 +48,10 @@ export class TLB {
 
 	/**
 	 * checks and gets the PPN from the TLB given the VPN
-	 * @param {*} flag a boolean flag indicating read/write status. 
-	 * 				   true: write
-	 * 				   false: read
 	 * @param {*} VPN VPN
 	 * @return -1 if TLB miss, and the PPN if TLB hit
 	 */
-	getPPN(flag, VPN) {
+	getPPN(VPN) {
 		let Sbit = this.p.ceil(this.p.log(this.S) / this.p.log(2));	// bits to represent number of set
 		let index = VPN % this.S;	// index of given VPN
 		let tag = VPN >> Sbit;		// tag of give VPN
@@ -65,7 +65,7 @@ export class TLB {
 		this.clearHighlight();
 
 		// asks TLB set to check if tag exists
-		return this.sets[index].checkTag(flag, tag);
+		return this.sets[index].checkTag(tag);
 	}
 
 	/**
@@ -89,6 +89,19 @@ export class TLB {
 
 		this.sets[index].setEntry(permissions, tag, PPN);
 	} 
+
+    /**
+     * invalidate tlb entry for the given VPN.
+     * If given VPN is not within tlb, nothing is changed
+     * @param {*} VPN 
+     */
+    invalidateEntry(VPN) {
+        let Sbit = this.p.ceil(this.p.log(this.S) / this.p.log(2));	// bits to represent number of set
+		let index = VPN % this.S;
+		let tag = VPN >> Sbit;
+
+        this.sets[index].invalidateEntry(tag);
+    }
 
 	display() {
 		var x = this.x;

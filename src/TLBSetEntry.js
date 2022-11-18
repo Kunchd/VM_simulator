@@ -22,7 +22,6 @@ export class TLBSetEntry {
 
         this.t = t;       // tag width
         this.PPNWidth = PPNWidth;   // PPN width
-        this.PPN = -1;     // PPN value
 
         this.V = 0;       // valid bit value
         this.D = 0;       // Dirty bit value
@@ -35,6 +34,35 @@ export class TLBSetEntry {
 
         // lighting values
         this.lightPPN = 0;  // indicate highlighting for moved/changed data
+        this.lightV = 0;
+        this.lightD = 0;
+        this.lightR = 0;
+        this.lightW = 0;
+        this.lightE = 0;
+        this.lightT = 0;
+
+        // width of this TLBEntry
+        this.width = scaleC * (xwidth(1) * (MGNT_BIT_WIDTH) 
+            + xwidth(this.p.ceil(this.t / 4)) 
+            + xwidth(this.p.ceil(this.PPNWidth / 4))) 
+            + scaleC * 0.5
+    }
+
+    /**
+     * reset all values to starting position
+     */
+    flush() {
+        this.V = 0;       // valid bit value
+        this.D = 0;       // Dirty bit value
+        this.R = 0;       // read bit value
+        this.W = 0;       // write bit value
+        this.E = 0;       // execute bit value
+        this.tag = 0;       // tag value
+        this.addr = -1;   // address of beginning of block (-1 is dummy addr)
+        this.PPN = undefined;     // PPN value
+
+        // lighting values
+        this.lightPPN = 0;
         this.lightV = 0;
         this.lightD = 0;
         this.lightR = 0;
@@ -74,15 +102,11 @@ export class TLBSetEntry {
 
     /**
      * check if this entry contain the following valid tag
-	 * @param {*} flag a boolean flag indicating read/write status. 
-	 * 				   true: write
-	 * 				   false: read
      * @param {*} tag tag to match with the tag stored in this entry
      * @retun true if a valid tag exist, false otherwise
      */
-    containTag(flag, tag) {
-        if(flag) return this.tag === tag && this.V && this.W;
-        return this.tag === tag && this.V && this.R;
+    containTag(tag) {
+        return this.tag === tag && this.V;
     }
 
     /**
@@ -127,8 +151,8 @@ export class TLBSetEntry {
         // cache block boxes
         // Where the tag start
         var xt = x + scaleC * xwidth(1) * (MGNT_BIT_WIDTH);
-        // Where the PPN start
-        var xPPN = x + scaleC * (xwidth(1) * (MGNT_BIT_WIDTH) + xwidth(this.p.ceil(this.t / 4)));
+        // Where the PPN start. 0.5 scaleC added to tag width for extra padding
+        var xPPN = x + scaleC * (xwidth(1) * (MGNT_BIT_WIDTH) + xwidth(this.p.ceil(this.t / 4))) + scaleC * 0.5;
         this.p.stroke(0);
 
         // render valid bit
@@ -153,7 +177,8 @@ export class TLBSetEntry {
 
         // render tag bits
         (this.lightT ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
-        this.p.rect(xt, y, scaleC * xwidth(this.p.ceil(this.t / 4)), scaleC);  // tag
+        // additional scaleC added for padding so everything isn't cramped
+        this.p.rect(xt, y, (scaleC * xwidth(this.p.ceil(this.t / 4)) + scaleC * 0.5), scaleC);  // tag
 
         // for PPN
         (this.lightPPN > 0 ? this.p.fill(EMPHASIS_HIGHLIGHT) : this.p.noFill());
@@ -185,11 +210,9 @@ export class TLBSetEntry {
             tagText = toBase(this.tag, 16, this.p.ceil(this.t / 4));
         else
             for (var i = 0; i < this.p.ceil(this.t / 4); i++) tagText += "-";
-        this.p.fill(this.lightT ? colorH : 0);
-        this.p.text(tagText, xt + scaleC * xwidth(this.p.ceil(this.t / 4)) * 0.5, ytext);  // tag
+        this.p.text(tagText, xt + (scaleC * xwidth(this.p.ceil(this.t / 4)) + scaleC * 0.5) * 0.5, ytext);  // tag
 
         // render PPN bits
-        this.p.fill(this.lightPPN > 1 ? colorH : 0);
         this.p.text(this.V && !isNaN(this.PPN) ? toBase(this.PPN, 16, 2) : "--"
             , xPPN + scaleC * xwidth(this.p.ceil(this.PPNWidth / 4)) * (0.5), ytext);  // data
 

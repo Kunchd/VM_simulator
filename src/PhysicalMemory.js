@@ -1,7 +1,7 @@
 import { scrollSize, hoverSize, scaleM, PMDisplayHeight, scaleC } from "./Constants.js";
 import { PHYS_MEM_HIGHLIGHT } from "./Constants.js";
 import { bg, colorC, colorB, colorM } from "./App.js";
-import { bounded } from "./HelperFunctions.js";
+import { bounded, findLRU, findUnused, updateUsed } from "./HelperFunctions.js";
 import { xwidth, toBase, setScrollBarToDesiredPos } from "./HelperFunctions.js";
 import { Page } from "./Page.js";
 
@@ -38,7 +38,7 @@ export class PhysicalMemory {
 		for (var i = 0; i < PMSize / PgSize; i++) {
 			this.light[i] = 0;                 	// nothing starts highlighted
 			this.pages[i] = new Page(this.p, this.PgSize);
-			this.used[i] = PMSize / PgSize;		// initialize all page to not recently used
+			this.used[i] = -1;		            // initialize all page to unused
 		}
 
 		// calculate dimensions of this table
@@ -51,26 +51,75 @@ export class PhysicalMemory {
 		this.vbarMemEnable = (this.Mtop + this.Mheight > this.p.height);
 	}
 
+    /**
+     * flush all recorded data from PM
+     */
+    flush() {
+        // revert to initial state
+        this.pages = [];	// contained pages
+		this.used = [];		// time since usage for each page (for LRU)
+                            // -1 if currently unused
+
+		/*
+		 * 0 stands for unused
+		 * 2 stands for identification highlight
+		 */
+		this.light = [];  // indicate highlighting for moved/changed data
+
+		// initialize data
+		for (var i = 0; i < this.PMSize / this.PgSize; i++) {
+			this.light[i] = 0;                 	// nothing starts highlighted
+			this.pages[i] = new Page(this.p, this.PgSize);
+			this.used[i] = -1;		// initialize all page to unused
+		}
+    }
+
 	// helper methods for hightlighting
-	// highlighting:  0 - no highlight, 1 - background, 2 - background + text
-	highlight(addr, light) { this.light[addr] = light; }
-	clearHighlight() { for (var i = 0; i < this.light.length; i++) this.light[i] = 0; }
+	/**
+     * clear all emphasis highlight
+     */
+	clearHighlight() {
+         for (var i = 0; i < this.light.length; i++) this.pages[i].clearHighlight();
+    }
+
+    /**
+     * Read byte PO from page at PPN
+     * (handles highlighting)
+     * @param {*} PPN number of physical page to read from
+     * @param {*} PO byte offset to read
+     */
+    readFromPage(PPN, PO) {
+        // update used for LRU
+        updateUsed(this.used, PPN);
+
+        // clear pervious emphasis
+        this.clearHighlight();
+        // highlight byte being read
+        this.pages[PPN].highlight(PO);
+
+        // center scroll bar on byte read
+        setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
+			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
+			this.Mheight - (PMDisplayHeight - this.pages[0].height),
+			this.vbarMem);
+    }
 
 	/**
 	 * Write the given data to the page corresponding to the PPN at the PO
+     * (handles highlighting)
 	 * @param {*} PPN physical page number
 	 * @param {*} PO page offset
 	 * @param {*} data data to be written
 	 */
 	writeToPage(PPN, PO, data) {
 		this.pages[PPN].write(PO, data);
-		this.used[PPN] = 0;					// reset usage for this page
-		this.updateUsed(PPN);
+		updateUsed(this.used, PPN);                    // reset usage for this page
 
 		// emphasize byte written
-		this.pages[PPN].clearHighlight();
+		this.clearHighlight();
 		this.pages[PPN].highlight(PO);
 
+        // center scroll bar on byte read
 		setScrollBarToDesiredPos((this.Mtop * 2 + PMDisplayHeight) / 2,
 			this.Mtop + ((this.pages[0].height + 5) + scaleC) * PPN,
 			this.Mheight - (PMDisplayHeight - this.pages[0].height),
@@ -113,7 +162,7 @@ export class PhysicalMemory {
 
 		this.pages[PPN] = page;
 		this.pages[PPN].setAssociatingVPN(VPN);
-		this.updateUsed(PPN);
+		updateUsed(this.used, PPN);
 	}
 
 	/**
@@ -129,7 +178,7 @@ export class PhysicalMemory {
 
 		this.light[PPN] = 2;
 		this.pages[PPN].setAssociatingVPN(VPN);
-		this.updateUsed(PPN);
+		updateUsed(this.used, PPN);
 	}
 
 	/**
@@ -138,40 +187,15 @@ export class PhysicalMemory {
 	 * @returns PPN of the page to be replaced
 	 */
 	findVictim() {
-		let unusedPPN = this.findUnusedPage();
-
-		if (unusedPPN !== -1) {
-			return unusedPPN;
-		} else {
-			// if all page taken, find LRU page
-			let max = -Number.MAX_VALUE;
-			let maxIndex = -1;
-			for (let i = 0; i < this.used; i++) {
-				if (this.used[i] > max) {
-					max = this.used[i];
-					maxIndex = i;
-				}
-			}
-
-			return maxIndex;
-		}
+		return findLRU(this.used);
 	}
 
-	/**
-	 * naively finds first available, unused page.
-	 * @returns PPN of unused page or -1 if all pages are used
-	 */
-	findUnusedPage() {
-		for (let i = 0; i < this.light.length; i++) {
-			if (this.light[i] === 0) {
-				// update status to used page
-				this.light[i] = 1;
-				return i;
-			}
-		}
-
-		return -1;
-	}
+    /**
+     * @returns index of first unused page or -1 if all entries used
+     */
+    findUnusedPage() {
+        return findUnused(this.used);
+    }
 
 	/**
 	 * Displays the memory table
@@ -228,17 +252,5 @@ export class PhysicalMemory {
 		this.p.noStroke();
 		this.p.fill(colorM);
 		this.p.text("PPN", x, scaleM * 0.8);
-	}
-
-	/**
-	 * increment used for all pages except for the currently udpated one
-	 * @param {*} PPN the page number that has been updated
-	 */
-	updateUsed(PPN) {
-		for (let i = 0; i < this.used.length; i++) {
-			if (i !== PPN) {
-				this.used[i]++;
-			}
-		}
 	}
 }

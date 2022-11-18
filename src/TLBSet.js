@@ -1,8 +1,8 @@
 import { TLBSetEntry } from './TLBSetEntry.js';
 import { scaleC } from './Constants.js';
-import { colorC, colorM, colorH } from "./App.js";
-import { xwidth } from './HelperFunctions.js';
+import { colorC } from "./App.js";
 import { MGNT_BIT_WIDTH } from './Constants.js';
+import { updateUsed, findLRU } from './HelperFunctions.js';
 
 /* Class to represent a TLB set (E cache lines).
  * This is where most of the cache policies are handled. */
@@ -23,25 +23,27 @@ export class TLBSet {
 
 		this.entries = [];		// instantiate entries in set
 		this.used = []; 		// accesses since page last used (for LRU)
-		for (var i = 0; i < E; i++) {
+		for (var i = 0; i < this.E; i++) {
 			this.entries[i] = new TLBSetEntry(p, t, PPNWidth);
-			this.used[i] = E;	// prepopulated all used entry with big number, to show lack of use
+			this.used[i] = -1;	// prepopulated all used as unused
 		}
 
 
 		// width for drawing
-		this.width = scaleC * (xwidth(1) * (MGNT_BIT_WIDTH)
-			+ xwidth(t < 1 ? 0 : this.p.ceil(t / 4)) + xwidth(this.p.ceil(this.PPNWidth / 4)) + 1);
+		this.width = this.entries[0].width + scaleC;
 		// height of this set
 		this.height = 1.5 * scaleC * this.E;
 		// is this the set of interest for this access? (affects display)
 		this.active = 0;
 	}
 
+    /**
+     * reset each entry within this set to starting position
+     */
 	flush() {
-		for (var i = 0; i < E; i++) {
-			this.entries[i].invalidate();
-			// if (replace > 0) this.used[i] = (replace == 1 ? E-i : 0);  // reset replacement policy
+		for (var i = 0; i < this.E; i++) {
+			this.entries[i].flush();    // reset entry data
+            this.used[i] = -1;          // reset used array
 		}
 	}
 
@@ -51,18 +53,14 @@ export class TLBSet {
 
 	/**
 	 * Checks the current set for tag match.
-	 * @param {*} flag a boolean flag indicating read/write status. 
-	 * 				   true: write
-	 * 				   false: read
 	 * @param {*} tag 
 	 * @return PPN if there's a valid matching tag or -1 otherwise
 	 */
-	checkTag(flag, tag) {
+	checkTag(tag) {
 		for (let i = 0; i < this.entries.length; i++) {
-			if (this.entries[i].containTag(flag, tag)) {
+			if (this.entries[i].containTag(tag)) {
 				// update used
-				this.used[i] = 0;
-				this.updateUsed(i);
+				updateUsed(this.used, i);
 
 				// emphasize entry found
 				this.entries[i].highlightAll();
@@ -82,12 +80,12 @@ export class TLBSet {
 	 * @param {*} PPN PPN to add to this set
 	 */
 	setEntry(permissions, tag, PPN) {
+        // find first invalid entry
 		for (let i = 0; i < this.entries.length; i++) {
 			if (!this.entries[i].checkValid()) {
 				this.entries[i].setPPN(permissions, tag, PPN);
 				// update used
-				this.used[i] = 0;
-				this.updateUsed(i);
+				updateUsed(this.used, i);
 
 				// emphasize entry found
 				this.entries[i].highlightAll();
@@ -97,22 +95,31 @@ export class TLBSet {
 		}
 
 		// if all entries are used, find LRU entry
-		let max = -Number.MAX_VALUE;
-		let maxIndex = -1;
-		for (let i = 0; i < this.used.length; i++) {
-			if (this.used[i] > max) {
-				maxIndex = i;
-			}
-		}
+		let maxIndex = findLRU(this.used);
 
 		// emphasize entry found
 		this.entries[maxIndex].highlightAll();
 
 		// update used
-		this.used[maxIndex] = 0;
-		this.updateUsed(maxIndex);
+		updateUsed(this.used, maxIndex);
 		this.entries[maxIndex].setPPN(permissions, tag, PPN);
 	}
+
+    /**
+     * invalidate entry assciated with given tag.
+     * nothing is changed if no match exists between given 
+     * tag and all entry tags
+     * @param {*} tag 
+     */
+    invalidateEntry(tag) {
+        for(let i = 0; i < this.entries.length; i++) {
+            if(this.entries[i].containTag(tag)) {
+                this.entries[i].flush();
+                this.used[i] = -1;  // mark this entry as unused
+                break;
+            }
+        }
+    }
 
 	display(x, y) {
 		// draw rectangle set around different entries
@@ -123,18 +130,6 @@ export class TLBSet {
 		// draw each entry within the set
 		for (var i = 0; i < this.E; i++) {
 			this.entries[i].display(x + 0.5 * scaleC, y + scaleC * (1 + 6 * i) / 4);
-		}
-	}
-
-	/**
-	 * increment time since use of all entries except for the current used entry
-	 * @param {*} index the index of the current used entry
-	 */
-	updateUsed(index) {
-		for (let i = 0; i < this.used.length; i++) {
-			if (i !== index) {
-				this.used[i]++;
-			}
 		}
 	}
 }
