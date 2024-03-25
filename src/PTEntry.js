@@ -87,6 +87,10 @@ export class PTEntry {
      * @returns dirty bit of this PTE
      */
     getDirty() {
+        // higlight dirty bit
+        this.clearHighlight();
+        this.lightD = 1;
+        
         return this.D;
     }
 
@@ -164,6 +168,16 @@ export class PTEntry {
             msg += "does not have read permission\n";
         }
         return msg;
+    }
+
+    /**
+     * (emphasis highlight valid bit)
+     * @returns true if this entry is valid, false otherwise
+     */
+    checkValid() {
+        // toggle valid bit highlight
+        this.lightV = 1;
+        return this.V === 1;
     }
 
     /**

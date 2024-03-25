@@ -116,3 +116,26 @@ export function updateUsed(LRUArr, updatedIndex) {
         }
     }
 }
+
+/* Helper function to read all parameters from URL.
+ * https://html-online.com/articles/get-url-parameters-javascript/ 
+ */
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+        vars[key] = value;
+    });
+    return vars;
+}
+
+/* Helper function to get a specific parameter from URL.
+ * Returns default value if not found.
+ * https://html-online.com/articles/get-url-parameters-javascript/ 
+ */
+export function getUrlParam(parameter, defaultvalue){
+    var urlparameter = defaultvalue;
+    if (window.location.href.indexOf(parameter) > -1) {
+        urlparameter = getUrlVars()[parameter];
+    }
+    return urlparameter;
+}

@@ -7,15 +7,15 @@
 
     <title>CSE 351 VM Simulator</title>
 
-    <script src="../p5lib/p5.min.js"></script>
-    <!-- <script src="libraries/p5.sound.min.js"></script> -->
-
+    <script language="javascript" type="text/javascript" src="../p5lib/p5.min.js"></script>
+    <script language="javascript" type="text/javascript" src="../p5lib/p5.dom.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.3/seedrandom.min.js"></script>
     <script language="javascript" type="module" src="./src/App.js"></script>
 
     <link rel="stylesheet" href="./css/App.css">
 </head>
 
-<body>
+    <body>
     <h1>351 VM Simulator</h1>
 
     <div class="grid-container">
@@ -27,7 +27,7 @@
                 <table>
                     <tr>
                         <!-- The page size choices are temporary for now -->
-                        <td>Address width:</td>
+                        <td>Virtual Address Width:</td>
                         <td>
                             <select id="addrWidth" name="addrWidth">
                                 <option value="10">10</option>

@@ -28,7 +28,7 @@ export class TLBSetEntry {
         this.R = 0;       // read bit value
         this.W = 0;       // write bit value
         this.E = 0;       // execute bit value
-        this.tag = 0;       // tag value
+        this.tag = -1;    // initialized with invalid value
         this.addr = -1;   // address of beginning of block (-1 is dummy addr)
         this.PPN = undefined;     // PPN value
 
@@ -101,19 +101,23 @@ export class TLBSetEntry {
     }
 
     /**
-     * check if this entry contain the following valid tag
-     * @param {*} tag tag to match with the tag stored in this entry
-     * @retun true if a valid tag exist, false otherwise
+     * check if this entry's tag matches given tag
+     * (set tag emphasis highlight, DOES NOT CLEAR PREV)
+     * @param {*} tag tag to match
+     * @returns true if match, false otherwise
      */
-    containTag(tag) {
-        return this.tag === tag && this.V;
+    checkTag(tag) {
+        this.lightT = 1;
+        return this.tag === tag;
     }
 
     /**
      * checks if the current entry is used via the valid bit
+     * (set valid bit emphasis highlight, DOES NOT CLEAR PREV)
      * @returns whether the current entry is valid
      */
     checkValid() {
+        this.lightV = 1;
         return this.V;
     }
 

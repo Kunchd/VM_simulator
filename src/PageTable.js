@@ -126,6 +126,24 @@ export class PT {
 		return this.entries[VPN].checkProtection(flag);
 	}
 
+    /**
+     * check if PTE associated with given VPN is valid
+     * (highlights valid bit)
+     * @param {*} VPN page number for the entry to check
+     * @returns true if valid, false otherwise
+     */
+    checkValid(VPN) {
+        // clear previous emphasis
+        this.clearHighlight();
+        // auto focus on current entry
+        setScrollBarToDesiredPos((this.PTtop * 2 + PTDisplayHeight) / 2,
+			this.PTtop + 1.5 * scaleC * VPN + 1.8 * scaleC,
+			this.PTheight - (PTDisplayHeight - scaleC),
+			this.vbarPT);
+        
+        return this.entries[VPN].checkValid();
+    }
+
 	/**
 	 * set the PT entry for the VPN to the given PPN/SSN with given permissions
 	 * @param {*} VPN VPN to set the PPN for

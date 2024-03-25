@@ -28,12 +28,12 @@ export class TLB {
 		this.sets = [];  // sets in the TLB
 		for (var i = 0; i < this.S; i++)
 			this.sets[i] = new TLBSet(this.p, this.E, this.t, this.PPNWidth);
-		this.Cwidth = this.sets[0].width + 2;  // width of TLB when drawn out
+		this.TLBwidth = this.sets[0].width + 2;  // width of TLB when drawn out
 
 		// initialize TLB with scrollBar
 		this.vbarTLBEnable = (this.TLBtop + this.TLBheight > TLBDisplayHeight);
 		this.vbarTLB = scrollBar;
-		this.x = scrollBar.xpos - 10 - this.Cwidth;
+		this.x = scrollBar.xpos - 10 - this.TLBwidth;
 	}
 
     /**
@@ -44,6 +44,9 @@ export class TLB {
 			this.sets[i].flush();
 	}
 
+    /**
+     * clear all emphasis highlight for this tlb
+     */
 	clearHighlight() { for (var i = 0; i < this.S; i++) this.sets[i].clearHighlight(); }
 
 	/**
@@ -65,7 +68,7 @@ export class TLB {
 		this.clearHighlight();
 
 		// asks TLB set to check if tag exists
-		return this.sets[index].checkTag(tag);
+		return this.sets[index].getPPN(tag);
 	}
 
 	/**
@@ -93,7 +96,7 @@ export class TLB {
     /**
      * invalidate tlb entry for the given VPN.
      * If given VPN is not within tlb, nothing is changed
-     * @param {*} VPN 
+     * @param {*} VPN page number of the page to invalidate
      */
     invalidateEntry(VPN) {
         let Sbit = this.p.ceil(this.p.log(this.S) / this.p.log(2));	// bits to represent number of set
@@ -101,6 +104,69 @@ export class TLB {
 		let tag = VPN >> Sbit;
 
         this.sets[index].invalidateEntry(tag);
+    }
+
+    /**
+     * check the set which contains the given VPN
+     * (emphasis highlight the set within tlb)
+     * @param {*} VPN page number associated with the set to higlight
+     */
+    checkSet(VPN) {
+        let index = VPN % this.S;
+        // clear all previous emphasis
+        this.clearHighlight();
+
+        // auto-focus
+        setScrollBarToDesiredPos((this.TLBtop * 2 + TLBDisplayHeight - this.sets[0].height - 20) / 2,
+			this.TLBtop + 1.5 * this.E * scaleC * index,
+			this.TLBheight - (TLBDisplayHeight - this.sets[0].height),
+			this.vbarTLB);
+
+        // emphasize given index
+        this.sets[index].setActive();
+    }
+
+    /**
+     * check if the entry associated with this VPN is valid
+     * @param {*} VPN VPN to check the valid bit for
+     * @returns 
+     */
+    checkValid(VPN) {
+        let Sbit = this.p.ceil(this.p.log(this.S) / this.p.log(2));	// bits to represent number of set
+		let index = VPN % this.S;
+		let tag = VPN >> Sbit;
+        // clear all previous emphasis
+        this.clearHighlight();
+
+        // auto-focus
+        setScrollBarToDesiredPos((this.TLBtop * 2 + TLBDisplayHeight - this.sets[0].height - 20) / 2,
+			this.TLBtop + 1.5 * this.E * scaleC * index,
+			this.TLBheight - (TLBDisplayHeight - this.sets[0].height),
+			this.vbarTLB);
+
+        // check valid bit
+        return this.sets[index].checkValid(tag);
+    }
+
+    /**
+     * check if there existing a matching tag within the tlb for the given VPN
+     * @param {*} VPN VPN to check the tag for
+     */
+    checkTag(VPN) {
+        let Sbit = this.p.ceil(this.p.log(this.S) / this.p.log(2));	// bits to represent number of set
+		let index = VPN % this.S;
+		let tag = VPN >> Sbit;
+        // clear all previous emphasis
+        this.clearHighlight();
+
+        // auto-focus
+        setScrollBarToDesiredPos((this.TLBtop * 2 + TLBDisplayHeight - this.sets[0].height - 20) / 2,
+			this.TLBtop + 1.5 * this.E * scaleC * index,
+			this.TLBheight - (TLBDisplayHeight - this.sets[0].height),
+			this.vbarTLB);
+
+        // check tag
+        return this.sets[index].checkTag(tag) !== -1;
     }
 
 	display() {
@@ -127,7 +193,7 @@ export class TLB {
 
 		this.p.noStroke();
 		this.p.fill(bg);
-		this.p.rect(x, 0, this.Cwidth, this.TLBtop);  // background for header
+		this.p.rect(x, 0, this.TLBwidth, this.TLBtop);  // background for header
 		this.p.rect(x, 0, -scaleC * 3.0, this.TLBtop);  // cover set numbers
 
 		this.p.textAlign(this.p.CENTER);
@@ -137,7 +203,7 @@ export class TLB {
 
 		// label title
 		let ytitle = 0.85 * scaleC;
-		this.p.text("TLB", x + this.Cwidth / 2, ytitle);
+		this.p.text("TLB", x + this.TLBwidth / 2, ytitle);
 
 		this.p.fill(colorC);
 		this.p.stroke(colorC);
@@ -164,6 +230,17 @@ export class TLB {
 		this.p.noStroke();
 		this.p.fill(bg);
 		var yCutOff = this.TLBtop + TLBDisplayHeight - scaleC;
-		this.p.rect(x - 50, yCutOff, this.Cwidth + 60, 300);
+		this.p.rect(x - 50, yCutOff, this.TLBwidth + 60, 300);
+
+        // draw line separating TLB with PT
+        let yBorder = this.TLBtop + TLBDisplayHeight - 0.5 * scaleC;
+        let xBorder = x - 2 * scaleC;
+        this.p.stroke(colorB);
+        this.p.strokeWeight(4);
+        this.p.noFill();
+        this.p.line(xBorder, yBorder, xBorder + this.TLBwidth * 1.5, yBorder);
+
+        // set stroke weight back to normal
+        this.p.strokeWeight(1);
 	}
 }

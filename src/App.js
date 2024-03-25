@@ -6,11 +6,11 @@ import { scrollSize, dampening, scaleM, scaleC } from "./Constants.js";
 import { TLBDisplayHeight, PTDisplayHeight, DiskDisplayHeight } from "./Constants.js";
 // import { INIT, PARAMS_PHYS_MEM, PARAMS_VIR_MEM, PARAMS_TLB, PARAMS_PT, PARAMS_DISK } from "./Constants.js";
 import { PT } from "./PageTable.js";
-import { bounded, toBase } from "./HelperFunctions.js";
+import { bounded, toBase, getUrlParam } from "./HelperFunctions.js";
 import { Disk } from "./Disk.js";
 
 
-let canvas, diagramCanvas;
+let canvas, diagramCanvas, seed;
 let inAddrWidth, inPgSize, inTlbSize, inTlbE, inPhysMemSize; // system param input
 let inReadAddr, inWriteAddr, inWriteData; // mem access param input
 
@@ -19,7 +19,7 @@ let ptSize, vmSize; // sys param calculated values
 
 // colors
 export let bg, colorC, colorH, colorM, colorP;
-export let colorG, colorB, colorW;
+export let colorG, colorB, colorW, lightEmphasis;
 
 // System parameters
 let m, PPNWidth, E, TLBSize, pgSize, physMemSize, POwidth;
@@ -47,13 +47,27 @@ let mmaBox;
 let msg = ""; // canvas message
 let msgbox;  // simulation messages
 
+// system control access
+let memoryAccessID = "MMA";         // memory access ID for system control
+let generateSystemID = "GenSys";    // generate system ID for system control
+let initialized = false;            // indicate whether system is ready to access user input
+
 // state variables and constants
 let state;
 const INIT = 0, PARAMS_PHYS_MEM = 1, PARAMS_VIR_MEM = 2, PARAMS_TLB = 3;
 const PARAMS_PT = 4, PARAMS_DISK = 5;
-const READY = 6, CHECK_TLB = 7;
-const PROTECTION_CHECK = 8, PHYSICAL_PAGE_ACCESS = 9;
-const CHECK_PAGE_TABLE = 10, UPDATE_TLB = 11, PAGE_FAULT = 12;
+const READY = 6;
+const CHECK_TLB = 7, CHECK_TLB_SET = 8, CHECK_TLB_VALID = 9, CHECK_TLB_TAG = 10;
+const TLB_HIT = 11, TLB_MISS = 12;
+const PROTECTION_CHECK = 13, PHYSICAL_PAGE_ACCESS = 14;
+const CHECK_PT_VALID = 15, PT_HIT = 16, PT_MISS = 17;
+const UPDATE_TLB = 18, PAGE_FAULT = 19;
+const CHECK_SSN = 20, IN_DISK = 21, NOT_IN_DISK = 22, FIND_PM_VICTIM = 23;
+const FIND_VICTIM_SSN = 24, VICTIM_IN_DISK = 25;
+const VICTIM_DIRTY = 27, VICTIM_NOT_DIRTY = 28, WRITE_VICTIM_TO_DISK = 29;
+const UPDATE_VICTIM_PTE = 30, MOVE_EVICTING_TO_PM = 31, UPDATE_EVICTING_PTE = 32;
+const RESTART_INSTR = 33;
+const SEEDLEN = 6;        // length of random seed string
 
 // system status vairables
 let TLBHit, TLBMiss;
@@ -85,7 +99,6 @@ class MemAccess {
         this.data = -1;       // access data: decimal form
         this.tlbRes = '?';    // tlb access result: 'H', 'M', or '?'
         this.ptRes = '?';     // pt access result: 'H', 'M', or '?'
-        this.fRes = '?';      // final access result: 'H', 'M', or '?'
     }
 }
 
@@ -104,6 +117,7 @@ const displayTables = (p) => {
         colorG = p.color(70, 70, 70);    // grey
         colorB = p.color(20, 20, 20);    // black
         colorW = p.color(230, 230, 230); // white
+        lightEmphasis = p.color(255, 0, 0, 50)  // light red
 
         canvas = p.createCanvas(960, 750).parent("p5Canvas");
 
@@ -175,6 +189,15 @@ const displayTables = (p) => {
         // initialize system parameters
         userInteracting = "";
 
+        // extract seed for RNG
+        // get seed from URL
+        seed = getUrlParam('seed', 'cse351');
+        if (seed.length != SEEDLEN) {
+            window.alert("Wrong seed string length (" + seed.length + " instead of " + SEEDLEN + ") - using default seed \"cse351\".");
+            seed = 'cse351';
+        }
+        console.log('seed = ' + seed);
+
         reset(true);
     }
 
@@ -232,6 +255,7 @@ const displayTables = (p) => {
     }
 
     function disableAccessButtons(accessType) {
+        if (accessType != 0) paramButton.attribute('disabled', '');
         (accessType == 1 ? readButton.attribute('value', 'Next') : readButton.attribute('disabled', ''));
         (accessType == 2 ? writeButton.attribute('value', 'Next') : writeButton.attribute('disabled', ''));
         mmaBox.attribute('disabled', '');
@@ -257,6 +281,7 @@ const displayTables = (p) => {
         loadHistButton.removeAttribute('disabled');
         uButton.removeAttribute('disabled');
         dButton.removeAttribute('disabled');
+        paramButton.removeAttribute('disabled');
     }
 
     var generateSysMessage
@@ -271,6 +296,14 @@ const displayTables = (p) => {
             console.log(explain + ", " + state);
             switch (state) {
                 case INIT:
+                    // reset initialized to false
+                    initialized = false;
+                    // reset previous system if applicable
+                    resetOverhead();
+
+                    // request system control
+                    getControlAccess(generateSystemID);
+
                     physMem = new PhysicalMemory(p, physMemSize, pgSize, vbarPhysMem);
 
                     // reset memory scroll bar
@@ -285,10 +318,11 @@ const displayTables = (p) => {
 
                     // update message for physical memory
                     generateSysMessage = "Press [Next] to advance explanation.\n";
+                    generateSysMessage += 'Values randomly generated with seed "' + seed + '".\n';
                     generateSysMessage += "Generating physical memory with size: "
                         + physMemSize + ", and page size: " + pgSize + "\n";
-                    generateSysMessage += "So (phys mem size) / (pg size) = " 
-                        + (physMemSize / pgSize) + " total physical pages\n"; 
+                    generateSysMessage += "So (phys mem size) / (pg size) = "
+                        + (physMemSize / pgSize) + " total physical pages\n";
                     msgbox.value(generateSysMessage);
 
                     state = PARAMS_PHYS_MEM;
@@ -304,7 +338,7 @@ const displayTables = (p) => {
 
                     // update msg for VM
                     generateSysMessage = "Press [Next] to advance explanation.\n";
-                    generateSysMessage += "Generating virtual memory with address width: " + m 
+                    generateSysMessage += "Generating virtual memory with address width: " + m
                         + " and page offset width: " + POwidth + "\n";
                     generateSysMessage += "where page offset width = log_2(page size) = " + POwidth + " bits\n";
                     generateSysMessage += "So a total of 2^(m - POwidth) = " + p.pow(2, m - POwidth)
@@ -324,13 +358,13 @@ const displayTables = (p) => {
 
                     // update msg for TLB
                     generateSysMessage = "Press [Next] to advance explanation.\n";
-                    generateSysMessage += "Generating Translation Lookaside Buffer with " 
+                    generateSysMessage += "Generating Translation Lookaside Buffer with "
                         + TLBSize + " slots and associativity of " + E + "\n";
                     generateSysMessage += "So each Translation Lookaside Buffer set contains " + E + " blocks\n";
-                    generateSysMessage += "and there are (total number of TLB slots) / (Associativity) = " 
+                    generateSysMessage += "and there are (total number of TLB slots) / (Associativity) = "
                         + (TLBSize / E) + " TLB sets\n";
                     generateSysMessage += "Each block contains a page table entry\n";
-                    
+
                     msgbox.value(generateSysMessage);
 
                     state = PARAMS_TLB;
@@ -346,7 +380,7 @@ const displayTables = (p) => {
 
                     // udpate msg for pt
                     generateSysMessage = "Press [Next] to advance explanation.\n";
-                    generateSysMessage += "generating page table with " + p.pow(2, m - POwidth) 
+                    generateSysMessage += "generating page table with " + p.pow(2, m - POwidth)
                         + " (same as number of virtual pages) total entries.\n";
                     generateSysMessage += "Each page table entry contains Valid, Read, Write, Execute bits\n";
                     generateSysMessage += "Each page table entry also contains the Physical Page Number\n";
@@ -365,7 +399,7 @@ const displayTables = (p) => {
 
                     // update msg for disk
                     generateSysMessage = "Press [Next] to advance explanation.\n";
-                    generateSysMessage += "generating disk with same size as VM (unrealisitc)\n";
+                    generateSysMessage += "generating disk (grow as space is needed)\n";
                     msgbox.value(generateSysMessage);
 
                     state = PARAMS_DISK;
@@ -380,8 +414,10 @@ const displayTables = (p) => {
                 default:
                     // update msg for prepopulate
                     generateSysMessage = "Press [Next] to advance explanation.\n";
+                    // add separating borders
+                    generateSysMessage += "------------------------------------------------\n";
+
                     generateSysMessage += "prepopulate physical memory with 3 random virtual pages\n";
-                    
 
                     // pre-allocte 3 VPN
                     let list = [];
@@ -394,6 +430,11 @@ const displayTables = (p) => {
                         }
                     }
                     msgbox.value(generateSysMessage);
+
+                    // system done initializing
+                    initialized = true;
+                    // release control
+                    releaseControlAccess(generateSystemID);
             }
         }
     }
@@ -401,9 +442,14 @@ const displayTables = (p) => {
     // persistent variable conatiners for readWriteDFA
     var VPN;
     var PO;
+    var TLBI;
+    var TLBT;
     var PPNRes;
     var PPN;
+    var victimVPN;
+    var victimSSN;
     var PPNRes;
+    var SSNRes;
     var DFAmessage;
     var newAccess;
     var retryfaultingInstr;
@@ -425,6 +471,31 @@ const displayTables = (p) => {
         switch (state) {
             case READY:
                 console.log("ready");
+                // get system control access to prevent allocation of new page
+                getControlAccess(memoryAccessID);
+
+                // clear all emphasis higlight for fresh start
+                clearAllEmphasis();
+
+                // reset display fields
+                dispVPN.html("--");
+                dispVPN.style("color", "black");
+                dispPO.html("--");
+                dispPO.style("color", "black");
+                dispTLBTag.html("--");
+                dispTLBTag.style("color", "black");
+                dispTLBIndex.html("--");
+                dispTLBIndex.style("color", "black");
+                dispPPN.html("--");
+                dispPPN.style("color", "black");
+                dispTLBHit.html("--");
+                dispTLBHit.style("color", "black");
+                dispTLBMiss.html("--");
+                dispTLBMiss.style("color", "black");
+                dispPTHit.html("--");
+                dispPTHit.style("color", "black");
+                dispPTMiss.html("--");
+                dispPTMiss.style("color", "black");
 
                 // check input is valid
                 if (isNaN(addr) || isNaN(data)) {
@@ -440,8 +511,10 @@ const displayTables = (p) => {
                 VPN = addr >> POwidth;     // virtual page number
                 PO = addr % pgSize;        // page offset
 
-                dispVPN.html(toBase(VPN, 16, null));
-                dispPO.html(toBase(PO, 16, null));
+                dispVPN.html("0x" + toBase(VPN, 16, null));
+                dispPO.html("0x" + toBase(PO, 16, null));
+                dispVPN.style("color", "red");
+                dispPO.style("color", "red");
 
                 if (writing) {
                     disableAccessButtons(2);
@@ -450,20 +523,21 @@ const displayTables = (p) => {
                 }
 
                 // check if retrying instruction
-                if(retryfaultingInstr) {
+                if (retryfaultingInstr) {
                     DFAmessage += "break down virtual address into VPN, PO\n";
                 }
                 // reset message for msg box
                 else {
                     DFAmessage = "break down virtual address into VPN, PO\n";
                 }
-                DFAmessage += "VPN: 0x" + toBase(VPN, 16, null) 
-                                + ", PO: 0x" + toBase(PO, 16, null) + "\n";
+                DFAmessage += "VPN: 0x" + toBase(VPN, 16, null)
+                    + ", PO: 0x" + toBase(PO, 16, null) + "\n";
 
                 // add separating borders
                 DFAmessage += "------------------------------------------------\n";
                 // print to msg box
                 msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
 
                 // build new access
                 newAccess = new MemAccess();
@@ -472,6 +546,10 @@ const displayTables = (p) => {
                 newAccess.data = data;  // what's stored in data doesn't matter for R
                 // since we will check access type first
 
+                // push new mem access to hist and update display
+                pushToHist(newAccess);
+                updateHist();
+
                 // this is how the DFA works, set next state and call again to trigger state code.
                 state = CHECK_TLB;
                 if (!explain) readWriteDFA(writing, addr, data);
@@ -479,55 +557,125 @@ const displayTables = (p) => {
             case CHECK_TLB:
                 console.log("check tlb");
 
+                // de-emphasize VPN and PO disp fields
+                dispVPN.style("color", "black");
+                dispPO.style("color", "black");
+
                 // TLB bit breakdown for display
                 let S = TLBSize / E;	// number of sets
                 let Swidth = p.ceil(p.log(S) / p.log(2));	// bits required to represent S
-                let TLBI = VPN % S;
-                let TLBT = VPN >> Swidth;
+                TLBI = VPN % S;
+                TLBT = VPN >> Swidth;
 
                 // update message for TLB
                 DFAmessage += "Breaking VPN into TLB Index and tag\n";
-                DFAmessage += "TLB Index: " + TLBI + ", tag: 0x" + toBase(TLBT, 16, null) + "\n";
-                DFAmessage += "Checking TLB with TLBI and TLBT\n";
+                DFAmessage += "TLB Index: 0x" + toBase(TLBI, 16, null) + ", tag: 0x" + toBase(TLBT, 16, null) + "\n";
 
                 // display tlb breakdown
-                dispTLBTag.html(toBase(TLBT, 16, null));
-                dispTLBIndex.html(toBase(TLBI, 16, null));
+                dispTLBTag.html("0x" + toBase(TLBT, 16, null));
+                dispTLBIndex.html("0x" + toBase(TLBI, 16, null));
+                dispTLBTag.style("color", "red");
+                dispTLBIndex.style("color", "red");
 
-                // check if address is in TLB
+                // update message box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = CHECK_TLB_SET;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case CHECK_TLB_SET:
+                dispTLBTag.style("color", "black");
+                tlb.checkSet(VPN);
+
+                DFAmessage += "Checking set: 0x" + toBase(TLBI, 16, null) + "\n";
+
+                // update explain message
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = CHECK_TLB_TAG;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case CHECK_TLB_TAG:
+                dispTLBIndex.style("color", "black");
+                dispTLBTag.style("color", "red");
+                let tlb_tag_res = tlb.checkTag(VPN);
+
+                DFAmessage += "Checking if set contains an entry with tag: 0x"
+                    + toBase(TLBT, 16, null) + "\n";
+
+                // update explain message
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = tlb_tag_res ? CHECK_TLB_VALID : TLB_MISS;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case CHECK_TLB_VALID:
+                dispTLBTag.style("color", "black");
+                let tlb_valid_res = tlb.checkValid(VPN);
+
+                DFAmessage += "Checking if discovered entry is valid\n";
+
+                // update explain message
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = tlb_valid_res ? TLB_HIT : TLB_MISS;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case TLB_HIT:
+                // get PPN from TLB
                 console.log("VPN: " + VPN);
                 PPN = tlb.getPPN(VPN);
                 console.log("PPN: " + PPN);
 
+                // TLB hit
+                TLBHit++;
+                // display PPN in box
+                dispPPN.html("0x" + toBase(PPN, 16, null));
+                dispPPN.style("color", "red");
 
-                if (PPN === -1) {
-                    // TLB miss
-                    TLBMiss++;
-                    state = CHECK_PAGE_TABLE;
+                // update cur access
+                histArray[histIndex].tlbRes = 'H';
+                updateHist();
 
-                    // update cur access
-                    newAccess.tlbRes = 'M';
-                    // update message status
-                    DFAmessage += "TLB miss\n"
-                } else {
-                    // TLB hit
-                    TLBHit++;
-                    // display PPN in box
-                    dispPPN.html(toBase(PPN, 16, null));
-
-                    state = PROTECTION_CHECK;
-
-                    // update cur access
-                    newAccess.tlbRes = 'H';
-                    // update message status
-                    DFAmessage += "TLB hit\n"
-                }
+                // update message status
+                DFAmessage += "TLB hit\n";
+                DFAmessage += "PPN: 0x" + toBase(PPN, 16, null) + "\n";
 
                 // add separating borders
                 DFAmessage += "------------------------------------------------\n";
-                // print message to msg box
+                // update explain message
                 msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
 
+                state = PROTECTION_CHECK;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case TLB_MISS:
+                // TLB miss
+                TLBMiss++;
+
+                // de-emphasize TLB tag and index
+                dispTLBTag.style("color", "black");
+                dispTLBIndex.style("color", "black");
+
+                // update cur access
+                histArray[histIndex].tlbRes = 'M';
+                updateHist();
+
+                // update message status
+                DFAmessage += "TLB miss\n"
+
+                // add separating borders
+                DFAmessage += "------------------------------------------------\n";
+                // update explain message
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = CHECK_PT_VALID;
                 if (!explain) readWriteDFA(writing, addr, data);
                 break;
             case PROTECTION_CHECK:
@@ -543,13 +691,10 @@ const displayTables = (p) => {
                 if (permRes === "") {
                     state = PHYSICAL_PAGE_ACCESS;
 
-                    // update access state
-                    newAccess.fRes = 'H';
                     // update msg state
                     DFAmessage += "have access permissions\n"
                 } else {
                     console.log("Protection fault");
-                    state = READY;
 
                     if (writing) {
                         enableAccessButtons(2);
@@ -557,8 +702,6 @@ const displayTables = (p) => {
                         enableAccessButtons(1);
                     }
 
-                    // update access state
-                    newAccess.fRes = 'M';
                     // update msg state
                     DFAmessage += "Protection fault:\n";
                     DFAmessage += permRes;
@@ -567,12 +710,17 @@ const displayTables = (p) => {
                     DFAmessage += "------------------------------------------------\n";
                     // flush to msg box
                     msgbox.value(DFAmessage);
+                    msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
 
                     // clear retry flag if necessary
                     retryfaultingInstr = false;
 
-                    // push access to hist
-                    pushToHist(newAccess);
+                    // set state
+                    state = READY;
+
+                    // release control access
+                    releaseControlAccess(memoryAccessID)
+
                     // done so we don't call again
                     break;
                 }
@@ -581,6 +729,7 @@ const displayTables = (p) => {
                 DFAmessage += "------------------------------------------------\n";
                 // flush to msg box
                 msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
 
                 if (!explain) readWriteDFA(writing, addr, data);
                 break;
@@ -589,8 +738,8 @@ const displayTables = (p) => {
 
                 // update msg for accessing page
                 DFAmessage += writing === true ? "writing to " : "reading from ";
-                DFAmessage += "physical page 0x" + toBase(PPN, 16, null) 
-                                + " at offset 0x" + toBase(PO, 16, null) + "\n";
+                DFAmessage += "physical page 0x" + toBase(PPN, 16, null)
+                    + " at offset 0x" + toBase(PO, 16, null) + "\n";
 
                 if (writing) {
                     console.log("writing");
@@ -620,58 +769,100 @@ const displayTables = (p) => {
                 // add separating borders
                 DFAmessage += "------------------------------------------------\n";
                 msgbox.value(DFAmessage);
-
-                // push access to hist
-                pushToHist(newAccess);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
 
                 // clear retry flag if necessary
                 retryfaultingInstr = false;
 
                 // done so we dont call again 
                 state = READY;
+
+                // release control access
+                releaseControlAccess(memoryAccessID)
+
                 break;
-            case CHECK_PAGE_TABLE:
+            case CHECK_PT_VALID:
                 console.log("check PT");
 
                 // update msg for PT
-                DFAmessage += "checking page table for VPN\n";
+                DFAmessage += "Checking page table...\n";
+                DFAmessage += "Checking if VPN: 0x" + toBase(VPN, 16, null) + " have valid entry\n";
+
+                // empahsize VPN field
+                dispVPN.style("color", "red");
+
+                let pt_valid = pt.checkValid(VPN);
+
+                if (pt_valid) {
+                    DFAmessage += "Page Table entry valid\n";
+                } else {
+                    DFAmessage += "Page Table entry invalid\n";
+                }
+
+                // update explain message
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = pt_valid ? PT_HIT : PT_MISS;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case PT_HIT:
+                // de-emphasize VPN field
+                dispVPN.style("color", "black");
 
                 PPNRes = pt.getPPN(VPN);  // PPN result from PT
-                if (PPNRes === null) {
-                    // page table miss
-                    PTMiss++;
-                    state = PAGE_FAULT;
 
-                    // update access state
-                    newAccess.ptRes = 'M';
-                    // update msg state
-                    DFAmessage += "page table miss\n";
-                } else {
-                    // page table hit
-                    PTHit++;
-                    // display PPN in box
-                    dispPPN.html(toBase(PPNRes[0], 16, null));
+                // page table hit
+                PTHit++;
+                // emphasize pt hit
+                dispPTHit.style("color", "red");
 
-                    state = UPDATE_TLB;
+                // update access state
+                histArray[histIndex].ptRes = 'H';
+                updateHist();
 
-                    // update access state
-                    newAccess.ptRes = 'H';
-                    // update msg state
-                    DFAmessage += "page table hit\n";
-                }
+                // update msg state
+                DFAmessage += "page table hit\n";
 
                 // add separating borders
                 DFAmessage += "------------------------------------------------\n";
-                // flush to msg box
+                // update explain message
                 msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
 
+                state = UPDATE_TLB;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case PT_MISS:
+                // page table miss
+                PTMiss++;
+                // emphasize page miss
+                dispPTMiss.style("color", "red");
+
+                // update access state
+                histArray[histIndex].ptRes = 'M';
+                updateHist();
+
+                // update msg state
+                DFAmessage += "page table miss\n";
+
+                // add separating borders
+                DFAmessage += "------------------------------------------------\n";
+                // update explain message
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = PAGE_FAULT;
                 if (!explain) readWriteDFA(writing, addr, data);
                 break;
             case UPDATE_TLB:
                 console.log("update tlb");
 
+                // de-emphasize pt hit
+                dispPTHit.style("color", "black");
+
                 // update msg for updating tlb
-                DFAmessage += "update TLB with new PTE found\n";
+                DFAmessage += "update TLB with new PTE found using Least Recently Used replacement policy\n";
 
                 // get the PPN from page table result
                 PPN = PPNRes[0];
@@ -679,174 +870,262 @@ const displayTables = (p) => {
 
                 // update tlb
                 tlb.setEntry(VPN, pt.getPagePermissions(VPN), PPN);
-                state = PROTECTION_CHECK;
+
+                DFAmessage += "Retrieving PPN from TLB\n"
+                DFAmessage += "PPN: 0x" + toBase(PPN, 16, null) + "\n";
+
+                // update PPN field
+                dispPPN.html("0x" + toBase(PPNRes[0], 16, null));
+                // emphasize PPN field
+                dispPPN.style("color", "red");
 
                 // add separating borders
                 DFAmessage += "------------------------------------------------\n";
                 // flush to msg box
                 msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
 
+                state = PROTECTION_CHECK;
                 if (!explain) readWriteDFA(writing, addr, data);
                 break;
             case PAGE_FAULT:
                 console.log("page fault");
 
+                // de-emphasize pt miss field
+                dispPTMiss.style("color", "black");
+
                 // update msg for Page Fault
-                DFAmessage += "page fault\n";
-                DFAmessage += "control transfered to OS\n";
+                DFAmessage += "Page fault\n";
+                DFAmessage += "Control transfered to OS\n";
 
                 // add separating borders (start of OS actions)
                 DFAmessage += "------------------------------------------------\n";
-                DFAmessage += "attempting to get page from disk\n";
 
-                let SSNRes = pt.getSSN(VPN);
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
 
-                // page not found in disk
-                if (SSNRes === null) {
-                    console.log("segfault");
+                state = CHECK_SSN;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case CHECK_SSN:
+                DFAmessage += "Attempting to get virtual page's location in disk via Swap Space Number (SSN)\n";
 
-                    // update access state
-                    newAccess.fRes = 'M';
-                    // update msg state
-                    DFAmessage += "page not found in disk\n";
-                    DFAmessage += "segfault\n";
+                // set display mode to disk
+                VM = false;
 
-                    if (writing) {
-                        enableAccessButtons(2);
-                    } else {
-                        enableAccessButtons(1);
-                    }
+                // access SSN while highlighting access
+                SSNRes = pt.getSSN(VPN);
 
-                    // push access to hist
-                    pushToHist(newAccess);
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
 
-                    // add separating borders
-                    DFAmessage += "------------------------------------------------\n";
-                    // flush to msg box
-                    msgbox.value(DFAmessage);
+                state = SSNRes !== null ? IN_DISK : NOT_IN_DISK;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case IN_DISK:
+                DFAmessage += "SSN found!\n";
+                DFAmessage += "Virtual page with VPN: 0x" + toBase(VPN, 16, null)
+                    + " is located at SSN: 0x" + toBase(SSNRes[0], 16, null) + "\n";
 
-                    // clear retry flag if necessary
-                    retryfaultingInstr = false;
+                // add separating borders (start of OS actions)
+                DFAmessage += "------------------------------------------------\n";
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
 
-                    // cannot be processed, so we do not proceed
-                    state = READY;
-                    break;
-                }
-                // page found in disk
-                else {
-                    // updating msg state
-                    DFAmessage += "page found in disk\n";
-                    DFAmessage += "swapping page into memory using LRU replacement policy\n";
+                state = FIND_PM_VICTIM;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case NOT_IN_DISK:
+                console.log("segfault");
 
-                    let [SSN, dirty] = SSNRes;
-                    // bring this page into mem
-                    // let [PPN, victimVPN] = swapPageFromDiskToMem(SSN, VPN);
+                // update msg state
+                DFAmessage += "Page not found in disk\n";
+                DFAmessage += "Segfault\n";
 
-                    // find LRU page in physMem
-                    let PPN = physMem.findVictim();
-                    let victimVPN = physMem.getAssociatingVPN(PPN);
-
-                    DFAmessage += "Least recently used page is PPN: 0x" + toBase(PPN, 16, null) 
-                        + ", with VPN: 0x" + toBase(victimVPN, 16, null) + "\n";
-
-                    // updating msg state
-                    DFAmessage += "check if page to evict is dirty\n";
-
-                    // check if victim is dirty
-                    if (pt.getDirty(victimVPN)) {
-                        // evicted page is dirty writing to disk
-                        DFAmessage += "evicted page is dirty, writing to disk\n";
-                    } else {
-                        DFAmessage += "evicted page is not dirty, no need to update disk\n";
-                    }
-
-                    // try to find if current page is already within disk
-                    let victimSSN = disk.findPage(victimVPN);
-                    // if already in disk, simply move page into spot in disk
-                    if (victimSSN !== -1) {
-                        disk.setPage(victimSSN, physMem.getPage(PPN));
-
-                        // updating msg state
-                        DFAmessage += "updating evicted page's page table entry with its new location in disk\n";
-                        DFAmessage += "swap space number: 0x" + toBase(victimSSN, 16, null) + "\n";
-
-                        DFAmessage += "invalidate evicted page's entry within TLB if applicable\n";
-                        let evictedPerm = pt.getPagePermissions(victimVPN);
-                        evictedPerm.V = 0;
-                        evictedPerm.D = 0;
-                        // update PT perm
-                        pt.setPTE(victimVPN, victimSSN, true, evictedPerm);
-                        // update TLB perm
-                        tlb.invalidateEntry(victimVPN);
-                    }
-                    // if not in disk, allocate new page
-                    else {
-                        // FOR READING in case page is not on disk
-                        if (!pt.getDirty(victimVPN)) {
-                            DFAmessage += "copy of page not found in disk. Allocating new page in disk for evicted page\n";
-                        }
-
-                        // For both reading and writing case
-                        // allocate page in disk if not already there
-                        victimSSN = disk.allocatePage(victimVPN);
-                        // if disk full, notify user
-                        if (victimSSN === -1) {
-                            DFAmessage += "disk space full, unable to write evicted page in disk\n";
-                        }
-                        // else write to new page
-                        else {
-                            disk.setPage(victimSSN, physMem.getPage(PPN));
-                            // updating msg state
-                            // updating msg state
-                            DFAmessage += "updating evicted page's page table entry with its new location in disk\n";
-                            DFAmessage += "swap space number: 0x" + toBase(victimSSN, 16, null) + "\n";
-
-                            DFAmessage += "invalidate evicted page's entry within TLB if applicable\n";
-                            let evictedPerm = pt.getPagePermissions(victimVPN);
-                            evictedPerm.V = 0;
-                            evictedPerm.D = 0;
-                            // update PT perm
-                            pt.setPTE(victimVPN, victimSSN, true, evictedPerm);
-                            // update TLB perm DOESNT WORK since it adds a new one
-                            tlb.invalidateEntry(victimVPN);
-                        }
-                    }
-
-                    // bring target page into physMem
-                    physMem.setPage(PPN, VPN, disk.getPage(SSN));
-
-                    // get correct management bit permissions for newly brought in page
-                    let evictingPerm = pt.getPagePermissions(VPN);
-                    evictingPerm.V = 1;
-
-                    /**
-                     * @todo convert embeded messages to use hex
-                     */
-
-                    // update msg state
-                    DFAmessage += "updating brought in page's page table entry with its new location in physical memory\n";
-                    DFAmessage += "PPN: 0x" + toBase(PPN, 16, null) + "\n";
-
-                    // update PT for newly brought in page
-                    pt.setPTE(VPN, PPN, false, evictingPerm);
+                if (writing) {
+                    enableAccessButtons(2);
+                } else {
+                    enableAccessButtons(1);
                 }
 
-                DFAmessage += "restarting page-faulting instruction\n"
                 // add separating borders
                 DFAmessage += "------------------------------------------------\n";
                 // flush to msg box
                 msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                // clear retry flag if necessary
+                retryfaultingInstr = false;
+
+                // cannot be processed, so we do not proceed
+                state = READY;
+
+                // release control access
+                releaseControlAccess(memoryAccessID)
+
+                break;
+            case FIND_PM_VICTIM:
+                DFAmessage += "Finding page to evict in physical memory using LRU replacement policy\n";
+
+                // find LRU page in physMem
+                PPN = physMem.findVictim();
+                victimVPN = physMem.getAssociatingVPN(PPN);
+
+                DFAmessage += "Least recently used page is PPN: 0x" + toBase(PPN, 16, null)
+                    + ", with VPN: 0x" + toBase(victimVPN, 16, null) + "\n";
+
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = FIND_VICTIM_SSN;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case FIND_VICTIM_SSN:
+                DFAmessage += "Attempting to find victim page's (VPN: 0x"
+                    + toBase(victimVPN, 16, null) + ") location in disk\n";
+
+                // try to find if current page is already within disk
+                victimSSN = disk.findPage(victimVPN);
+
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = VICTIM_IN_DISK;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case VICTIM_IN_DISK:
+                DFAmessage += "Victim page found in disk at SSN: 0x" + toBase(victimSSN, 16, null) + "\n";
+                DFAmessage += "Checking if victim is dirty...\n";
+
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = pt.getDirty(victimVPN) ? VICTIM_DIRTY : VICTIM_NOT_DIRTY;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case VICTIM_DIRTY:
+                DFAmessage += "Victim is dirty, need to write to disk\n";
+
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = WRITE_VICTIM_TO_DISK;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case VICTIM_NOT_DIRTY:
+                DFAmessage += "Victim is not dirty, no need to write to disk\n";
+
+                // add separating borders (start of OS actions)
+                DFAmessage += "------------------------------------------------\n";
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = UPDATE_VICTIM_PTE;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case WRITE_VICTIM_TO_DISK:
+                DFAmessage += "Writing changes to disk at SSN: 0x" + toBase(victimSSN, 16, null) + "\n";
+
+                disk.setPage(victimSSN, physMem.getPage(PPN));
+
+                // add separating borders (start of OS actions)
+                DFAmessage += "------------------------------------------------\n";
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = UPDATE_VICTIM_PTE;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case UPDATE_VICTIM_PTE:
+                DFAmessage += "Updating evicted page's page table entry with its new location in disk\n";
+                DFAmessage += "Swap Space Number: 0x" + toBase(victimSSN, 16, null) + "\n";
+                DFAmessage += "invalidate evicted page's entry within TLB if applicable\n";
+
+                let evictedPerm = pt.getPagePermissions(victimVPN);
+                evictedPerm.V = 0;
+                evictedPerm.D = 0;
+
+                // add separating borders (start of OS actions)
+                DFAmessage += "------------------------------------------------\n";
+                // update PT perm
+                pt.setPTE(victimVPN, victimSSN, true, evictedPerm);
+                // update TLB perm
+                tlb.invalidateEntry(victimVPN);
+
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = MOVE_EVICTING_TO_PM;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case MOVE_EVICTING_TO_PM:
+                DFAmessage += "Copying content of evicting page at VPN: 0x"
+                    + toBase(VPN, 16, null) + " to physical memory\n";
+
+                // bring target page into physMem
+                physMem.setPage(PPN, VPN, disk.getPage(SSNRes[0]));
+
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = UPDATE_EVICTING_PTE;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case UPDATE_EVICTING_PTE:
+                DFAmessage += "updating brought in page's page table entry with its new location in physical memory\n";
+                DFAmessage += "PPN: 0x" + toBase(PPN, 16, null) + "\n";
+
+                // get correct management bit permissions for newly brought in page
+                let evictingPerm = pt.getPagePermissions(VPN);
+                evictingPerm.V = 1;
+
+                // update PT for newly brought in page
+                pt.setPTE(VPN, PPN, false, evictingPerm);
+
+                // add separating borders (start of OS actions)
+                DFAmessage += "------------------------------------------------\n";
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
+
+                state = RESTART_INSTR;
+                if (!explain) readWriteDFA(writing, addr, data);
+                break;
+            case RESTART_INSTR:
+                DFAmessage += "restarting page-faulting instruction\n"
+
+                // add separating borders
+                DFAmessage += "------------------------------------------------\n";
+                // flush to msg box
+                msgbox.value(DFAmessage);
+                msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
 
                 // set retry faulting instruction flag so we keep disk swapping messages
                 retryfaultingInstr = true;
 
                 state = READY;
+
+                // release control access (does this before quickly requesting again)
+                // should not have issue with user requesting a new access within this time frame
+                releaseControlAccess(memoryAccessID)
+
                 if (!explain) readWriteDFA(writing, addr, data);
                 break;
             default:
                 alert("default case");
-        }
-    }
+        }   // end switch
+    }   // readWriteDFA
 
     /**
      * handles reading from VM upon user request to read at a given address
@@ -854,9 +1133,8 @@ const displayTables = (p) => {
     function readVM() {
         let addr = parseInt(inReadAddr.value(), 16);
         let data = 0;  // we are not writing so data is irrelevant 
-        readWriteDFA(false, addr, data);
-        // move message box to top
-        msgbox.elt.scrollTop = 0;
+        // only process if system initialized
+        if (initialized) readWriteDFA(false, addr, data);
     }
 
     /**
@@ -865,9 +1143,8 @@ const displayTables = (p) => {
     function writeVM() {
         let addr = parseInt(inWriteAddr.value(), 16);
         let data = parseInt(inWriteData.value(), 16);
-        readWriteDFA(true, addr, data);
-        // move message box to top
-        msgbox.elt.scrollTop = 0;
+        // only process if system initialized
+        if (initialized) readWriteDFA(true, addr, data);
     }
 
     /**
@@ -877,24 +1154,41 @@ const displayTables = (p) => {
      * @param {*} VPN virtual page number of the page user is allocating
      */
     function handleVPAllocation(VPN) {
+        // does not need to check for system initialization because 
+        // the VM must have sys control inorder to call this function in the first place
         let perm = getPermForVPN(VPN);	// get management bit permission for this VA
 
         // if current page not already allocated
         if (pt.getPPN(VPN) === null && pt.getSSN(VPN) === null) {
+            // update explain box
+            let allocationMsg = "Attempting to allocate virtual page at VPN: 0x" + toBase(VPN, 16, null) + "\n";
+
             virMem.allocatePage(VPN);
+
+            // allocates corresponding page in disk
+            let SSN = disk.allocatePage(VPN);
+            allocationMsg += "Allocating space for new page in disk at: 0x" + toBase(SSN, 16, null) + "\n";
+
+            allocationMsg += "Attempting to find unused page in physical memory\n";
             let PPN = physMem.findUnusedPage();
 
             if (PPN !== -1) {
+                allocationMsg += "Unused physical page at PPN: 0x" + toBase(PPN, 16, null) + " found\n";
                 perm.V = 1;		// this page is in memory
 
-                physMem.allocatePage(PPN, VPN);
+                allocationMsg += "Storing a copy of newly allocated page in disk in memory\n"
+
+                let page = disk.getPage(SSN)
+                physMem.setPage(PPN, VPN, page);
+
+                allocationMsg += "Updating page table entry for VPN: 0x" + toBase(VPN, 16, null) + "\n";
+                allocationMsg += "Setting valid bit to 1 to indicate VPN: 0x"
+                    + toBase(VPN, 16, null) + " is in physical memory\n";
                 pt.setPTE(VPN, PPN, false, perm);
             } else {
-                let SSN = disk.allocatePage();
-                if (SSN === -1) {
-                    console.log("out of disk space");
-                    return;
-                }
+                allocationMsg += "No unused page in physical memory found\n";
+                allocationMsg += "Updating page table entry for VPN: 0x" + toBase(VPN, 16, null) + "\n";
+                allocationMsg += "Setting valid bit to 0 since page is in disk\n";
                 pt.setPTE(VPN, SSN, true, perm);
             }
 
@@ -902,6 +1196,10 @@ const displayTables = (p) => {
             newAccess.type = 'A';
             newAccess.addr = VPN;
             pushToHist(newAccess);
+
+            // flush to msg box
+            msgbox.value(allocationMsg);
+            msgbox.elt.scrollTop = msgbox.elt.scrollHeight;
         }
     }
 
@@ -918,7 +1216,7 @@ const displayTables = (p) => {
         let perm;	// permission attached to the current VPN
 
         // read only segment
-        if (0 <= percentage && percentage <= 0.2) {
+        if (0 <= percentage && percentage <= 0.1) {
             perm = {
                 V: 0,
                 D: 0,
@@ -928,7 +1226,7 @@ const displayTables = (p) => {
             }
         }
         // read write segment
-        else if (0.2 < percentage && percentage <= 0.4) {
+        else if (0.1 < percentage && percentage <= 0.4) {
             perm = {
                 V: 0,
                 D: 0,
@@ -970,6 +1268,9 @@ const displayTables = (p) => {
         POwidth = p.ceil(p.log(pgSize) / p.log(2));         // bit width of PO
         PPNWidth = p.ceil(p.log(physMemSize) / p.log(2));   // bit width of PPN
 
+        // set random seed
+        Math.seedrandom(seed);
+
         return 0;
     }
 
@@ -998,7 +1299,7 @@ const displayTables = (p) => {
                 p.stroke(colorW);
                 p.fill(colorW);
                 p.textAlign(p.CENTER);
-                p.text("Vitrual Memory", virMem.x + virMem.Mwidth * 0.3, 0.85 * scaleM);          // VM
+                p.text("Virtual Memory", virMem.x + virMem.Mwidth * 0.3, 0.85 * scaleM);          // VM
                 p.stroke(colorB);
                 p.fill(colorB);
                 p.textAlign(p.CENTER);
@@ -1007,7 +1308,7 @@ const displayTables = (p) => {
                 p.stroke(colorB);
                 p.fill(colorB);
                 p.textAlign(p.CENTER);
-                p.text("Vitrual Memory", virMem.x + virMem.Mwidth * 0.3, 0.85 * scaleM);          // VM
+                p.text("Virtual Memory", virMem.x + virMem.Mwidth * 0.3, 0.85 * scaleM);          // VM
                 p.stroke(colorW);
                 p.fill(colorW);
                 p.textAlign(p.CENTER);
@@ -1039,6 +1340,51 @@ const displayTables = (p) => {
         disk.flush();
     }
 
+    /**
+     * reset all system overhead relative to current 
+     * sys state to default starting state
+     */
+    function resetOverhead() {
+        // history stored value
+        histArray = [];
+        histMove = false;
+        histIndex = -1;
+
+        // display field stored values
+        TLBHit = 0; TLBMiss = 0;
+        PTHit = 0; PTMiss = 0;
+
+        // initialized state
+        initialized = false;
+
+        // explain box values
+        msg = '';
+        msgbox.value('');
+
+        // free control access lock
+        userInteracting = "";
+
+        // reset display fields
+        dispVPN.html("--");
+        dispVPN.style("color", "black");
+        dispPO.html("--");
+        dispPO.style("color", "black");
+        dispTLBTag.html("--");
+        dispTLBTag.style("color", "black");
+        dispTLBIndex.html("--");
+        dispTLBIndex.style("color", "black");
+        dispPPN.html("--");
+        dispPPN.style("color", "black");
+        dispTLBHit.html("--");
+        dispTLBHit.style("color", "black");
+        dispTLBMiss.html("--");
+        dispTLBMiss.style("color", "black");
+        dispPTHit.html("--");
+        dispPTHit.style("color", "black");
+        dispPTMiss.html("--");
+        dispPTMiss.style("color", "black");
+    }
+
     // display the current message to canvas
     function dispMsg(x, y) {
         p.fill(0);
@@ -1052,6 +1398,8 @@ const displayTables = (p) => {
      * check if user wants to update the VM state to disk or reverse
      */
     function updateVMDiskState() {
+        if (!initialized) return false;
+        // only check if sys initialized
         if (bounded(p.mouseY, 0, 0.85 * scaleM + 5)) {
             if (bounded(p.mouseX, virMem.x, virMem.x + virMem.Mwidth * 0.6)) {
                 VM = true;
@@ -1073,20 +1421,18 @@ const displayTables = (p) => {
             histMsg += i == histIndex ? '> ' : '  ';
             switch (histArray[i].type) {
                 case 'A':
-                    histMsg += 'Allocate VPN: ' + toBase(histArray[i].addr, 16, 2) + '\n';
+                    histMsg += 'Allocate VPN: 0x' + toBase(histArray[i].addr, 16, 2) + '\n';
                     break;
                 case 'W':
                     histMsg += 'W(0x' + toBase(histArray[i].addr, 16, 2) + ', 0x' +
-                        toBase(histArray[i].data, 16, 2) + ') = ' +
-                        "tlb: " + histArray[i].tlbRes + ", " +
-                        "pt: " + histArray[i].ptRes + ", " +
-                        "final res: " + histArray[i].fRes + '\n';
+                        toBase(histArray[i].data, 16, 2) + ') = \n' +
+                        "  TLB: " + histArray[i].tlbRes + ", " +
+                        "PT: " + histArray[i].ptRes + ", " + '\n';
                     break;
                 case 'R':
-                    histMsg += 'R(0x' + toBase(histArray[i].addr, 16, 2) + ') = ' +
-                        "tlb: " + histArray[i].tlbRes + ", " +
-                        "pt: " + histArray[i].ptRes + ", " +
-                        "final res: " + histArray[i].fRes + '\n';
+                    histMsg += 'R(0x' + toBase(histArray[i].addr, 16, 2) + ') = \n' +
+                        "  TLB: " + histArray[i].tlbRes + ", " +
+                        "PT: " + histArray[i].ptRes + '\n';
                     break;
                 default:
                     hist.value(hist.value() + 'Unknown access type\n');
@@ -1100,6 +1446,8 @@ const displayTables = (p) => {
      * move hist cursor up
      */
     function histUp() {
+        // only allow input when system initialized
+        if (!initialized) return;
         histIndex = p.max(0, histIndex - 1);
         updateHist();
     }
@@ -1108,17 +1456,32 @@ const displayTables = (p) => {
      * move hist cursor down
      */
     function histDown() {
+        // only allow input when system initialized
+        if (!initialized) return;
         histIndex = p.min(histArray.length - 1, histIndex + 1);
         updateHist();
     }
 
     function loadHist() {
+        /**
+         * @todo new access is run on temp, but the display needs to show hist,
+         *       since that's the thing being updated
+         */
+
+        // only allow input when system initialized
+        if (!initialized) return;
+
         // flush current tables
         flush();
+        paramBox.checked(false);
+        mmaBox.checked(false);
+
         // update current hist upto histIndex
         let tempHist = histArray.slice(0, histIndex + 1);
         // reset histIndex since the calls will increment it
         histIndex = -1;
+        // reset histArray to restart access
+        histArray = [];
 
         // reset system tracking variables
         TLBHit = 0; TLBMiss = 0;
@@ -1133,7 +1496,6 @@ const displayTables = (p) => {
                     , tempHist[i].addr, tempHist[i].data);
             }
         }
-        histArray = tempHist;
         console.log(histIndex);
         updateHist();
     }
@@ -1146,6 +1508,17 @@ const displayTables = (p) => {
         histArray.push(access);
         histIndex++;
         updateHist();
+    }
+
+    /**
+     * clear all emphasis highlight in each table
+     */
+    function clearAllEmphasis() {
+        tlb.clearHighlight();
+        pt.clearHighlight();
+        physMem.clearHighlight();
+        virMem.clearHighlight();
+        disk.clearHighlight();
     }
 
     /**
@@ -1197,8 +1570,14 @@ const displayTables = (p) => {
  * 			false - another component is current handling user input
  */
 export function getControlAccess(componentId) {
+    /**
+     * @todo the mma ids should not prohibit the user's ability to scorll.
+     *       it should only prohibit the ability to allocate
+     */
     if (!userInteracting) {
         userInteracting = componentId;
+        return true;
+    } else if (userInteracting === memoryAccessID && componentId !== "VM") {
         return true;
     }
     return false;

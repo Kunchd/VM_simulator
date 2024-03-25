@@ -14,7 +14,7 @@ export const MGNT_BIT_WIDTH = 5;
 export const PT_PPN_WIDTH = 5;
 
 // system color constants
-export const PHYS_MEM_HIGHLIGHT = "#bdfa61";
+export const PHYS_MEM_HIGHLIGHT = "#40B0A6";
 export const VIR_MEM_HIGHLIGHT = "#88B5F8";
-export const DISK_HIGHLIGHT = "#6DF8B5";
+export const DISK_HIGHLIGHT = "#E1BE6A";
 export const EMPHASIS_HIGHLIGHT = '#ff8080';
